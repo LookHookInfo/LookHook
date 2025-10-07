@@ -1,0 +1,66 @@
+@import "preline/variants.css";
+@import "tailwindcss";
+html, body, #root { height: 100%; min-height: 100%; }
+.max-1200 { max-width: 1200px; }
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #000;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-gradient-line {
+  background: linear-gradient(to right, #f0f0f0 0%, #f0f0f0 20%, #888888 50%, #f0f0f0 80%, #f0f0f0 100%);
+  background-size: 400% 100%; /* Make the gradient much wider */
+  animation: gradient-animation 8s ease infinite; /* 8s duration, ease timing, infinite loop */
+}
+
+@keyframes drubBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.drub-bounce-animation {
+  animation: drubBounce 3s ease-in-out infinite;
+}
+
+.input-style {
+  border: 1px solid #444;
+  background-color: #222;
+}
+.btn-claim {
+  background-color: #4CAF50;
+  color: white;
+}
+.btn-disabled {
+  background-color: #555;
+  color: #aaa;
+  cursor: not-allowed;
+}
+.border-gold-400 {
+  border-color: #FFD700; /* Gold */
+}

@@ -1,0 +1,187 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
+contract HashNamesOptimized is ERC721 {
+    IERC20 public immutable hashToken;
+    IERC721 public immutable discountNFT;
+    
+    address public constant TREASURY = 0x4905139C1Cf63FfBD1751Dee4e119A628d9DBF40;
+    string public constant STATIC_IMAGE = "https://bafybeidxvc54o44eezbkmlz4gm2krhlbc25sxwbh4zfpx5miwnck6wpjq4.ipfs.dweb.link/";
+    uint256 public constant PRICE = 1000 ether;
+
+    uint256 public tokenCount;
+
+    mapping(string => uint256) public nameToTokenId;
+    mapping(uint256 => bytes32) public tokenIdToHash;
+    mapping(uint256 => string) public tokenIdToName;
+    mapping(address => uint256) public primaryName;
+    mapping(address => uint256) public userMintCount;
+
+    event NameRegistered(uint256 indexed tokenId, string name, address indexed owner, uint256 price, bool withDiscount);
+    event PrimaryNameSet(address indexed owner, uint256 indexed tokenId);
+    event FirstMint(address indexed user, uint256 tokenId);
+
+    modifier validName(string memory name_) {
+        uint256 length = bytes(name_).length;
+        require(length >= 1 && length <= 15, "Name must be 1-15 characters");
+        _;
+    }
+
+    constructor(address paymentToken, address discountNFT_)
+        ERC721("Name Hash", ".hash")
+    {
+        hashToken = IERC20(paymentToken);
+        discountNFT = IERC721(discountNFT_);
+    }
+
+    // ==================== REGISTER ====================
+    function register(string memory name_) external validName(name_) {
+        require(nameToTokenId[name_] == 0, "Name already taken");
+        require(balanceOf(msg.sender) < 20, "Maximum 20 names per wallet");
+
+        bool hasDiscountNFT = hasDiscount(msg.sender);
+        uint256 finalPrice = hasDiscountNFT ? PRICE / 2 : PRICE;
+
+        require(hashToken.transferFrom(msg.sender, TREASURY, finalPrice), "Payment failed");
+
+        tokenCount++;
+        uint256 tokenId = tokenCount;
+
+        nameToTokenId[name_] = tokenId;
+        tokenIdToHash[tokenId] = keccak256(abi.encodePacked(name_));
+        tokenIdToName[tokenId] = name_;
+
+        _safeMint(msg.sender, tokenId);
+
+        userMintCount[msg.sender]++;
+        if (userMintCount[msg.sender] == 1) {
+            emit FirstMint(msg.sender, tokenId);
+        }
+
+        if (primaryName[msg.sender] == 0) {
+            primaryName[msg.sender] = tokenId;
+            emit PrimaryNameSet(msg.sender, tokenId);
+        }
+
+        emit NameRegistered(tokenId, name_, msg.sender, finalPrice, hasDiscountNFT);
+    }
+
+    // ==================== DISCOUNT ====================
+    function hasDiscount(address user) public view returns (bool) {
+        return discountNFT.balanceOf(user) > 0;
+    }
+
+    function getPriceForUser(address user) public view returns (uint256) {
+        return hasDiscount(user) ? PRICE / 2 : PRICE;
+    }
+
+    function getDiscountPercent() public pure returns (uint256) {
+        return 500; // 50% в basis points
+    }
+
+    // ==================== TOKEN URI ====================
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(bytes(tokenIdToName[tokenId]).length != 0, "Nonexistent token");
+        string memory name_ = tokenIdToName[tokenId];
+
+        string memory json = string(abi.encodePacked(
+            '{"name":"', name_, '.hash",',
+            '"description":"A unique .hash name",',
+            '"image":"', STATIC_IMAGE, '",',
+            '"attributes":[{"trait_type":"Length","value":', _toString(bytes(name_).length), "}]}"));
+        string memory encoded = _base64(bytes(json));
+        return string(abi.encodePacked("data:application/json;base64,", encoded));
+    }
+
+    // ==================== PRIMARY NAME ====================
+    function setPrimaryName(uint256 tokenId) external {
+        require(ownerOf(tokenId) == msg.sender, "Not owner");
+        primaryName[msg.sender] = tokenId;
+        emit PrimaryNameSet(msg.sender, tokenId);
+    }
+
+    function getPrimaryName(address user) external view returns (string memory) {
+        uint256 tokenId = primaryName[user];
+        if (tokenId == 0) return "";
+        return tokenIdToName[tokenId];
+    }
+
+    // ==================== HELPERS ====================
+    function isNameTaken(string memory nameToCheck) external view returns (bool) {
+        return nameToTokenId[nameToCheck] != 0;
+    }
+
+    function getOwnerOfName(string memory nameToCheck) external view returns (address) {
+        uint256 tokenId = nameToTokenId[nameToCheck];
+        require(tokenId != 0, "Name not registered");
+        return ownerOf(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    // ==================== INTERNAL UTILITIES ====================
+    function _toString(uint256 value) internal pure returns (string memory) {
+        if (value == 0) return "0";
+        uint256 temp = value;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        bytes memory buffer = new bytes(digits);
+        while (value != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + value % 10));
+            value /= 10;
+        }
+        return string(buffer);
+    }
+
+    function _base64(bytes memory data) internal pure returns (string memory) {
+        if (data.length == 0) return "";
+
+        string memory TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        uint256 encodedLen = 4 * ((data.length + 2) / 3);
+
+        bytes memory result = new bytes(encodedLen);
+
+        uint256 i = 0;
+        uint256 j = 0;
+        for (; i + 3 <= data.length; i += 3) {
+            (uint256 a, uint256 b, uint256 c) = (uint8(data[i]), uint8(data[i+1]), uint8(data[i+2]));
+            uint256 n = (a << 16) | (b << 8) | c;
+
+            result[j++] = bytes(TABLE)[(n >> 18) & 0x3F];
+            result[j++] = bytes(TABLE)[(n >> 12) & 0x3F];
+            result[j++] = bytes(TABLE)[(n >> 6) & 0x3F];
+            result[j++] = bytes(TABLE)[n & 0x3F];
+        }
+
+        if (i + 1 == data.length) {
+            uint256 a = uint8(data[i]);
+            uint256 n = a << 16;
+
+            result[j++] = bytes(TABLE)[(n >> 18) & 0x3F];
+            result[j++] = bytes(TABLE)[(n >> 12) & 0x3F];
+            result[j++] = bytes('=')[0];
+            result[j++] = bytes('=')[0];
+        } else if (i + 2 == data.length) {
+            uint256 a = uint8(data[i]);
+            uint256 b = uint8(data[i+1]);
+            uint256 n = (a << 16) | (b << 8);
+
+            result[j++] = bytes(TABLE)[(n >> 18) & 0x3F];
+            result[j++] = bytes(TABLE)[(n >> 12) & 0x3F];
+            result[j++] = bytes(TABLE)[(n >> 6) & 0x3F];
+            result[j++] = bytes('=')[0];
+        }
+
+        return string(result);
+    }
+}

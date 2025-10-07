@@ -1,0 +1,69 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+
+contract CoffeeQuest {
+    uint256 public totalCoffee;
+    uint256 public totalTips;
+    address public topDonor;
+    uint256 public topDonorAmount;
+    address payable public owner;
+
+    mapping(address => uint256) public tipsFromUsers;
+    mapping(address => bool) public eligibleForRole; // Coffee Donors
+
+    uint256 public constant COFFEE_USD = 5 * 1e8; // $5, Chainlink 8 decimals
+
+    AggregatorV3Interface internal priceFeed;
+
+    event TipReceived(address indexed sender, uint256 amount);
+    event RoleGranted(address indexed donor);
+
+    constructor(address _priceFeed) {
+        owner = payable(msg.sender);
+        priceFeed = AggregatorV3Interface(_priceFeed);
+    }
+
+    function getEthPrice() public view returns (uint256) {
+        (, int256 price,,,) = priceFeed.latestRoundData();
+        require(price > 0, "Invalid price");
+        return uint256(price); // 8 decimals
+    }
+
+    function getCoffeePriceInETH() public view returns (uint256) {
+        uint256 ethPrice = getEthPrice(); // $/ETH * 1e8
+        uint256 coffeePriceETH = (COFFEE_USD * 1e18) / ethPrice;
+        return coffeePriceETH; // wei
+    }
+
+    function buyMeACoffee() public payable {
+        uint256 requiredETH = getCoffeePriceInETH();
+        require(msg.value >= requiredETH, "Send enough ETH (~$5)");
+
+        totalCoffee += 1;
+        totalTips += msg.value;
+        tipsFromUsers[msg.sender] += msg.value;
+
+        if (!eligibleForRole[msg.sender]) {
+            eligibleForRole[msg.sender] = true;
+            emit RoleGranted(msg.sender);
+        }
+
+        if (tipsFromUsers[msg.sender] > topDonorAmount) {
+            topDonor = msg.sender;
+            topDonorAmount = tipsFromUsers[msg.sender];
+        }
+
+        owner.transfer(msg.value);
+        emit TipReceived(msg.sender, msg.value);
+    }
+
+    function isEligibleForRole(address _user) public view returns (bool) {
+        return eligibleForRole[_user];
+    }
+
+    function getTotalTipsFromUser(address _user) public view returns (uint256) {
+        return tipsFromUsers[_user];
+    }
+}
