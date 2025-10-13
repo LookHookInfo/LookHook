@@ -61,7 +61,7 @@ export default function Forum() {
                 <span className="text-sm text-neutral-400 font-medium leading-none">
                   to{" "}
                   <a
-                    href="https://chums.chat/#/!ufaVoeToOzZqgzdbgV:chums.chat?via=chums.chat"
+                    href="https://chums.chat/#/!VOdEMBTNlpoBVIDtme:everscale.chat?via=everscale.chat"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="underline hover:text-white transition-colors"
