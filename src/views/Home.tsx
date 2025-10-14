@@ -9,6 +9,7 @@ import Tips from "@/partials/Tips";
 import { Domain } from "@/partials/Domain";
 import Drub from "@/partials/Drub";
 import Hashchain from "@/partials/Hashchain";
+import Airdrop from "@/partials/Airdrop";
 
 export default function Home() {
   return (
@@ -25,6 +26,9 @@ export default function Home() {
       </div>
       <div className="flex flex-col md:flex-row gap-4 my-8">
         <Drub className="w-full md:w-1/2" />
+        <Airdrop className="w-full md:w-1/2" />
+      </div>
+      <div className="flex flex-col md:flex-row gap-4 my-8">
         <Hashchain className="w-full md:w-1/2" />
       </div>
 
