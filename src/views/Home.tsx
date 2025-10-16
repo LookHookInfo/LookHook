@@ -20,15 +20,15 @@ export default function Home() {
       <Mining />
       <NFT />
 
-      <div className="flex flex-col md:flex-row gap-4 my-8">
+      <div className="flex flex-col md:flex-row gap-4 my-2">
         <Tips className="w-full md:w-1/2" />
         <Domain className="w-full md:w-1/2" />
       </div>
-      <div className="flex flex-col md:flex-row gap-4 my-8">
+      <div className="flex flex-col md:flex-row gap-4 my-2">
         <Drub className="w-full md:w-1/2" />
         <Airdrop className="w-full md:w-1/2" />
       </div>
-      <div className="flex flex-col md:flex-row gap-4 my-8">
+      <div className="flex flex-col md:flex-row gap-4 my-2">
         <Hashchain className="w-full md:w-1/2" />
       </div>
 

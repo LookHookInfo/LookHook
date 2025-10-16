@@ -1,7 +1,12 @@
 import { useActiveAccount } from "thirdweb/react";
 import { airdropContract } from "@/utils/contracts";
 import { useReadContract } from "thirdweb/react";
-import { prepareContractCall, toEther, getContractEvents, prepareEvent } from "thirdweb";
+import {
+  prepareContractCall,
+  toEther,
+  getContractEvents,
+  prepareEvent,
+} from "thirdweb";
 import { TransactionButton } from "thirdweb/react";
 import ConnectWalletButton from "@/components/ConnectWalletButton";
 import { useState, useEffect } from "react";
@@ -15,7 +20,11 @@ export default function Airdrop({ className }: AirdropProps) {
   const [remainingTime, setRemainingTime] = useState<string>("");
   const [claimedCount, setClaimedCount] = useState<number | null>(null);
 
-  const { data: userStatus, isLoading: isUserStatusLoading, refetch: refetchUserStatus } = useReadContract({
+  const {
+    data: userStatus,
+    isLoading: isUserStatusLoading,
+    refetch: refetchUserStatus,
+  } = useReadContract({
     contract: airdropContract,
     method: "getUserStatus",
     params: [account?.address || ""],
@@ -81,9 +90,9 @@ export default function Airdrop({ className }: AirdropProps) {
               className="rounded-xl w-full h-auto"
             />
             {claimedCount !== null && (
-                <span className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-lg">
-                    {claimedCount}
-                </span>
+              <span className="absolute bottom-16 left-6 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-lg">
+                🪂 {claimedCount}
+              </span>
             )}
 
             {/* Social links */}
