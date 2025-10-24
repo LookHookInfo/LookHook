@@ -179,6 +179,51 @@ function NameAchievement({ wallet }: { wallet: Wallet }) {
   );
 }
 
+// Stake NFT Achievement Component
+function StakeNftAchievement({ wallet }: { wallet: Wallet }) {
+  const ownerAddress = wallet.getAccount()?.address;
+
+  const { data: balance, isLoading: isBalanceLoading } = useReadContract({
+    contract: {
+      address: "0x22d015f90111d2b3174af23b2a607e467243b763",
+      chain: hashcoinContract.chain, // Assuming same chain as hashcoin
+      client: hashcoinContract.client, // Assuming same client as hashcoin
+    },
+    method: "function balanceOf(address owner) view returns (uint256)",
+    params: [ownerAddress || ""],
+    queryOptions: {
+      enabled: !!ownerAddress,
+    },
+  });
+
+  const hasNft = balance && balance > 0n;
+
+  if (!ownerAddress) {
+    return (
+      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Connect wallet to see achievement">
+        <span className="text-neutral-400 text-xs">?</span>
+      </div>
+    );
+  }
+
+  if (isBalanceLoading) {
+    return (
+      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Loading Stake NFT...">
+        <span className="text-neutral-400 text-xs">...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
+      title={hasNft ? "Stake NFT Owned" : "Stake NFT Not Owned"}
+    >
+      <img src="/Stake.webp" alt="Stake NFT Achievement" className={`size-10 ${!hasNft ? 'opacity-50' : ''}`} />
+    </div>
+  );
+}
+
 export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading, registeredName }: ProfileModalProps) {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -235,8 +280,12 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
               <EarlyNftAchievement wallet={wallet} />
               <TipsAchievement wallet={wallet} />
               <NameAchievement wallet={wallet} />
-              {[...Array(7)].map((_, index) => (
+              {[...Array(3)].map((_, index) => (
                 <div key={index} className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon"></div>
+              ))}
+              <StakeNftAchievement wallet={wallet} /> {/* New achievement at 9th position */}
+              {[...Array(3)].map((_, index) => (
+                <div key={index + 3} className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon"></div>
               ))}
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden" title="Soon">
                 <img src="/WL.webp" alt="WL Achievement" className="size-10 opacity-50" />

@@ -211,22 +211,22 @@ export function Domain({ className }: DomainProps) {
               {!account ? (
                 <ConnectWalletButton />
               ) : (
-                <button
-                  onClick={handleUnifiedClaim}
-                  disabled={isButtonDisabled}
-                  className={`w-full py-3 rounded-lg transition mb-4 ${
-                    isButtonDisabled ? "btn-disabled" : "btn-claim"
-                  }`}
-                >
-                  {isPending || isConfirming ? (
-                    <span className="flex items-center justify-center">
-                      <span className="animate-spin mr-2">⏳</span>
-                      Processing...
-                    </span>
-                  ) : (
-                    `🎉 Register for ${formattedPrice} HASH`
-                  )}
-                </button>
+                <div className="flex justify-center">
+                  <button
+                    onClick={handleUnifiedClaim}
+                    disabled={isButtonDisabled}
+                  className={`w-full py-3 rounded-lg transition mb-4 ${isButtonDisabled ? "btn-disabled" : "btn-full-width-green"}`}
+                  >
+                    {isPending || isConfirming ? (
+                      <span className="flex items-center justify-center">
+                        <span className="animate-spin mr-2">⏳</span>
+                        Processing...
+                      </span>
+                    ) : (
+                      `🎉 Register for ${formattedPrice} HASH`
+                    )}
+                  </button>
+                </div>
               )}
             </div>
           </div>

@@ -1,70 +1,91 @@
+import { useStakeContract } from "../hooks/useStakeContract";
+import { StakingSection } from "../components/StakingSection";
+
 export default function Features() {
+  const {
+    tokenSymbol,
+    stakeAPY,
+    walletBalance,
+    stakedBalance,
+    userStakes,
+    apr3M,
+    apr6M,
+    apr12M,
+    refreshBalances,
+    isApproved,
+    refetchAllowance,
+    poolInfo,
+    status, // Get status
+    setStatus, // Get setStatus
+  } = useStakeContract();
+
   return (
     <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
       <div className="lg:grid lg:grid-cols-12 lg:gap-16 lg:items-center">
-        <div className="lg:col-span-7">
-          <div className="grid grid-cols-12 gap-2 sm:gap-6 items-center lg:-translate-x-10">
-            <div className="col-span-4">
-              <img
-                className="rounded-xl"
-                src="https://ipfs.io/ipfs/QmTqqHTGhD2U6N32wEjR4WxKHVRopeDj7V4BeUwuwdzzTu"
-                alt="Features Image"
-                loading="lazy"
-              />
-            </div>
-
-            <div className="col-span-3">
-              <img
-                className="rounded-xl"
-                src="https://ipfs.io/ipfs/QmRHdKniyVZGmWp7MbKmFRCFdoU5XF8y3d3m8KU1aAaaA2"
-                alt="Features Image"
-                loading="lazy"
-              />
-            </div>
-
-            <div className="col-span-5">
-              <img
-                className="rounded-xl"
-                src="https://ipfs.io/ipfs/QmZFEJbinReQyaYPFEdUrG7usUAb2auvdwrkbtPCNwquk5"
-                alt="Features Image"
-                loading="lazy"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-5 sm:mt-10 lg:mt-0 lg:col-span-5">
+        <div className="mt-5 sm:mt-10 lg:mt-0 lg:col-span-4">
           <div className="space-y-6 sm:space-y-8">
             <div className="space-y-2 md:space-y-4">
               <h2 className="font-bold text-3xl lg:text-4xl text-gray-300 dark:text-neutral-200">
-                Look Hook Products
+                <img
+                  src="https://bafybeidlh52vnf2cfuvskmhdrixojelnavpyv2q34qmlz5bfutr2mjgvey.ipfs.dweb.link/"
+                  alt="Stake"
+                  className="rounded-xl w-16 h-16 inline-block mr-2 align-middle"
+                />
+                Lock Staking
               </h2>
               <p className="text-gray-400 dark:text-neutral-500">
-                Look Hook builds next-gen Web3 products using account
-                abstraction, gasless transactions, and on-chain identity —
-                seamless, secure, and user-centric.
+                A Web3 solution for secure token locking wit Simple logic,
+                transparent terms, and zero complexity — all on-chain and fully
+                under your control.
               </p>
+              <div className="flex justify-center items-center space-x-4 mt-4 gleam-effect">
+                <a href="https://app.galxe.com/quest/bAFdwDecXS6NRWsbYqVAgh/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white font-bold relative z-10">
+                  Galxe
+                </a>
+                <a href="https://quest.intract.io/project/mining-hash/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white font-bold relative z-10">
+                  Intract
+                </a>
+                <a href="https://guild.xyz/hashcoin/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white font-bold relative z-10">
+                  Guild
+                </a>
+              </div>
             </div>
+            {poolInfo && (
+              <div className="bg-black/30 rounded-xl p-4 space-y-2 border border-neutral-700">
+                <p className="text-sm text-neutral-400">
+                  Total rewards in pool:{" "}
+                  <span className="text-white font-semibold">
+                    {(poolInfo[1] / 10n ** 18n).toString()} {tokenSymbol || ""}
+                  </span>
+                </p>
+                <p className="text-sm text-neutral-400">
+                  Total staked by users:{" "}
+                  <span className="text-white font-semibold">
+                    {(poolInfo[0] / 10n ** 18n).toString()} {tokenSymbol || ""}
+                  </span>
+                </p>
+              </div>
+            )}
             <ul className="space-y-2 sm:space-y-4">
               {[
                 {
                   text: (
                     <>
-                      <span className="font-bold">Account</span> Abstraction
+                      <span className="font-bold">Fixed</span> Lock Periods
                     </>
                   ),
                 },
                 {
                   text: (
                     <>
-                      Gasless – users don’t pay for <span className="font-bold">gas</span>
+                      On-Chain <span className="font-bold">Transparency</span>
                     </>
                   ),
                 },
                 {
                   text: (
                     <>
-                      <span className="font-bold">Decentralized</span> infrastructure
+                      <span className="font-bold">Simple</span> & Secure
                     </>
                   ),
                 },
@@ -90,6 +111,22 @@ export default function Features() {
             </ul>
           </div>
         </div>
+        <StakingSection
+          className="lg:col-span-8"
+          tokenSymbol={tokenSymbol}
+          stakeAPY={stakeAPY}
+          walletBalance={walletBalance}
+          stakedBalance={stakedBalance}
+          userStakes={userStakes}
+          apr3M={apr3M}
+          apr6M={apr6M}
+          apr12M={apr12M}
+          refreshBalances={refreshBalances}
+          isApproved={isApproved}
+          refetchAllowance={refetchAllowance}
+          status={status}
+          setStatus={setStatus}
+        />
       </div>
     </div>
   );
