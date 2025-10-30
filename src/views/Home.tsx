@@ -1,4 +1,4 @@
-import Mining from "@/partials/Mining";
+import OldMining from "@/partials/OldMining";
 import NFT from "@/partials/NFT";
 import Features from "@/partials/Features";
 import Hero from "@/partials/Hero";
@@ -10,6 +10,7 @@ import { Domain } from "@/partials/Domain";
 import Drub from "@/partials/Drub";
 import Hashchain from "@/partials/Hashchain";
 import Airdrop from "@/partials/Airdrop";
+import Mining from "@/partials/Mining";
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
       <Features />
       <Forum />
       <Mining />
+      <OldMining />
       <NFT />
 
       <div className="flex flex-col md:flex-row gap-4 my-2">
