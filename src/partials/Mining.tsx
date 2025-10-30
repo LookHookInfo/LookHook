@@ -1,38 +1,67 @@
 import { useState } from "react";
 import {
   MediaRenderer,
-  TransactionButton,
   useActiveAccount,
   useReadContract,
 } from "thirdweb/react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getNFTs, setApprovalForAll } from "thirdweb/extensions/erc1155";
+import { useQuery } from "@tanstack/react-query";
+import { getNFTs } from "thirdweb/extensions/erc1155";
 import { balanceOf as erc20BalanceOf } from "thirdweb/extensions/erc20";
-import { prepareContractCall, ThirdwebContract, NFT } from "thirdweb";
+import { ThirdwebContract, NFT } from "thirdweb";
 import { formatUnits } from "viem";
 
 import { client } from "../lib/thirdweb/client";
 import { contractTools, contractStaking, usdcContract } from "../utils/contracts";
-import { useToolCardLogic } from "@/hooks/useToolCardLogic";
+import ConnectWalletButton from "@/components/ConnectWalletButton";
+import { ToolDetailModal } from "@/components/ToolDetailModal";
 
 // #region Main Game Component
 function Game() {
   const account = useActiveAccount();
+  const [selectedTool, setSelectedTool] = useState<NFT | null>(null);
 
-  if (!account) {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <h3 className="text-xl font-semibold">
-          Please connect your wallet to play.
-        </h3>
-      </div>
-    );
-  }
+  const { data: usdcBalanceData } = useReadContract(erc20BalanceOf, {
+    contract: usdcContract,
+    address: account?.address || "",
+    queryOptions: { enabled: !!account },
+  });
+  const usdcBalance = usdcBalanceData || 0n;
 
-  return <GameContent address={account.address} />;
+  return (
+    <div className="relative">
+      <GameContent
+        account={account}
+        onSelectTool={setSelectedTool}
+        usdcBalance={usdcBalance}
+      />
+      {selectedTool && account && (
+        <ToolDetailModal
+          tool={selectedTool}
+          address={account.address}
+          contractTools={contractTools}
+          contractStaking={contractStaking}
+          onClose={() => setSelectedTool(null)}
+          usdcBalance={usdcBalance}
+        />
+      )}
+      {!account && (
+        <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center rounded-xl z-20">
+          <ConnectWalletButton />
+        </div>
+      )}
+    </div>
+  );
 }
 
-function GameContent({ address }: { address: string }) {
+function GameContent({ 
+  account,
+  onSelectTool,
+  usdcBalance,
+}: { 
+  account: ReturnType<typeof useActiveAccount> | undefined;
+  onSelectTool: (tool: NFT) => void;
+  usdcBalance: bigint;
+}) {
   const { data: allTools, isLoading: isLoadingTools } = useQuery({
     queryKey: ["allTools"],
     queryFn: () => getNFTs({ contract: contractTools }),
@@ -40,19 +69,19 @@ function GameContent({ address }: { address: string }) {
 
   if (isLoadingTools) {
     return (
-      <div className="flex justify-center items-center h-full">
+      <div className="flex justify-center items-center h-full min-h-[400px]">
         <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={`${!account ? 'pointer-events-none' : ''}`}>
       <ToolGrid
-        address={address}
+        address={account?.address || ""}
         allTools={allTools}
-        contractTools={contractTools}
-        contractStaking={contractStaking}
+        onSelectTool={onSelectTool}
+        usdcBalance={usdcBalance}
       />
     </div>
   );
@@ -79,22 +108,14 @@ function Section({
 function ToolGrid({
   address,
   allTools,
-  contractTools,
-  contractStaking,
+  onSelectTool,
+  usdcBalance,
 }: {
   address: string;
   allTools: NFT[] | undefined;
-  contractTools: ThirdwebContract;
-  contractStaking: ThirdwebContract;
+  onSelectTool: (tool: NFT) => void;
+  usdcBalance: bigint;
 }) {
-  const { data: usdcBalanceData } = useReadContract(erc20BalanceOf, {
-    contract: usdcContract,
-    address: address,
-    queryOptions: { enabled: !!address },
-  });
-
-  const usdcBalance = usdcBalanceData || 0n;
-
   const titleWithBalance = (
     <div className="flex justify-between items-center">
       <span>Inventory</span>
@@ -118,10 +139,7 @@ function ToolGrid({
           <ToolCard
             key={tool.id.toString()}
             tool={tool}
-            address={address}
-            contractTools={contractTools}
-            contractStaking={contractStaking}
-            usdcBalance={usdcBalance}
+            onClick={() => onSelectTool(tool)}
           />
         ))}
       </div>
@@ -131,138 +149,22 @@ function ToolGrid({
 
 function ToolCard({
   tool,
-  address,
-  contractTools,
-  contractStaking,
-  usdcBalance,
+  onClick,
 }: {
   tool: NFT;
-  address: string;
-  contractTools: ThirdwebContract;
-  contractStaking: ThirdwebContract;
-  usdcBalance: bigint;
+  onClick: () => void;
 }) {
-  const {
-    quantity,
-    setQuantity,
-    account,
-    queryClient,
-    isLoading,
-    ownAmount,
-    stakedAmount,
-    claimableRewards,
-    totalPrice,
-    isApprovedForStaking,
-    handleStake,
-    refetchStakingApproval,
-    isBuying,
-    handleBuy,
-  } = useToolCardLogic({ tool, address, contractTools, contractStaking });
-
-  if (isLoading) {
-    return (
-      <div className="border border-neutral-800 rounded-lg p-4 min-h-[300px] flex justify-center items-center">
-        <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
-      </div>
-    );
-  }
-
-  const hasInsufficientFunds = usdcBalance < totalPrice;
-
   return (
-    <div className="border border-neutral-800 rounded-lg p-4">
-      <p className="font-semibold">{tool.metadata.name}</p>
+    <div 
+      className="border border-neutral-800 rounded-lg p-4 cursor-pointer hover:border-neutral-600 transition-colors duration-200"
+      onClick={onClick}
+    >
+      <p className="font-semibold truncate">{tool.metadata.name}</p>
       <MediaRenderer
         client={client}
         src={tool.metadata.image}
-        className="w-full h-36 mt-2 rounded-lg"
+        className="w-full h-36 mt-2 rounded-lg aspect-square object-cover"
       />
-
-      <p className="text-sm mt-4">In Wallet: {ownAmount.toString()}</p>
-      <p className="text-sm">Staked: {stakedAmount.toString()}</p>
-
-      <input
-        type="number"
-        value={quantity}
-        onChange={(e) => setQuantity(e.target.value)}
-        min={1}
-        className="w-full mt-4 p-2 rounded-md bg-neutral-800 text-white text-sm"
-        placeholder="Quantity"
-      />
-
-      <div className="flex flex-col mt-4 gap-2">
-        <button
-          onClick={handleBuy}
-          disabled={!account || isBuying || hasInsufficientFunds}
-          className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isBuying
-            ? "Processing..."
-            : hasInsufficientFunds
-            ? "Insufficient USDC"
-            : `Buy $${formatUnits(totalPrice, 6)}`}
-        </button>
-
-        {isApprovedForStaking ? (
-          <TransactionButton
-            transaction={handleStake}
-            disabled={ownAmount === 0n}
-            className="w-full"
-            onTransactionConfirmed={() => queryClient.invalidateQueries()}
-          >
-            Equip
-          </TransactionButton>
-        ) : (
-          <TransactionButton
-            transaction={() => {
-              if (!account) throw new Error("Not connected");
-              return setApprovalForAll({
-                contract: contractTools,
-                operator: contractStaking.address,
-                approved: true,
-              });
-            }}
-            disabled={ownAmount === 0n}
-            className="w-full"
-            onTransactionConfirmed={() => refetchStakingApproval()}
-          >
-            Approve
-          </TransactionButton>
-        )}
-
-        <TransactionButton
-          transaction={() =>
-            prepareContractCall({
-              contract: contractStaking,
-              method: "function withdraw(uint256, uint64)",
-              params: [tool.id, BigInt(quantity)],
-            })
-          }
-          disabled={stakedAmount === 0n}
-          className="w-full"
-          onTransactionConfirmed={() => queryClient.invalidateQueries()}
-        >
-          Unequip
-        </TransactionButton>
-
-        <TransactionButton
-          transaction={() =>
-            prepareContractCall({
-              contract: contractStaking,
-              method: "function claimRewards(uint256)",
-              params: [tool.id],
-            })
-          }
-          disabled={claimableRewards === 0n}
-          className="w-full"
-          onTransactionConfirmed={() => queryClient.invalidateQueries()}
-        >
-          Claim{" "}
-          {claimableRewards
-            ? `(${parseFloat(formatUnits(claimableRewards, 18)).toFixed(4)})`
-            : ""}
-        </TransactionButton>
-      </div>
     </div>
   );
 }
