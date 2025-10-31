@@ -20,18 +20,13 @@ export default function Airdrop({ className }: AirdropProps) {
   const [remainingTime, setRemainingTime] = useState<string>("");
   const [claimedCount, setClaimedCount] = useState<number | null>(null);
 
-  const {
-    data: userStatus,
-    isLoading: isUserStatusLoading,
-    refetch: refetchUserStatus,
-  } = useReadContract({
-    contract: airdropContract,
-    method: "getUserStatus",
-    params: [account?.address || ""],
-    queryOptions: {
-      enabled: !!account,
-    },
-  });
+  const { data: userStatus, isLoading: isUserStatusLoading, refetch: refetchUserStatus } =
+    useReadContract({
+      contract: airdropContract,
+      method: "getUserStatus",
+      params: [account?.address || ""],
+      queryOptions: { enabled: !!account },
+    });
 
   const { data: claimDeadline } = useReadContract({
     contract: airdropContract,
@@ -82,20 +77,28 @@ export default function Airdrop({ className }: AirdropProps) {
     <section className={`w-full px-4 py-8 text-white ${className ?? ""}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* Image and Socials */}
           <div className="w-full lg:w-[200px] flex flex-col items-center relative">
+            <div
+              className="absolute -top-2 -left-2
+                         bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
+                         text-white px-3 py-1 text-xs font-bold rounded-full
+                         shadow-lg z-10"
+            >
+              Base
+            </div>
+
             <img
               src="/Airdrop.png"
               alt="HashCoin NFT"
               className="rounded-xl w-full h-auto"
             />
+
             {claimedCount !== null && (
               <span className="absolute bottom-16 left-6 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-lg">
                 🪂 {claimedCount}
               </span>
             )}
 
-            {/* Social links */}
             <div className="pt-6 flex flex-wrap items-center justify-center gap-2">
               <span className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-500 text-gray-500 bg-transparent">
                 {remainingTime}
@@ -103,9 +106,8 @@ export default function Airdrop({ className }: AirdropProps) {
             </div>
           </div>
 
-          {/* Text content */}
           <div className="flex-1 space-y-6">
-            <div className="flex justify-between items-center flex-wrap gap-2">
+            <div className="flex justify-between items-center flex-wrap gap-2 relative">
               <h2 className="text-3xl font-bold text-white">Airdrop</h2>
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center justify-center px-2 py-0.5 h-6 text-xs font-semibold bg-black text-white border border-white rounded">
@@ -136,14 +138,11 @@ export default function Airdrop({ className }: AirdropProps) {
             <div className="mt-4 w-full">
               {account ? (
                 isUserStatusLoading ? (
-                  <button
-                    disabled
-                    className="w-full py-3 rounded-lg transition btn-disabled"
-                  >
+                  <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
                     Loading...
                   </button>
                 ) : userStatus ? (
-                  userStatus[2] ? ( // canClaim
+                  userStatus[2] ? (
                     <TransactionButton
                       transaction={() =>
                         prepareContractCall({
@@ -156,26 +155,17 @@ export default function Airdrop({ className }: AirdropProps) {
                     >
                       {`Claim 🎉 ${toEther(userStatus[0])} HASH`}
                     </TransactionButton>
-                  ) : userStatus[1] ? ( // claimed
-                    <button
-                      disabled
-                      className="w-full py-3 rounded-lg transition btn-disabled"
-                    >
+                  ) : userStatus[1] ? (
+                    <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
                       Claimed 🤝
                     </button>
                   ) : (
-                    <button
-                      disabled
-                      className="w-full py-3 rounded-lg transition btn-disabled"
-                    >
+                    <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
                       Not Eligible
                     </button>
                   )
                 ) : (
-                  <button
-                    disabled
-                    className="w-full py-3 rounded-lg transition btn-disabled"
-                  >
+                  <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
                     Could not retrieve your status.
                   </button>
                 )

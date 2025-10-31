@@ -62,7 +62,13 @@ export function Domain({ className }: DomainProps) {
       cancelled = true;
       clearTimeout(handler);
     };
-  }, [name, isNameTaken, maxNameLength, maxNamesPerAddress, registeredNamesCount]);
+  }, [
+    name,
+    isNameTaken,
+    maxNameLength,
+    maxNamesPerAddress,
+    registeredNamesCount,
+  ]);
 
   const handleUnifiedClaim = useCallback(() => {
     unifiedClaim(name);
@@ -87,8 +93,15 @@ export function Domain({ className }: DomainProps) {
     <section className={`w-full px-4 py-8 text-white ${className ?? ""}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* Image and Socials — уменьшено */}
-          <div className="w-full lg:w-[150px] flex flex-col items-center">
+          <div className="w-full lg:w-[150px] flex flex-col items-center relative">
+            <div
+              className="absolute -top-2 -left-2
+                         bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
+                         text-white px-3 py-1 text-xs font-bold rounded-full
+                         shadow-lg z-10"
+            >
+              Base
+            </div>
             <img
               src="https://bafybeid4a5ecvk3pvunzk6exnazh6u2uuhlvjlcucpg3lm3sa5dskc6wbm.ipfs.w3s.link/namehash.png"
               alt="HashCoin NFT"
@@ -98,8 +111,9 @@ export function Domain({ className }: DomainProps) {
               className="pt-6 flex flex-wrap items-center justify-center gap-2"
               title="only for holders of the NFT Plasma Cat collection"
             >
-              {price !== null && displayPrice !== null && (
-                price && displayPrice && displayPrice < price ? (
+              {price !== null &&
+                displayPrice !== null &&
+                (price && displayPrice && displayPrice < price ? (
                   <span className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-green-500 text-green-500">
                     <svg
                       className="w-4 h-4 mr-2"
@@ -121,14 +135,12 @@ export function Domain({ className }: DomainProps) {
                   <span className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-500 text-gray-500 opacity-50">
                     50% Inactive
                   </span>
-                )
-              )}
+                ))}
             </div>
           </div>
 
-          {/* Text content */}
           <div className="flex-1 space-y-6 w-full">
-            <div className="flex justify-between items-center flex-wrap gap-2">
+            <div className="flex justify-between items-center flex-wrap gap-2 relative">
               <h2 className="text-3xl font-bold text-white">Name Hash</h2>
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center justify-center px-2 py-0.5 h-6 text-xs font-semibold bg-black text-white border border-white rounded whitespace-nowrap">
@@ -139,7 +151,6 @@ export function Domain({ className }: DomainProps) {
 
             <p className="text-neutral-400">Forever on-chain.</p>
 
-            {/* Name Registration UI */}
             <div className="mt-4 w-full text-center">
               <div className="relative w-full mb-4 flex items-center input-style rounded-lg">
                 <input
@@ -151,7 +162,6 @@ export function Domain({ className }: DomainProps) {
                 />
                 <span className="pr-3 text-lg text-neutral-400">.hash</span>
 
-                {/* Иконка статуса — фиксированное место */}
                 <div className="absolute inset-y-0 right-0 flex items-center pr-16 w-7 h-7">
                   {status === "checking" && (
                     <svg
@@ -215,7 +225,9 @@ export function Domain({ className }: DomainProps) {
                   <button
                     onClick={handleUnifiedClaim}
                     disabled={isButtonDisabled}
-                  className={`w-full py-3 rounded-lg transition mb-4 ${isButtonDisabled ? "btn-disabled" : "btn-full-width-green"}`}
+                    className={`w-full py-3 rounded-lg transition mb-4 ${
+                      isButtonDisabled ? "btn-disabled" : "btn-full-width-green"
+                    }`}
                   >
                     {isPending || isConfirming ? (
                       <span className="flex items-center justify-center">

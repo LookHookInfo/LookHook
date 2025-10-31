@@ -23,7 +23,16 @@ export default function Features() {
     <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
       <div className="lg:grid lg:grid-cols-12 lg:gap-16 lg:items-center">
         <div className="mt-5 sm:mt-10 lg:mt-0 lg:col-span-4">
-          <div className="space-y-6 sm:space-y-8">
+          <div className="space-y-6 sm:space-y-8 relative">
+            <div
+              className="absolute -top-3 left-1/2 -translate-x-1/2
+                     bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
+                     text-white px-3 py-1 text-xs font-bold rounded-full
+                     shadow-lg"
+            >
+              Base
+            </div>
+
             <div className="space-y-2 md:space-y-4">
               <h2 className="font-bold text-3xl lg:text-4xl text-gray-300 dark:text-neutral-200">
                 <img
@@ -39,13 +48,28 @@ export default function Features() {
                 under your control.
               </p>
               <div className="flex justify-center items-center space-x-4 mt-4 gleam-effect">
-                <a href="https://app.galxe.com/quest/bAFdwDecXS6NRWsbYqVAgh/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white font-bold relative z-10">
+                <a
+                  href="https://app.galxe.com/quest/bAFdwDecXS6NRWsbYqVAgh/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-white font-bold relative z-10"
+                >
                   Galxe
                 </a>
-                <a href="https://quest.intract.io/project/mining-hash/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white font-bold relative z-10">
+                <a
+                  href="https://quest.intract.io/project/mining-hash/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-white font-bold relative z-10"
+                >
                   Intract
                 </a>
-                <a href="https://guild.xyz/hashcoin/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white font-bold relative z-10">
+                <a
+                  href="https://guild.xyz/hashcoin/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-white font-bold relative z-10"
+                >
                   Guild
                 </a>
               </div>

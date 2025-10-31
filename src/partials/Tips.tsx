@@ -17,12 +17,12 @@ export default function Tips({ className }: TipsProps) {
   const [coffeeCount, setCoffeeCount] = useState(1);
   const COFFEE_PRICE_USD = 5;
 
-  // --- Fetch data from the new contract functions ---
-  const { data: totalCoffee, isLoading: isLoadingTotalCoffee } = useReadContract({
-    contract: buyMeACoffeeContract,
-    method: "totalCoffee",
-    params: [],
-  });
+  const { data: totalCoffee, isLoading: isLoadingTotalCoffee } =
+    useReadContract({
+      contract: buyMeACoffeeContract,
+      method: "totalCoffee",
+      params: [],
+    });
 
   const { data: topDonor, isLoading: isLoadingTopDonor } = useReadContract({
     contract: buyMeACoffeeContract,
@@ -36,23 +36,28 @@ export default function Tips({ className }: TipsProps) {
     params: [],
   });
 
-  const { data: coffeePriceInETH, isLoading: isLoadingCoffeePrice } = useReadContract({
-    contract: buyMeACoffeeContract,
-    method: "getCoffeePriceInETH",
-    params: [],
-  });
+  const { data: coffeePriceInETH, isLoading: isLoadingCoffeePrice } =
+    useReadContract({
+      contract: buyMeACoffeeContract,
+      method: "getCoffeePriceInETH",
+      params: [],
+    });
 
-  const { data: topDonorName, isLoading: isLoadingTopDonorName } = useReadContract({
-    contract: nameContract,
-    method: "function getPrimaryName(address user) view returns (string)",
-    params: [topDonor!],
-    queryOptions: {
-      enabled: !!topDonor && topDonor !== "0x0000000000000000000000000000000000000000",
-    },
-  });
+  const { data: topDonorName, isLoading: isLoadingTopDonorName } =
+    useReadContract({
+      contract: nameContract,
+      method: "function getPrimaryName(address user) view returns (string)",
+      params: [topDonor!],
+      queryOptions: {
+        enabled:
+          !!topDonor &&
+          topDonor !== "0x0000000000000000000000000000000000000000",
+      },
+    });
 
-  // --- Calculate derived values ---
-  const totalTipInWei = coffeePriceInETH ? BigInt(coffeeCount) * coffeePriceInETH : 0n;
+  const totalTipInWei = coffeePriceInETH
+    ? BigInt(coffeeCount) * coffeePriceInETH
+    : 0n;
   const totalTipInETH = toEther(totalTipInWei);
   const usdValue = COFFEE_PRICE_USD * coffeeCount;
 
@@ -74,13 +79,22 @@ export default function Tips({ className }: TipsProps) {
     <section className={`w-full px-4 py-8 text-white ${className ?? ""}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
-          {/* Image and Socials */}
-          <div className="w-full lg:w-[150px] flex flex-col items-center">
+          <div className="w-full lg:w-[150px] flex flex-col items-center relative">
+            <div
+              className="absolute -top-2 -left-2
+                         bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
+                         text-white px-3 py-1 text-xs font-bold rounded-full
+                         shadow-lg z-10"
+            >
+              Base
+            </div>
+
             <img
               src="https://ipfs.io/ipfs/Qmb9uRpG5dpCfZ8mYCpcBqubnj4mRcrbTQpuniMRYXxXM3"
               alt="HashCoin NFT"
               className="rounded-xl w-full h-auto"
             />
+
             <div className="pt-6 flex flex-wrap items-center justify-center gap-2">
               {isLoadingTopDonor || (isLoadingTopDonorName && topDonor) ? (
                 <span className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-500 text-gray-500">
@@ -101,7 +115,6 @@ export default function Tips({ className }: TipsProps) {
             </div>
           </div>
 
-          {/* Text content and Tipping UI */}
           <div className="flex-1 space-y-6">
             <div className="flex justify-between items-center flex-wrap gap-2">
               <h2 className="text-3xl font-bold text-white">Tips</h2>
@@ -120,7 +133,6 @@ export default function Tips({ className }: TipsProps) {
 
             <p className="text-neutral-400">On-Chain Coffee</p>
 
-            {/* Coffee Counter */}
             <div className="flex items-center justify-center gap-2 w-full mb-4">
               <button
                 onClick={() => setCoffeeCount((prev) => Math.max(1, prev - 1))}
@@ -130,7 +142,12 @@ export default function Tips({ className }: TipsProps) {
               </button>
               <span className="text-lg font-semibold text-white flex-grow text-center">
                 {coffeeCount} Coffee{coffeeCount > 1 ? "s" : ""}
-                {usdValue && <span className="text-sm text-neutral-400"> (~${usdValue})</span>}
+                {usdValue && (
+                  <span className="text-sm text-neutral-400">
+                    {" "}
+                    (~${usdValue})
+                  </span>
+                )}
               </span>
               <button
                 onClick={() => setCoffeeCount((prev) => prev + 1)}
@@ -150,19 +167,17 @@ export default function Tips({ className }: TipsProps) {
                     value: totalTipInWei,
                   })
                 }
-                onTransactionSent={() => {
-                  setCoffeeCount(1);
-                }}
-                onError={(error) => {
-                  console.error("Transaction error", error);
-                }}
+                onTransactionSent={() => setCoffeeCount(1)}
+                onError={(error) => console.error("Transaction error", error)}
                 className={`!w-full !py-3 !rounded-lg !transition !mb-4 !text-white ${
                   account
                     ? "!bg-[#4CAF50] !hover:bg-[#45a049]"
                     : "!bg-[#555] !text-[#aaa] !cursor-not-allowed"
                 }`}
               >
-                {isLoadingCoffeePrice ? 'Loading...' : `Send Coffee (${parseFloat(totalTipInETH).toFixed(4)} ETH)`}
+                {isLoadingCoffeePrice
+                  ? "Loading..."
+                  : `Send Coffee (${parseFloat(totalTipInETH).toFixed(4)} ETH)`}
               </TransactionButton>
             ) : (
               <div className="flex flex-col items-center gap-y-3">

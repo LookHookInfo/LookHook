@@ -1,4 +1,3 @@
-// partials/Hashchain.tsx
 interface HashchainProps {
   className?: string;
 }
@@ -8,15 +7,20 @@ export default function Hashchain({ className }: HashchainProps) {
     <section className={`w-full px-4 py-8 text-white ${className ?? ""}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* Image and Socials */}
-          <div className="w-full lg:w-[200px] flex flex-col items-center">
+          <div className="w-full lg:w-[200px] flex flex-col items-center relative">
+            <div
+              className="absolute -top-2 -left-2
+                         bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
+                         text-white px-3 py-1 text-xs font-bold rounded-full
+                         shadow-lg z-10"
+            >
+              Hash
+            </div>
             <img
               src="https://bafybeigxq4wv2jmp5axr4zkux6yksji35sravcjytxj6udstvp4vseskpa.ipfs.w3s.link/Dcoin.png"
               alt="HashCoin NFT"
               className="rounded-xl w-full h-auto"
             />
-
-            {/* Social links */}
             <div className="pt-6 flex flex-wrap items-center justify-center gap-2">
               <span className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-500 text-gray-500 bg-transparent">
                 Vercel App
@@ -24,7 +28,6 @@ export default function Hashchain({ className }: HashchainProps) {
             </div>
           </div>
 
-          {/* Text content */}
           <div className="flex-1 space-y-6">
             <div className="flex justify-between items-center flex-wrap gap-2">
               <h2 className="text-3xl font-bold text-white">Hash Chain</h2>

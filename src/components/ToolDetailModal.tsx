@@ -130,7 +130,7 @@ export function ToolDetailModal({
                 <TransactionButton
                   transaction={() => handleStake(BigInt(quantity))}
                   disabled={ownAmount === 0n || quantity > ownAmount}
-                  className="w-full"
+                  className="w-full justify-center px-4 py-2 text-sm font-medium bg-neutral-700 border border-neutral-600 text-white rounded-md hover:bg-neutral-600 transition-colors disabled:opacity-50"
                   onTransactionConfirmed={() => queryClient.invalidateQueries()}
                 >
                   Equip {ownAmount > 0n ? `(${ownAmount.toString()})` : ""}
@@ -146,7 +146,7 @@ export function ToolDetailModal({
                     });
                   }}
                   disabled={ownAmount === 0n}
-                  className="w-full"
+                  className="w-full justify-center px-4 py-2 text-sm font-medium bg-neutral-700 border border-neutral-600 text-white rounded-md hover:bg-neutral-600 transition-colors disabled:opacity-50"
                   onTransactionConfirmed={() => refetchStakingApproval()}
                 >
                   Approve
@@ -163,7 +163,7 @@ export function ToolDetailModal({
                   })
                 }
                 disabled={stakedAmount === 0n || quantity > stakedAmount}
-                className="w-full"
+                className="w-full justify-center px-4 py-2 text-sm font-medium bg-neutral-700 border border-neutral-600 text-white rounded-md hover:bg-neutral-600 transition-colors disabled:opacity-50"
                 onTransactionConfirmed={() => queryClient.invalidateQueries()}
               >
                 Unequip{" "}
@@ -180,7 +180,7 @@ export function ToolDetailModal({
                   })
                 }
                 disabled={claimableRewards === 0n}
-                className="w-full"
+                className="w-full justify-center px-4 py-2 text-sm font-medium bg-neutral-700 border border-neutral-600 text-white rounded-md hover:bg-neutral-600 transition-colors disabled:opacity-50"
                 onTransactionConfirmed={() => queryClient.invalidateQueries()}
               >
                 Claim{" "}

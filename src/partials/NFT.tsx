@@ -1,4 +1,3 @@
-// partials/NFTCard.tsx
 interface NFTCardProps {
   className?: string;
 }
@@ -8,24 +7,34 @@ export default function NFTCard({ className }: NFTCardProps) {
     <section className={`w-full px-4 py-8 text-white ${className ?? ""}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
+          
           {/* Image and Links */}
-          <div className="w-full lg:w-[200px] flex flex-col items-center">
+          <div className="w-full lg:w-[140px] flex flex-col items-center relative">
+            <div
+              className="absolute -top-2 -left-2
+                         bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
+                         text-white px-3 py-1 text-xs font-bold rounded-full
+                         shadow-lg z-10"
+            >
+              Base
+            </div>
+
             <img
               src="https://ipfs.io/ipfs/QmSNSLzJwsVye4QJqdjTo4oF5XnvWg5uWGKUY74jHBAStw"
               alt="NFT Claim App"
-              className="rounded-xl w-full h-auto"
+              className="rounded-xl w-full h-auto scale-[0.]"
             />
 
-            {/* Social links */}
-            <div className="pt-6 flex flex-wrap items-center justify-center gap-2">
-              <a
-                href="https://mintapp.fun"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
-              >
-                Website
-              </a>
+            <a
+              href="https://mintapp.fun"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
+            >
+              Website
+            </a>
+
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
               <a
                 href="https://t.me/ChainInside/1824"
                 target="_blank"
@@ -37,6 +46,7 @@ export default function NFTCard({ className }: NFTCardProps) {
                   <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
                 </svg>
               </a>
+
               <a
                 href="https://x.com/ForumChain/status/1922984506320998468"
                 target="_blank"
@@ -48,6 +58,7 @@ export default function NFTCard({ className }: NFTCardProps) {
                   <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932Z" />
                 </svg>
               </a>
+
               <a
                 href="https://discord.com/invite/D55sWhNgcb"
                 target="_blank"
@@ -64,7 +75,7 @@ export default function NFTCard({ className }: NFTCardProps) {
 
           {/* Text content */}
           <div className="flex-1 space-y-6">
-            <div className="flex justify-between items-center flex-wrap gap-2">
+            <div className="flex justify-between items-center flex-wrap gap-2 relative">
               <h2 className="text-3xl font-bold text-white">NFT Claim</h2>
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center justify-center px-2 py-0.5 h-6 text-xs font-semibold bg-black text-white border border-white rounded">
@@ -74,9 +85,9 @@ export default function NFTCard({ className }: NFTCardProps) {
             </div>
 
             <p className="text-neutral-400">
-              <strong>Plasma Cat</strong> is an NFT collection that grants access to community
-              events, quests, and early access to product features. After the
-              mint, we will airdrop the <strong>$CATSH</strong> meme token.
+              <strong>Plasma Cat</strong> is an NFT collection that grants
+              access to community events, quests, and early access to product
+              features. After the mint, we will airdrop the <strong>$CATSH</strong> meme token.
             </p>
           </div>
         </div>

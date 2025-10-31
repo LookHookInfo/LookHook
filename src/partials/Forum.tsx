@@ -1,4 +1,3 @@
-// partials/Forum.tsx
 interface ForumProps {
   className?: string;
 }
@@ -8,40 +7,43 @@ export default function Forum({ className }: ForumProps) {
     <section className={`w-full px-4 py-8 text-white ${className ?? ""}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
+
           {/* Image and Links */}
-          <div className="w-full lg:w-[200px] flex flex-col items-center">
+          <div className="w-full lg:w-[140px] flex flex-col items-center relative">
             <img
               src="https://ipfs.io/ipfs/QmeWw8gp6H2RicpFG6aFhS77Wf9mZLpjQ3hubi8L1Bs4Lx"
               alt="Blockchain Forum"
-              className="rounded-xl w-full h-auto"
+              className="rounded-xl w-full h-auto scale-90"
             />
 
-            {/* Social links */}
-            <div className="pt-6 flex flex-wrap items-center justify-center gap-2">
-              <a
-                href="https://t.me/ChainInside"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
-              >
-                Forum
-              </a>
+            <a
+              href="https://t.me/ChainInside"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
+            >
+              Forum
+            </a>
+
+            {/* Social links under button */}
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
               <a
                 href="https://x.com/ForumChain"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center size-8 rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
+                className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
               >
                 <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
                   <title>X</title>
                   <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932Z" />
                 </svg>
               </a>
+
               <a
                 href="https://discord.com/invite/D55sWhNgcb"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center size-8 rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
+                className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
               >
                 <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
                   <title>Discord</title>
