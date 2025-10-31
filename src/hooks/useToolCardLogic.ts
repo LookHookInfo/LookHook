@@ -15,7 +15,7 @@ import {
   sendAndConfirmTransaction,
 } from "thirdweb";
 import { formatUnits } from "viem";
-import { usdcContract, contractTools } from "@/utils/contracts";
+import { usdcContract } from "@/utils/contracts";
 
 // Props for the hook
 interface UseToolCardLogicProps {
@@ -106,7 +106,7 @@ export function useToolCardLogic({
     return prepareContractCall({
       contract: contractStaking,
       method: "function stake(uint256 _tokenId, uint64 _amount)",
-      params: [tool.id, BigInt(quantity)],
+      params: [tool.id, amount],
     });
   };
 
@@ -152,7 +152,6 @@ export function useToolCardLogic({
 
   return {
     quantity,
-    setQuantity,
     incrementQuantity,
     decrementQuantity,
     account,
@@ -162,14 +161,9 @@ export function useToolCardLogic({
     stakedAmount,
     claimableRewards,
     totalPrice,
-    isTokenApprovedForBuy,
     isApprovedForStaking,
-    quantityAsBigInt,
     handleStake,
     refetchStakingApproval,
-    refetchTokenAllowance,
-    contractTools,
-    contractStaking,
     isBuying,
     handleBuy,
   };

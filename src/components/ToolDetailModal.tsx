@@ -25,7 +25,6 @@ export function ToolDetailModal({
 }: ToolDetailModalProps) {
   const {
     quantity,
-    setQuantity,
     account,
     queryClient,
     isLoading,

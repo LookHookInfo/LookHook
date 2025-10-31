@@ -1,4 +1,3 @@
-import OldMining from "@/partials/OldMining";
 import NFT from "@/partials/NFT";
 import Features from "@/partials/Features";
 import Hero from "@/partials/Hero";
@@ -19,7 +18,6 @@ export default function Home() {
       <Features />
       <Forum />
       <Mining />
-      <OldMining />
       <NFT />
 
       <div className="flex flex-col md:flex-row gap-4 my-2">
