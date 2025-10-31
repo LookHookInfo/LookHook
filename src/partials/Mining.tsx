@@ -159,12 +159,23 @@ function ToolCard({
       className="border border-neutral-800 rounded-lg p-4 cursor-pointer hover:border-neutral-600 transition-colors duration-200"
       onClick={onClick}
     >
-      <p className="font-semibold truncate">{tool.metadata.name}</p>
-      <MediaRenderer
-        client={client}
-        src={tool.metadata.image}
-        className="w-full h-36 mt-2 rounded-lg aspect-square object-cover"
-      />
+      <div className="relative w-full h-36 mt-2 rounded-lg aspect-square object-cover overflow-hidden">
+        <MediaRenderer
+          client={client}
+          src={tool.metadata.image}
+          className="w-full h-full object-cover"
+        />
+        {/* Name Overlay */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-fit px-2 py-1 bg-gray-200 bg-opacity-75 rounded-lg text-center">
+          <p className="font-bold text-sm text-gray-800 truncate">{tool.metadata.name}</p>
+        </div>
+        {/* Description Overlay */}
+        {tool.metadata.description && (
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-fit px-2 py-1 bg-gray-200 bg-opacity-75 rounded-lg text-center">
+            <p className="font-bold text-xs text-gray-800 truncate">{tool.metadata.description}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

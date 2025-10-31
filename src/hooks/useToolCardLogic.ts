@@ -31,7 +31,15 @@ export function useToolCardLogic({
   contractTools,
   contractStaking,
 }: UseToolCardLogicProps) {
-  const [quantity, setQuantity] = useState<number | string>(1);
+  const [quantity, setQuantity] = useState<number>(1);
+
+  const incrementQuantity = () => {
+    setQuantity((prev) => prev + 1);
+  };
+
+  const decrementQuantity = () => {
+    setQuantity((prev) => Math.max(1, prev - 1));
+  };
   const [isBuying, setIsBuying] = useState(false);
   const account = useActiveAccount();
   const queryClient = useQueryClient();
@@ -93,7 +101,7 @@ export function useToolCardLogic({
   const isTokenApprovedForBuy = tokenAllowance && tokenAllowance >= totalPrice;
 
   // Transaction handlers
-  const handleStake = () => {
+  const handleStake = (amount: bigint) => {
     if (!account) throw new Error("Not connected");
     return prepareContractCall({
       contract: contractStaking,
@@ -145,6 +153,8 @@ export function useToolCardLogic({
   return {
     quantity,
     setQuantity,
+    incrementQuantity,
+    decrementQuantity,
     account,
     queryClient,
     isLoading: isLoadingBalance || isLoadingStakeInfo,
