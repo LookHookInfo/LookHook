@@ -1,14 +1,19 @@
-export default function NFTCard() {
+// partials/NFTCard.tsx
+interface NFTCardProps {
+  className?: string;
+}
+
+export default function NFTCard({ className }: NFTCardProps) {
   return (
-    <section className="w-full px-4 py-8 text-white">
-      <div className="max-w-7xl mx-auto bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700">
+    <section className={`w-full px-4 py-8 text-white ${className ?? ""}`}>
+      <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* Image */}
-          <div className="flex-shrink-0">
+          {/* Image and Links */}
+          <div className="w-full lg:w-[200px] flex flex-col items-center">
             <img
               src="https://ipfs.io/ipfs/QmSNSLzJwsVye4QJqdjTo4oF5XnvWg5uWGKUY74jHBAStw"
-              alt="HashCoin NFT"
-              className="rounded-xl w-[90%] max-w-[320px] h-auto mx-auto"
+              alt="NFT Claim App"
+              className="rounded-xl w-full h-auto"
             />
 
             {/* Social links */}
@@ -17,41 +22,41 @@ export default function NFTCard() {
                 href="https://mintapp.fun"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-gray-100 dark:hover:bg-neutral-700"
+                className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
               >
                 Website
               </a>
-
               <a
                 href="https://t.me/ChainInside/1824"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-gray-100 dark:hover:bg-neutral-700"
+                className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
               >
-                Forum
+                <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
+                  <title>Telegram</title>
+                  <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+                </svg>
               </a>
-
               <a
                 href="https://x.com/ForumChain/status/1922984506320998468"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
               >
                 <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
                   <title>X</title>
                   <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932Z" />
                 </svg>
               </a>
-
               <a
                 href="https://discord.com/invite/D55sWhNgcb"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
               >
                 <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
                   <title>Discord</title>
-                  <path d="M20.317 4.3698a19.7913 19.7913 0 0 0-4.8851-1.5152.0741.0741 0 0 0-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 0 0-.0785-.037 19.7363 19.7363 0 0 0-4.8852 1.515.0699.0699 0 0 0-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 0 0 .0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 0 0 .0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 0 0-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 0 1-.0076-.1277c.1258-.0943.2517-.1923.3718-.2916a.0743.0743 0 0 1 .0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 0 1 .0785.0095c.1202.0994.246.1984.3728.292a.077.077 0 0 1-.0065.1276 12.2986 12.2986 0 0 1-1.873.8914.0766.0766 0 0 0-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 0 0 .0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 0 0 .0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 0 0-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.4189 0 1.3333-.9555 2.419-2.1569 2.419zm7.9748 0c-1.1825 0-2.1568-1.0857-2.1568-2.419 0-1.3332.9554-2.4189 2.1568-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.4189 0 1.3333-.946 2.419-2.1568 2.419Z" />
+                  <path d="M20.317 4.37a19.8 19.8 0 0 0-4.885-1.515.074.074 0 0 0-.078.037 13.5 13.5 0 0 0-.608 1.25 18.5 18.5 0 0 0-5.487 0 11.7 11.7 0 0 0-.618-1.25.077.077 0 0 0-.078-.037A19.8 19.8 0 0 0 3.678 4.37 15.9 15.9 0 0 0 .1 18.058a.082.082 0 0 0 .031.056 20.1 20.1 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 12.4 12.4 0 0 0 1.226-1.994.076.076 0 0 0-.042-.106 13.5 13.5 0 0 1-1.872-.892.077.077 0 0 1-.008-.128l.372-.292a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.06 0a.074.074 0 0 1 .079.01l.373.292a.077.077 0 0 1-.007.128 13.2 13.2 0 0 1-1.873.89.077.077 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.029 20.1 20.1 0 0 0 6.002-3.03.077.077 0 0 0 .031-.055A15.9 15.9 0 0 0 20.317 4.37ZM8.02 15.33c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.419 0 1.333-.956 2.419-2.157 2.419Zm7.975 0c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.419 0 1.333-.946 2.419-2.157 2.419Z" />
                 </svg>
               </a>
             </div>
@@ -60,68 +65,19 @@ export default function NFTCard() {
           {/* Text content */}
           <div className="flex-1 space-y-6">
             <div className="flex justify-between items-center flex-wrap gap-2">
-              <h2 className="text-3xl font-bold text-white">NFT Claim App</h2>
+              <h2 className="text-3xl font-bold text-white">NFT Claim</h2>
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center justify-center px-2 py-0.5 h-6 text-xs font-semibold bg-black text-white border border-white rounded">
                   Web3
                 </span>
               </div>
             </div>
-            <p className="text-neutral-300 text-lg">
-              <span className="font-semibold">Plasma Cat</span> is our first NFT
-              collection. Holders get access to events, quests, and future team
-              product perks. The <span className="font-semibold">$CATSH</span>{" "}
-              meme coin launches after full mint.
-            </p>
 
             <p className="text-neutral-400">
-              We offer full-cycle NFT collection services: secure and private
-              setup, custom claim page, professional text and visuals, whitelist
-              support, hidden collections, social media promotion, and minting
-              in ETH, USDT, or your token. Complex character sets are also
-              available.
+              <strong>Plasma Cat</strong> is an NFT collection that grants access to community
+              events, quests, and early access to product features. After the
+              mint, we will airdrop the <strong>$CATSH</strong> meme token.
             </p>
-
-            {/* Checklist */}
-            <ul className="space-y-2 sm:space-y-4">
-              {[
-                {
-                  text: (
-                    <>
-                      <span className="font-bold">Digital</span> Ownership
-                    </>
-                  ),
-                },
-                {
-                  text: (
-                    <>
-                      Unique <span className="font-bold">creation</span>
-                    </>
-                  ),
-                },
-                {
-                  text: (
-                    <>
-                      <span className="font-bold">Key</span> to privileges
-                    </>
-                  ),
-                },
-              ].map((item, index) => (
-                <li className="flex gap-x-3" key={index}>
-                  <span className="mt-0.5 size-6 flex justify-center items-center rounded-lg border border-gray-200 text-white dark:border-neutral-700">
-                    <svg
-                      className="size-3.5"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z" />
-                    </svg>
-                  </span>
-                  <span className="text-neutral-300">{item.text}</span>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
       </div>

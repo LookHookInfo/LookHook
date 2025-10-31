@@ -16,10 +16,11 @@ export default function Home() {
     <div className="max-w-[1200px] mx-auto px-4">
       <Hero />
       <Features />
-      <Forum />
+      <div className="flex flex-col md:flex-row gap-4 my-2">
+        <Forum className="w-full md:w-1/2" />
+        <NFT className="w-full md:w-1/2" />
+      </div>
       <Mining />
-      <NFT />
-
       <div className="flex flex-col md:flex-row gap-4 my-2">
         <Tips className="w-full md:w-1/2" />
         <Domain className="w-full md:w-1/2" />

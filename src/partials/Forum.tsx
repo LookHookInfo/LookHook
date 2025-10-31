@@ -1,14 +1,19 @@
-export default function Forum() {
+// partials/Forum.tsx
+interface ForumProps {
+  className?: string;
+}
+
+export default function Forum({ className }: ForumProps) {
   return (
-    <section className="w-full px-4 py-8 text-white">
-      <div className="max-w-7xl mx-auto bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700">
+    <section className={`w-full px-4 py-8 text-white ${className ?? ""}`}>
+      <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* Image */}
-          <div className="flex-shrink-0">
+          {/* Image and Links */}
+          <div className="w-full lg:w-[200px] flex flex-col items-center">
             <img
               src="https://ipfs.io/ipfs/QmeWw8gp6H2RicpFG6aFhS77Wf9mZLpjQ3hubi8L1Bs4Lx"
-              alt="HashCoin NFT"
-              className="rounded-xl w-[90%] max-w-[320px] h-auto mx-auto"
+              alt="Blockchain Forum"
+              className="rounded-xl w-full h-auto"
             />
 
             {/* Social links */}
@@ -17,32 +22,30 @@ export default function Forum() {
                 href="https://t.me/ChainInside"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-gray-100 dark:hover:bg-neutral-700"
+                className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
               >
                 Forum
               </a>
-
               <a
                 href="https://x.com/ForumChain"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                className="inline-flex items-center justify-center size-8 rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
               >
                 <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
                   <title>X</title>
                   <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932Z" />
                 </svg>
               </a>
-
               <a
                 href="https://discord.com/invite/D55sWhNgcb"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                className="inline-flex items-center justify-center size-8 rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
               >
                 <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
                   <title>Discord</title>
-                  <path d="M20.317 4.3698a19.7913 19.7913 0 0 0-4.8851-1.5152.0741.0741 0 0 0-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 0 0-.0785-.037 19.7363 19.7363 0 0 0-4.8852 1.515.0699.0699 0 0 0-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 0 0 .0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 0 0 .0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 0 0-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 0 1-.0076-.1277c.1258-.0943.2517-.1923.3718-.2916a.0743.0743 0 0 1 .0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 0 1 .0785.0095c.1202.0994.246.1984.3728.292a.077.077 0 0 1-.0065.1276 12.2986 12.2986 0 0 1-1.873.8914.0766.0766 0 0 0-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 0 0 .0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 0 0 .0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 0 0-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.4189 0 1.3333-.9555 2.419-2.1569 2.419zm7.9748 0c-1.1825 0-2.1568-1.0857-2.1568-2.419 0-1.3332.9554-2.4189 2.1568-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.4189 0 1.3333-.946 2.419-2.1568 2.419Z" />
+                  <path d="M20.317 4.37a19.8 19.8 0 0 0-4.885-1.515.074.074 0 0 0-.078.037 13.5 13.5 0 0 0-.608 1.25 18.5 18.5 0 0 0-5.487 0 11.7 11.7 0 0 0-.618-1.25.077.077 0 0 0-.078-.037A19.8 19.8 0 0 0 3.678 4.37 15.9 15.9 0 0 0 .1 18.058a.082.082 0 0 0 .031.056 20.1 20.1 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 12.4 12.4 0 0 0 1.226-1.994.076.076 0 0 0-.042-.106 13.5 13.5 0 0 1-1.872-.892.077.077 0 0 1-.008-.128l.372-.292a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.06 0a.074.074 0 0 1 .079.01l.373.292a.077.077 0 0 1-.007.128 13.2 13.2 0 0 1-1.873.89.077.077 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.029 20.1 20.1 0 0 0 6.002-3.03.077.077 0 0 0 .031-.055A15.9 15.9 0 0 0 20.317 4.37ZM8.02 15.33c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.419 0 1.333-.956 2.419-2.157 2.419Zm7.975 0c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.419 0 1.333-.946 2.419-2.157 2.419Z" />
                 </svg>
               </a>
             </div>
@@ -51,80 +54,24 @@ export default function Forum() {
           {/* Text content */}
           <div className="flex-1 space-y-6">
             <div className="flex justify-between items-center flex-wrap gap-2">
-              <h2 className="text-3xl font-bold text-white">
-                Blockchain Forum
-              </h2>
+              <h2 className="text-3xl font-bold text-white">Forum</h2>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center justify-center px-2 py-0.5 h-6 text-xs font-semibold bg-black text-white border border-white rounded">
-                  Web2
-                </span>
-                <span className="text-sm text-neutral-400 font-medium leading-none">
-                  to{" "}
-                  <a
-                    href="https://chums.chat/#/!VOdEMBTNlpoBVIDtme:everscale.chat?via=everscale.chat"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-white transition-colors"
-                  >
-                    WebFree
-                  </a>
-                </span>
+                <a
+                  href="https://chums.chat/#/!VOdEMBTNlpoBVIDtme:everscale.chat?via=everscale.chat"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center px-2.5 py-0.5 h-6 text-xs font-semibold bg-black text-white border border-white rounded hover:bg-white hover:text-black transition-colors"
+                >
+                  WebFree
+                </a>
               </div>
             </div>
 
-            <p className="text-neutral-300 text-lg">
-              Blockchain Forum is a Telegram community with easy topic
-              navigation, where members discuss testnets, crypto trends, and
-              project development. It brings together developers, investors, and
-              enthusiasts who stay informed and share real Web3 experience.
-            </p>
-
             <p className="text-neutral-400">
-              The focus is on Bitcoin and other leading blockchains. We’re
-              supported by Mining Hash — a project actively contributing to
-              decentralized innovation.
+              Blockchain Forum - a Telegram community uniting people passionate
+              about testnets, blockchain, and Web3. Join the community and be
+              part of the conversation.
             </p>
-
-            {/* Checklist */}
-            <ul className="space-y-2 sm:space-y-4">
-              {[
-                {
-                  text: (
-                    <>
-                      <span className="font-bold">Your</span> Web Space
-                    </>
-                  ),
-                },
-                {
-                  text: (
-                    <>
-                      Early Access to <span className="font-bold">Trends</span>
-                    </>
-                  ),
-                },
-                {
-                  text: (
-                    <>
-                      <span className="font-bold">Lead</span> the Conversation
-                    </>
-                  ),
-                },
-              ].map((item, index) => (
-                <li className="flex gap-x-3" key={index}>
-                  <span className="mt-0.5 size-6 flex justify-center items-center rounded-lg border border-gray-200 text-white dark:border-neutral-700">
-                    <svg
-                      className="size-3.5"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z" />
-                    </svg>
-                  </span>
-                  <span className="text-neutral-300">{item.text}</span>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
       </div>
