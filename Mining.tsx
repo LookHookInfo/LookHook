@@ -15,7 +15,6 @@ import {
   contractTools,
   contractStaking,
   usdcContract,
-  hashcoinContract,
 } from "../utils/contracts";
 import ConnectWalletButton from "@/components/ConnectWalletButton";
 import { ToolDetailModal } from "@/components/ToolDetailModal";
@@ -50,14 +49,8 @@ function Game() {
         />
       )}
       {!account && (
-        <div className="absolute inset-0 flex justify-center items-center rounded-xl z-20">
-          <div className="text-center p-6 bg-neutral-800/90 border border-neutral-700 rounded-lg shadow-xl">
-            <h3 className="text-xl font-bold text-white mb-2">Start Mining</h3>
-            <p className="text-neutral-300 mb-4">
-              Connect your wallet to manage your inventory.
-            </p>
-            <ConnectWalletButton />
-          </div>
+        <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center rounded-xl z-20">
+          <ConnectWalletButton />
         </div>
       )}
     </div>
@@ -188,24 +181,11 @@ function ToolCard({ tool, onClick }: { tool: NFT; onClick: () => void }) {
 // #endregion
 
 export default function Mining() {
-  const { data: totalRewards, isLoading } = useReadContract({
-    contract: contractStaking,
-    method: "function getRewardTokenBalance() view returns (uint256)",
-    params: [],
-  });
-
-  const { data: tokenSymbol } = useReadContract({
-    contract: hashcoinContract,
-    method: "symbol",
-    params: [],
-  });
-
   return (
     <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
       <div className="lg:grid lg:grid-cols-12 lg:gap-16 lg:items-center">
         <div className="mt-5 sm:mt-10 lg:mt-0 lg:col-span-4">
           <div className="space-y-6 sm:space-y-8 relative">
-            {/* Бейджик Base */}
             <div
               className="absolute -top-3 left-1/2 -translate-x-1/2
                      bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
@@ -214,7 +194,6 @@ export default function Mining() {
             >
               Base
             </div>
-
             <div className="space-y-2 md:space-y-4">
               <h2 className="font-bold text-3xl lg:text-4xl text-gray-300 dark:text-neutral-200">
                 <img
@@ -231,21 +210,6 @@ export default function Mining() {
                 growing ecosystem.
               </p>
             </div>
-
-            {/* Reward Pool */}
-            <div className="bg-black/30 rounded-xl p-4 border border-neutral-700">
-              <div className="flex justify-between text-sm text-neutral-400">
-                <span>Reward Pool:</span>
-                <span className="text-white font-semibold">
-                  {isLoading ? (
-                    <div className="inline-block loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-4 w-4"></div>
-                  ) : (
-                    `${totalRewards ? Math.floor(parseFloat(formatUnits(totalRewards, 18))).toLocaleString() : "0"} ${tokenSymbol || ""}`
-                  )}
-                </span>
-              </div>
-            </div>
-
             {/* Social links */}
             <div className="pt-6 flex flex-wrap items-center justify-center gap-2">
               <a
