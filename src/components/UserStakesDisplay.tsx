@@ -27,6 +27,7 @@ interface TierDisplayProps {
     apr: bigint; // Keep as bigint, convert to number for display
     tokenSymbol: string;
     setStatus: (status: Status) => void;
+    status: Status; // Added missing status prop
     showQuestTooltip?: boolean; // New prop
 }
 
@@ -126,8 +127,6 @@ function TierDisplay({ tierId, tierName, stakeData, amount, refreshBalances, ref
                                     boxShadow: '0 0 15px rgba(76, 175, 80, 0.6)', /* Green glow */
                                     transition: 'box-shadow 0.3s ease-in-out',
                                 }}
-                                onMouseOver={(e: React.MouseEvent<HTMLButtonElement>) => e.currentTarget.style.boxShadow = '0 0 25px rgba(76, 175, 80, 0.9)'}
-                                onMouseOut={(e: React.MouseEvent<HTMLButtonElement>) => e.currentTarget.style.boxShadow = '0 0 15px rgba(76, 175, 80, 0.6)'}
                             >
                                 Unstake
                             </TransactionButton>
@@ -156,8 +155,6 @@ function TierDisplay({ tierId, tierName, stakeData, amount, refreshBalances, ref
                                     boxShadow: '0 0 15px rgba(0, 198, 255, 0.6)',
                                     transition: 'box-shadow 0.3s ease-in-out',
                                 }}
-                                onMouseOver={(e: React.MouseEvent<HTMLButtonElement>) => e.currentTarget.style.boxShadow = '0 0 25px rgba(0, 198, 255, 0.9)'}
-                                onMouseOut={(e: React.MouseEvent<HTMLButtonElement>) => e.currentTarget.style.boxShadow = '0 0 15px rgba(0, 198, 255, 0.6)'}
                                 disabled={stakeData.rewards <= 0n}
                             >
                                 {Math.floor(Number(stakeData.rewards / BigInt(10 ** 18)))} {tokenSymbol}

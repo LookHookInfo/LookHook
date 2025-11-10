@@ -88,7 +88,7 @@ export default function Airdrop({ className }: AirdropProps) {
             </div>
 
             <img
-              src="/Airdrop.png"
+              src="/Airdrop.webp"
               alt="HashCoin NFT"
               className="rounded-xl w-full h-auto"
             />

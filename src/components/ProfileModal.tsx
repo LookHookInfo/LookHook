@@ -3,6 +3,7 @@ import type { Wallet } from "thirdweb/wallets";
 import { useDisconnect, useWalletBalance, useReadContract } from "thirdweb/react";
 import { hashcoinContract, earlyBirdContract, buyMeACoffeeContract, nameContract } from "../utils/contracts";
 import EarlyBirdClaimButton from "./EarlyBirdClaimButton";
+import { DolphinAchievement, SharkAchievement, WhaleAchievement } from "./WhaleAchievements";
 
 interface ProfileModalProps {
   wallet: Wallet;
@@ -274,35 +275,64 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
             <h3 className="text-xl font-semibold text-blue-400 mb-4">
               Achievements
             </h3>
-            <div className="grid grid-cols-4 gap-2">
+            {(() => {
+              let freeCellCounter = 0;
+              return (
+                <div className="grid grid-cols-4 gap-2">
+
               <HashcoinAchievement wallet={wallet} />
               <NftAchievement hasNft={hasCatNft} isLoading={isNftLoading} />
               <EarlyNftAchievement wallet={wallet} />
               <TipsAchievement wallet={wallet} />
               <NameAchievement wallet={wallet} />
-              {[...Array(3)].map((_, index) => (
-                <div key={index} className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon"></div>
-              ))}
+              {[...Array(3)].map((_, index) => {
+                freeCellCounter++;
+                return (
+                  <div key={index} className="size-12 rounded-full bg-neutral-700 flex items-center justify-center text-white text-lg font-bold" title="Soon">
+                    {freeCellCounter}
+                  </div>
+                );
+              })}
               <StakeNftAchievement wallet={wallet} /> {/* New achievement at 9th position */}
-              {[...Array(3)].map((_, index) => (
-                <div key={index + 3} className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon"></div>
-              ))}
+              {[...Array(3)].map((_, index) => {
+                freeCellCounter++;
+                return (
+                  <div key={index + 3} className="size-12 rounded-full bg-neutral-700 flex items-center justify-center text-white text-lg font-bold" title="Soon">
+                    {freeCellCounter}
+                  </div>
+                );
+              })}
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden" title="Soon">
                 <img src="/WL.webp" alt="WL Achievement" className="size-10 opacity-50" />
               </div>
-              {[...Array(4)].map((_, index) => (
-                <div key={index + 7} className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon"></div>
-              ))}
+              <DolphinAchievement wallet={wallet} />
+              <SharkAchievement wallet={wallet} />
+              <WhaleAchievement wallet={wallet} />
+              {(() => {
+                freeCellCounter++;
+                return (
+                  <div key={"free-cell-7"} className="size-12 rounded-full bg-neutral-700 flex items-center justify-center text-white text-lg font-bold" title="Soon">
+                    {freeCellCounter}
+                  </div>
+                );
+              })()}
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden" title="Soon">
                 <img src="/OG.webp" alt="OG Achievement" className="size-10 opacity-50" />
               </div>
-              {[...Array(1)].map((_, index) => (
-                <div key={index + 11} className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon"></div>
-              ))}
+              {(() => {
+                freeCellCounter++;
+                return (
+                  <div key={"free-cell-8"} className="size-12 rounded-full bg-neutral-700 flex items-center justify-center text-white text-lg font-bold" title="Soon">
+                    {freeCellCounter}
+                  </div>
+                );
+              })()}
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden" title="Soon">
                 <img src="/GM.webp" alt="GM Achievement" className="size-10 opacity-50" />
               </div>
             </div>
+          );
+        })()}
           </section>
 
           <div className="border-t border-neutral-700"></div>

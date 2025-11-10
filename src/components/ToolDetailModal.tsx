@@ -11,7 +11,7 @@ interface ToolDetailModalProps {
   address: string;
   usdcBalance: bigint;
   contractTools: ThirdwebContract;
-  contractStaking: ThirdwebContract;
+  contractStaking: ThirdwebContract<any>;
   onClose: () => void;
 }
 

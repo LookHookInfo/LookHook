@@ -132,7 +132,7 @@ function ToolGrid({
       <span>Inventory</span>
       {address && (
         <div className="flex items-center gap-2 text-sm font-normal">
-          <img src="/usdc.png" alt="USDC logo" className="w-5 h-5" />
+          <img src="/usdc.webp" alt="USDC logo" className="w-5 h-5" />
           <span>{parseFloat(formatUnits(usdcBalance, 6)).toFixed(2)}</span>
         </div>
       )}
@@ -190,7 +190,7 @@ function ToolCard({ tool, onClick }: { tool: NFT; onClick: () => void }) {
 export default function Mining() {
   const { data: totalRewards, isLoading } = useReadContract({
     contract: contractStaking,
-    method: "function getRewardTokenBalance() view returns (uint256)",
+    method: "getRewardTokenBalance",
     params: [],
   });
 
@@ -205,7 +205,7 @@ export default function Mining() {
       <div className="lg:grid lg:grid-cols-12 lg:gap-16 lg:items-center">
         <div className="mt-5 sm:mt-10 lg:mt-0 lg:col-span-4">
           <div className="space-y-6 sm:space-y-8 relative">
-            {/* Бейджик Base */}
+            {/* Base */}
             <div
               className="absolute -top-3 left-1/2 -translate-x-1/2
                      bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600

@@ -59,6 +59,7 @@ export const contractStaking = getContract({
   client,
   chain: chain,
   address: "0xBBc4f75874930EB4d8075FCB3f48af2535A8E848",
+  abi: [{"inputs":[],"name":"getRewardTokenBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"stake","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"claimRewards","outputs":[],"stateMutability":"nonpayable","type":"function"}] as const
 });
 
 export const usdcContract = getContract({
@@ -66,4 +67,11 @@ export const usdcContract = getContract({
   chain: chain,
   address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   abi: erc20Abi,
+});
+
+export const whaleContract = getContract({
+  client,
+  chain: chain,
+  address: "0xd8030CF276ebf373848dC847CAdbf083701E4712",
+  abi: [{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getUserStatus","outputs":[{"internalType":"uint256","name":"earnedHASH","type":"uint256"},{"internalType":"bool","name":"dolphinAvailable","type":"bool"},{"internalType":"bool","name":"sharkAvailable","type":"bool"},{"internalType":"bool","name":"whaleAvailable","type":"bool"},{"internalType":"bool","name":"hasDolphinNFT","type":"bool"},{"internalType":"bool","name":"hasSharkNFT","type":"bool"},{"internalType":"bool","name":"hasWhaleNFT","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"mintDolphin","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"mintShark","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"mintWhale","outputs":[],"stateMutability":"nonpayable","type":"function"}] as const
 });

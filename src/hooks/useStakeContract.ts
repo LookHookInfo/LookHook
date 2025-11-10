@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   useActiveAccount,
   useReadContract,
@@ -13,7 +13,7 @@ export type Status = "idle" | "pending" | "success" | "error";
 export function useStakeContract() {
   const account = useActiveAccount();
   const [status, setStatus] = useState<Status>("idle");
-  const { mutateAsync: sendAndConfirm, isSending, isConfirming } = useSendAndConfirmTransaction();
+  const { mutateAsync: sendAndConfirm, isPending } = useSendAndConfirmTransaction();
 
   const { data: tokenSymbol } = useReadContract({
     contract: hashcoinContract,
@@ -157,8 +157,7 @@ export function useStakeContract() {
     claim,
     isApproved,
     refetchAllowance,
-    isPending: isSending,
-    isConfirming,
+    isPending, // Expose isPending
     status, // Return status
     setStatus, // Return setStatus
     refreshBalances: () => {

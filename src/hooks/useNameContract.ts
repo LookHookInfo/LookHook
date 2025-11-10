@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { readContract, prepareContractCall, waitForReceipt, getContract } from "thirdweb";
+import { readContract, prepareContractCall, waitForReceipt } from "thirdweb";
 import { client } from "../lib/thirdweb/client";
 import { chain } from "../lib/thirdweb/chain";
 import { nameContract, hashcoinContract } from "../utils/contracts";
@@ -110,7 +110,7 @@ export function useNameContract(setStatus: (status: any) => void) {
     try {
       const call = await prepareContractCall({
         contract: hashcoinContract,
-        method: "function approve(address spender, uint256 value)",
+        method: "approve",
         params: [nameContract.address, displayPrice],
       });
       const tx = await sendTx(call);

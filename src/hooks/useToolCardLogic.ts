@@ -22,7 +22,7 @@ interface UseToolCardLogicProps {
   tool: NFT;
   address: string;
   contractTools: ThirdwebContract;
-  contractStaking: ThirdwebContract;
+  contractStaking: ThirdwebContract<any>;
 }
 
 export function useToolCardLogic({
@@ -68,8 +68,7 @@ export function useToolCardLogic({
 
   const { data: stakeInfo, isLoading: isLoadingStakeInfo } = useReadContract({
     contract: contractStaking,
-    method:
-      "function getStakeInfoForToken(uint256 _tokenId, address _staker) external view returns (uint256, uint256)",
+    method: "getStakeInfoForToken",
     params: [tool.id, address],
   });
 

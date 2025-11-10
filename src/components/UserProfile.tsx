@@ -4,7 +4,7 @@ import { ConnectButton } from "thirdweb/react";
 import { client } from "../lib/thirdweb/client";
 import { chain } from "../lib/thirdweb/chain";
 import ProfileModal from "./ProfileModal";
-import { nftCollectionContract } from "../utils/contracts";
+import { nftCollectionContract, whaleContract } from "../utils/contracts";
 import { useNameContract } from "../hooks/useNameContract";
 
 export default function UserProfile() {
@@ -32,7 +32,25 @@ export default function UserProfile() {
     },
   });
 
+  const { data: whaleContractData } = useReadContract({
+    contract: whaleContract,
+    method: "getUserStatus",
+    params: [account?.address || ""],
+    queryOptions: {
+      enabled: !!account,
+    },
+  });
+
   const hasCatNft = !!(balance && balance > 0n);
+
+  const canMintDolphin = whaleContractData ? whaleContractData[1] : false;
+  const hasDolphin = whaleContractData ? whaleContractData[4] : false;
+  const canMintShark = whaleContractData ? whaleContractData[2] : false;
+  const hasShark = whaleContractData ? whaleContractData[5] : false;
+  const canMintWhale = whaleContractData ? whaleContractData[3] : false;
+  const hasWhale = whaleContractData ? whaleContractData[6] : false;
+
+  const shouldGlow = (canMintDolphin && !hasDolphin) || (canMintShark && !hasShark) || (canMintWhale && !hasWhale);
 
   if (!wallet) {
     return (
@@ -65,7 +83,7 @@ export default function UserProfile() {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="inline-flex items-center gap-x-2 px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 text-white hover:bg-gray-700 transition-colors dark:border-neutral-700 dark:hover:bg-neutral-700"
+        className={`inline-flex items-center gap-x-2 px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 text-white hover:bg-gray-700 transition-colors dark:border-neutral-700 dark:hover:bg-neutral-700 ${shouldGlow ? 'glow-effect' : ''}`}
       >
         {iconToDisplay}
         <span className="font-mono">{displayName}</span>
