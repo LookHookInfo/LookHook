@@ -17,10 +17,11 @@ export default function Features() {
     poolInfo,
     status, // Get status
     setStatus, // Get setStatus
+    isPoolInfoLoading,
   } = useStakeContract();
 
   return (
-    <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+    <div className="max-w-[85rem] px-4 py-4 sm:px-6 lg:px-8 lg:py-6 mx-auto">
       <div className="lg:grid lg:grid-cols-12 lg:gap-16 lg:items-center">
         <div className="mt-5 sm:mt-10 lg:mt-0 lg:col-span-4">
           <div className="space-y-6 sm:space-y-8 relative">
@@ -74,7 +75,12 @@ export default function Features() {
                 </a>
               </div>
             </div>
-            {poolInfo && (
+            {isPoolInfoLoading ? (
+              <div className="bg-black/30 rounded-xl p-4 space-y-3 border border-neutral-700 animate-pulse">
+                <div className="h-4 bg-neutral-700 rounded w-3/4"></div>
+                <div className="h-4 bg-neutral-700 rounded w-1/2"></div>
+              </div>
+            ) : poolInfo && (
               <div className="bg-black/30 rounded-xl p-4 space-y-2 border border-neutral-700">
                 <p className="text-sm text-neutral-400">
                   Total rewards in pool:{" "}

@@ -2,7 +2,7 @@ import { useReadContract, useSendAndConfirmTransaction } from "thirdweb/react";
 import type { Wallet } from "thirdweb/wallets";
 import { whaleContract } from "../utils/contracts";
 import { prepareContractCall } from "thirdweb";
-import CubeLoader from "./CubeLoader";
+
 import { useEffect } from "react";
 
 interface WhaleAchievementProps {
@@ -45,7 +45,7 @@ export function DolphinAchievement({ wallet }: WhaleAchievementProps) {
   const { mutate: sendAndConfirmDolphin, isPending: isMintingDolphin } = useSendAndConfirmTransaction();
 
   const progressText = `Earned: ${Number(currentRewards / (10n ** 18n))}/${Number(DOLPHIN_THRESHOLD / (10n ** 18n))} HASH`;
-  const titleText = hasNft ? "Dolphin Owned!" : canMint ? "Claim your Dolphin NFT!" : `Earn Dolphin to unlock (${progressText})`;
+  const titleText = hasNft ? "Dolphin Owned!" : canMint ? "Claim your Dolphin NFT!" : `Dolphin – Keep mining (${progressText})`;
 
   const handleDolphinClaim = async () => {
     console.log("🐬 Claim Attempt:", { canMint, hasNft, currentRewards: Number(currentRewards) });
@@ -77,7 +77,7 @@ export function DolphinAchievement({ wallet }: WhaleAchievementProps) {
   if (isLoadingWhaleContract) {
     return (
       <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Loading Dolphin...">
-        <CubeLoader />
+        <span className="text-neutral-400 text-xs">...</span>
       </div>
     );
   }
@@ -97,7 +97,7 @@ export function DolphinAchievement({ wallet }: WhaleAchievementProps) {
       )}
       {isMintingDolphin && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/70">
-          <CubeLoader />
+          <span className="text-neutral-400 text-xs">...</span>
         </div>
       )}
     </div>
@@ -136,7 +136,7 @@ export function SharkAchievement({ wallet }: WhaleAchievementProps) {
   const { mutate: sendAndConfirmShark, isPending: isMintingShark } = useSendAndConfirmTransaction();
 
   const progressText = `Earned: ${Number(currentRewards / (10n ** 18n))}/${Number(SHARK_THRESHOLD / (10n ** 18n))} HASH`;
-  const titleText = hasNft ? "Shark Owned!" : canMint ? "Claim your Shark NFT!" : `Earn Shark to unlock (${progressText})`;
+  const titleText = hasNft ? "Shark Owned!" : canMint ? "Claim your Shark NFT!" : `Shark – Keep mining (${progressText})`;
 
   const handleSharkClaim = async () => {
     console.log("🦈 Claim Attempt:", { canMint, hasNft, currentRewards: Number(currentRewards) });
@@ -169,7 +169,7 @@ export function SharkAchievement({ wallet }: WhaleAchievementProps) {
   if (isLoadingWhaleContract) {
     return (
       <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Loading Shark...">
-        <CubeLoader />
+        <span className="text-neutral-400 text-xs">...</span>
       </div>
     );
   }
@@ -189,7 +189,7 @@ export function SharkAchievement({ wallet }: WhaleAchievementProps) {
       )}
       {isMintingShark && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/70">
-          <CubeLoader />
+          <span className="text-neutral-400 text-xs">...</span>
         </div>
       )}
     </div>
@@ -228,7 +228,7 @@ export function WhaleAchievement({ wallet }: WhaleAchievementProps) {
   const { mutate: sendAndConfirmWhale, isPending: isMintingWhale } = useSendAndConfirmTransaction();
 
   const progressText = `Earned: ${Number(currentRewards / (10n ** 18n))}/${Number(WHALE_THRESHOLD / (10n ** 18n))} HASH`;
-  const titleText = hasNft ? "Whale Owned!" : canMint ? "Claim your Whale NFT!" : `Earn Whale to unlock (${progressText})`;
+  const titleText = hasNft ? "Whale Owned!" : canMint ? "Claim your Whale NFT!" : `Whale – Keep mining (${progressText})`;
 
   const handleWhaleClaim = async () => {
     if (canMint && !hasNft && ownerAddress && !isMintingWhale) {
@@ -259,7 +259,7 @@ export function WhaleAchievement({ wallet }: WhaleAchievementProps) {
   if (isLoadingWhaleContract) {
     return (
       <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Loading Whale...">
-        <CubeLoader />
+        <span className="text-neutral-400 text-xs">...</span>
       </div>
     );
   }
@@ -279,7 +279,7 @@ export function WhaleAchievement({ wallet }: WhaleAchievementProps) {
       )}
       {isMintingWhale && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/70">
-          <CubeLoader />
+          <span className="text-neutral-400 text-xs">...</span>
         </div>
       )}
     </div>

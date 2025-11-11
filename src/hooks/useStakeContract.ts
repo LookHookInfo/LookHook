@@ -39,7 +39,7 @@ export function useStakeContract() {
   const { data: apr6M } = useReadContract({ contract: stakingContract, method: "APR_6M", params: [] });
   const { data: apr12M } = useReadContract({ contract: stakingContract, method: "APR_12M", params: [] });
 
-  const { data: poolInfo } = useReadContract({
+  const { data: poolInfo, isLoading: isPoolInfoLoading } = useReadContract({
     contract: stakingContract,
     method: "getPoolInfo",
     params: [],
@@ -152,6 +152,7 @@ export function useStakeContract() {
     apr6M,
     apr12M,
     poolInfo,
+    isPoolInfoLoading,
     stake,
     unstake,
     claim,

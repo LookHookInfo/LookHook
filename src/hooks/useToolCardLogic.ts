@@ -68,7 +68,7 @@ export function useToolCardLogic({
 
   const { data: stakeInfo, isLoading: isLoadingStakeInfo } = useReadContract({
     contract: contractStaking,
-    method: "getStakeInfoForToken",
+    method: "function getStakeInfoForToken(uint256 _tokenId, address _staker) external view returns (uint256, uint256)",
     params: [tool.id, address],
   });
 

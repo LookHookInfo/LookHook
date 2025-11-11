@@ -1,7 +1,7 @@
 
 export default function Hero(){
     return (
-<div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+<div className="max-w-[85rem] px-4 py-4 sm:px-6 lg:px-8 lg:py-6 mx-auto">
   <div className="h-0.5 w-full rounded-full my-8 animated-gradient-line"></div>
   <div className="mt-5 lg:mt-16 grid lg:grid-cols-3 gap-8 lg:gap-12">
     <div className="lg:col-span-1">

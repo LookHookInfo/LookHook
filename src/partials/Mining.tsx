@@ -132,7 +132,7 @@ function ToolGrid({
       <span>Inventory</span>
       {address && (
         <div className="flex items-center gap-2 text-sm font-normal">
-          <img src="/usdc.webp" alt="USDC logo" className="w-5 h-5" />
+          <img src="/assets/usdc.webp" alt="USDC logo" className="w-5 h-5" />
           <span>{parseFloat(formatUnits(usdcBalance, 6)).toFixed(2)}</span>
         </div>
       )}
@@ -201,7 +201,7 @@ export default function Mining() {
   });
 
   return (
-    <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+    <div className="max-w-[85rem] px-4 py-4 sm:px-6 lg:px-8 lg:py-6 mx-auto">
       <div className="lg:grid lg:grid-cols-12 lg:gap-16 lg:items-center">
         <div className="mt-5 sm:mt-10 lg:mt-0 lg:col-span-4">
           <div className="space-y-6 sm:space-y-8 relative">

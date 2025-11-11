@@ -90,7 +90,7 @@ export function Domain({ className }: DomainProps) {
     : "...";
 
   return (
-    <section className={`w-full px-4 py-8 text-white ${className ?? ""}`}>
+    <section className={`w-full px-4 py-4 text-white ${className ?? ""}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           <div className="w-full lg:w-[150px] flex flex-col items-center relative">

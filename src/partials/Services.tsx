@@ -105,7 +105,7 @@ export default function Services() {
         (service) => openModal === service.title && service.modal
       )}
 
-      <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+      <div className="max-w-[85rem] px-4 py-4 sm:px-6 lg:px-8 lg:py-6 mx-auto">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 items-start gap-6">
           {services.map((service) => (
             <div

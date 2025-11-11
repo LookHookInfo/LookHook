@@ -2,7 +2,7 @@ import { AppLogo } from "@/components/Com";
 
 export function Footer() {
   return (
-    <footer className="mt-auto w-full max-w-[85rem] py-10 px-4 sm:px-6 lg:px-8 mx-auto">
+    <footer className="mt-auto w-full max-w-[85rem] py-4 px-4 sm:px-6 lg:px-8 mx-auto">
       <div className="text-center">
         {/* App Logo */}
         <div className="flex place-content-center">

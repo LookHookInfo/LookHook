@@ -88,32 +88,38 @@ export function ToolDetailModal({
               />
               {/* Name Overlay */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-fit px-2 py-1 bg-gray-200 bg-opacity-75 rounded-lg text-center">
-                <h3 className="text-xl font-bold text-gray-800 truncate">{tool.metadata.name}</h3>
+                <h3 className="text-xl font-bold text-gray-800 truncate">
+                  {tool.metadata.name}
+                </h3>
               </div>
               {/* Description Overlay */}
               {tool.metadata.description && (
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-fit px-2 py-1 bg-gray-200 bg-opacity-75 rounded-lg text-center">
-                  <p className="text-sm font-bold text-gray-800 truncate">{tool.metadata.description}</p>
+                  <p className="text-sm font-bold text-gray-800 truncate">
+                    {tool.metadata.description}
+                  </p>
                 </div>
               )}
             </div>
-
-
-
 
             <div className="flex items-center justify-center gap-2 mb-4">
               <button
                 onClick={decrementQuantity}
                 disabled={quantity <= 1}
                 className="px-3 py-1 border border-neutral-600 rounded-md text-white hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >-</button>
-              <span className="w-12 text-center text-white text-lg font-semibold">{quantity}</span>
+              >
+                -
+              </button>
+              <span className="w-12 text-center text-white text-lg font-semibold">
+                {quantity}
+              </span>
               <button
                 onClick={incrementQuantity}
                 className="px-3 py-1 border border-neutral-600 rounded-md text-white hover:bg-neutral-700"
-              >+</button>
+              >
+                +
+              </button>
             </div>
-
 
             <div className="flex flex-col mt-4 gap-2">
               {/* Buy Button */}
@@ -122,7 +128,9 @@ export function ToolDetailModal({
                 disabled={!account || isBuying || hasInsufficientFunds}
                 className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isBuying ? "Processing..." : `Buy $${parseFloat(formatUnits(totalPrice, 6)).toFixed(2)}`}
+                {isBuying
+                  ? "Processing..."
+                  : `Buy $${parseFloat(formatUnits(totalPrice, 6)).toFixed(2)}`}
               </button>
 
               {/* Equip/Approve Button */}
@@ -185,7 +193,9 @@ export function ToolDetailModal({
               >
                 Claim{" "}
                 {claimableRewards
-                  ? `(${parseFloat(formatUnits(claimableRewards, 18)).toFixed(4)})`
+                  ? `(${parseFloat(formatUnits(claimableRewards, 18)).toFixed(
+                      4
+                    )})`
                   : ""}
               </TransactionButton>
             </div>

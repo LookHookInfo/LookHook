@@ -74,7 +74,7 @@ export default function UserProfile() {
   if (isNftBalanceLoading) {
     iconToDisplay = <div className="size-5 rounded-full bg-neutral-700 animate-pulse" />;
   } else if (hasCatNft) {
-    iconToDisplay = <img src="/Cat.webp" alt="User NFT" className="size-5 rounded-full" />;
+    iconToDisplay = <img src="/assets/Cat.webp" alt="User NFT" className="size-5 rounded-full" />;
   } else {
     iconToDisplay = <svg className="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 3c-3.86 0-7 1.69-7 3.79V20h14v-3.21C19 14.69 15.86 13 12 13z" /></svg>;
   }
