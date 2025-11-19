@@ -10,7 +10,7 @@ interface WhaleAchievementProps {
 }
 
 const DOLPHIN_THRESHOLD = 1000n * (10n ** 18n);
-const SHARK_THRESHOLD = 5000n * (10n ** 18n);
+const SHARK_THRESHOLD = 10000n * (10n ** 18n);
 const WHALE_THRESHOLD = 25000n * (10n ** 18n);
 
 export function DolphinAchievement({ wallet }: WhaleAchievementProps) {

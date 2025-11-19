@@ -73,6 +73,6 @@ export const usdcContract = getContract({
 export const whaleContract = getContract({
   client,
   chain: chain,
-  address: "0xd8030CF276ebf373848dC847CAdbf083701E4712",
+  address: "0x7aa5fc50D0E4A400545E34055134C89F2b310080",
   abi: [{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getUserStatus","outputs":[{"internalType":"uint256","name":"earnedHASH","type":"uint256"},{"internalType":"bool","name":"dolphinAvailable","type":"bool"},{"internalType":"bool","name":"sharkAvailable","type":"bool"},{"internalType":"bool","name":"whaleAvailable","type":"bool"},{"internalType":"bool","name":"hasDolphinNFT","type":"bool"},{"internalType":"bool","name":"hasSharkNFT","type":"bool"},{"internalType":"bool","name":"hasWhaleNFT","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"mintDolphin","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"mintShark","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"mintWhale","outputs":[],"stateMutability":"nonpayable","type":"function"}] as const
 });
