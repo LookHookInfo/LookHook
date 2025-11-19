@@ -74,41 +74,35 @@ export default function Airdrop({ className }: AirdropProps) {
   }, [claimDeadline]);
 
   return (
-    <section className={`w-full px-4 py-4 text-white ${className ?? ""}`}>
-      <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          <div className="w-full lg:w-[200px] flex flex-col items-center relative">
-            <div
-              className="absolute -top-2 -left-2
-                         bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
-                         text-white px-3 py-1 text-xs font-bold rounded-full
-                         shadow-lg z-10"
-            >
-              Base
-            </div>
-
-            <img
-              src="/assets/Airdrop.webp"
-              alt="HashCoin NFT"
-              className="rounded-xl w-full h-auto"
-            />
-
-            {claimedCount !== null && (
-              <span className="absolute bottom-16 left-6 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-lg">
-                🪂 {claimedCount}
-              </span>
-            )}
-
-            <div className="pt-6 flex flex-wrap items-center justify-center gap-2">
-              <span className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-500 text-gray-500 bg-transparent">
-                {remainingTime}
-              </span>
-            </div>
+    <div className={`w-full h-full text-white bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 flex flex-col ${className ?? ""}`}>
+      <div className="flex-grow flex flex-col md:flex-row gap-8 items-start">
+        {/* Image Block */}
+        <div className="flex-shrink-0 w-32 h-32 relative">
+          <div
+            className="absolute -top-2 -left-2
+                       bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
+                       text-white px-3 py-1 text-xs font-bold rounded-full
+                       shadow-lg z-10"
+          >
+            Base
           </div>
+          <img
+            src="/assets/Airdrop.webp"
+            alt="HashCoin NFT"
+            className="rounded-xl w-full h-full object-cover"
+          />
+          {claimedCount !== null && (
+            <span className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-lg">
+              🪂 {claimedCount}
+            </span>
+          )}
+        </div>
 
-          <div className="flex-1 space-y-6">
-            <div className="flex justify-between items-center flex-wrap gap-2 relative">
-              <h2 className="text-3xl font-bold text-white">Airdrop</h2>
+        {/* Text Content Block */}
+        <div className="flex-1 space-y-6 flex flex-col">
+          <div className="flex-grow">
+            <div className="flex justify-between items-center flex-wrap gap-2 relative mb-4">
+              <h2 className="text-3xl font-bold text-white line-clamp-1">Airdrop</h2>
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center justify-center px-2 py-0.5 h-6 text-xs font-semibold bg-black text-white border border-white rounded">
                   first
@@ -116,66 +110,57 @@ export default function Airdrop({ className }: AirdropProps) {
               </div>
             </div>
 
-            <p className="text-neutral-400">
-              <b>Intermediate</b> airdrop for <br />
-              Zealy, Sea, Tips, and Name <br />
-              participants before the main event.
+            <p className="text-neutral-400 text-sm line-clamp-3">
+              <b>Intermediate</b> airdrop for Zealy, Sea, Tips, and Name participants before the main event.
+              The participants' contract is available for review.
             </p>
+          </div>
 
-            <p className="text-neutral-400">
-              The participants'{" "}
-              <a
-                href="https://basescan.org/address/0x69cb90ee92d2f84dd5d77737a0295dcc8aa9dc6a#code#L5"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-white transition"
-              >
-                contract
-              </a>
-              .
-            </p>
-
-            <div className="mt-4 w-full">
-              {account ? (
-                isUserStatusLoading ? (
-                  <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
-                    Loading...
-                  </button>
-                ) : userStatus ? (
-                  userStatus[2] ? (
-                    <TransactionButton
-                      transaction={() =>
-                        prepareContractCall({
-                          contract: airdropContract,
-                          method: "claim",
-                        })
-                      }
-                      onTransactionConfirmed={() => refetchUserStatus()}
-                      className="w-full py-3 rounded-lg transition !bg-[#4CAF50] !hover:bg-[#45a049] text-white"
-                    >
-                      {`Claim 🎉 ${toEther(userStatus[0])} HASH`}
-                    </TransactionButton>
-                  ) : userStatus[1] ? (
-                    <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
-                      Claimed 🤝
-                    </button>
-                  ) : (
-                    <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
-                      Not Eligible
-                    </button>
-                  )
-                ) : (
-                  <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
-                    Could not retrieve your status.
-                  </button>
-                )
-              ) : (
-                <ConnectWalletButton />
-              )}
-            </div>
+          <div className="mt-2 text-center text-xs font-medium text-gray-400 border border-gray-500 rounded-lg py-1.5 px-3">
+            {remainingTime}
           </div>
         </div>
       </div>
-    </section>
+
+      {/* Action Button Block */}
+      <div className="mt-4 w-full">
+        {account ? (
+          isUserStatusLoading ? (
+            <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
+              Loading...
+            </button>
+          ) : userStatus ? (
+            userStatus[2] ? (
+              <TransactionButton
+                transaction={() =>
+                  prepareContractCall({
+                    contract: airdropContract,
+                    method: "claim",
+                  })
+                }
+                onTransactionConfirmed={() => refetchUserStatus()}
+                className="w-full py-3 rounded-lg transition !bg-[#4CAF50] !hover:bg-[#45a049] text-white"
+              >
+                {`Claim 🎉 ${toEther(userStatus[0])} HASH`}
+              </TransactionButton>
+            ) : userStatus[1] ? (
+              <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
+                Claimed 🤝
+              </button>
+            ) : (
+              <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
+                Not Eligible
+              </button>
+            )
+          ) : (
+            <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
+              Could not retrieve your status.
+            </button>
+          )
+        ) : (
+          <ConnectWalletButton />
+        )}
+      </div>
+    </div>
   );
 }
