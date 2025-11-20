@@ -74,10 +74,10 @@ export default function Airdrop({ className }: AirdropProps) {
   }, [claimDeadline]);
 
   return (
-    <div className={`w-full h-full text-white bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 flex flex-col ${className ?? ""}`}>
+    <div className={`w-full h-full text-white bg-neutral-800 rounded-2xl p-4 sm:p-6 shadow-lg border border-neutral-700 flex flex-col ${className ?? ""}`}>
       <div className="flex-grow flex flex-col md:flex-row gap-8 items-start">
         {/* Image Block */}
-        <div className="flex-shrink-0 w-32 h-32 relative">
+        <div className="flex-shrink-0 w-60 h-60 relative">
           <div
             className="absolute -top-2 -left-2
                        bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
@@ -88,7 +88,7 @@ export default function Airdrop({ className }: AirdropProps) {
           </div>
           <img
             src="/assets/Airdrop.webp"
-            alt="HashCoin NFT"
+            alt="Airdrop"
             className="rounded-xl w-full h-full object-cover"
           />
           {claimedCount !== null && (
@@ -111,8 +111,7 @@ export default function Airdrop({ className }: AirdropProps) {
             </div>
 
             <p className="text-neutral-400 text-sm line-clamp-3">
-              <b>Intermediate</b> airdrop for Zealy, Sea, Tips, and Name participants before the main event.
-              The participants' contract is available for review.
+              Special airdrop for early participants (Zealy, Sea, Tips, Name). Review contract for details.
             </p>
           </div>
 

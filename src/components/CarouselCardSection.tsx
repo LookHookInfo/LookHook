@@ -30,14 +30,14 @@ const CarouselCardSection: React.FC<CarouselCardSectionProps> = ({ items, classN
     if (offset === 0) {
       // Active card: slightly scaled down and centered
       return {
-        transform: 'scale(1) translateX(0)',
+        transform: 'scale(0.85) translateX(0)',
         zIndex: 10,
         opacity: 1,
       };
     } else if (offset === 1) {
       // Card directly behind the active one (peeking from the right)
       return {
-        transform: 'scale(0.98) translateX(5px)', // Minimal peek
+        transform: 'scale(0.833) translateX(5px)', // Minimal peek
         zIndex: 5,
         opacity: 1, // Must be opaque
         filter: 'brightness(0.8)',
@@ -45,7 +45,7 @@ const CarouselCardSection: React.FC<CarouselCardSectionProps> = ({ items, classN
     } else {
       // Other cards further behind (hidden)
       return {
-        transform: 'scale(0.96) translateX(10px)',
+        transform: 'scale(0.816) translateX(10px)',
         zIndex: 0,
         opacity: 0,
       };
@@ -53,7 +53,7 @@ const CarouselCardSection: React.FC<CarouselCardSectionProps> = ({ items, classN
   };
 
   return (
-    <div className={`relative flex flex-col justify-center bg-transparent ${className} min-h-[390px]`}>
+    <div className={`relative flex flex-col justify-center min-h-[550px] md:min-h-0 ${className}`}>
       {/* Container for the stacked cards */}
       <div className="relative flex-grow flex items-center justify-center">
         {items.map((item, index) => (
