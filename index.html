@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/image.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- SEO Meta Tags -->
+    <title>Look Hook - Practical Tools for Web3 & Digital Assets</title>
+    <meta name="description" content="Look Hook is a team and platform building practical tools and products for the Web3 and digital assets space.">
+    <meta name="keywords" content="Web3, digital assets, blockchain, tools, crypto, platform">
+
+    <!-- Open Graph Meta Tags (for social media sharing) -->
+    <meta property="og:title" content="Look Hook - Practical Tools for Web3 & Digital Assets">
+    <meta property="og:description" content="Look Hook is a team and platform building practical tools and products for the Web3 and digital assets space.">
+    <meta property="og:image" content="/image.svg"> <!-- Replace with your actual, absolute URL in production -->
+    <meta property="og:url" content="https://lookhook.info"> <!-- Replace with your actual website URL -->
+    <meta property="og:type" content="website" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Look Hook - Practical Tools for Web3 & Digital Assets">
+    <meta name="twitter:description" content="Look Hook is a team and platform building practical tools and products for the Web3 and digital assets space.">
+    <meta name="twitter:image" content="/image.svg"> <!-- Replace with your actual, absolute URL in production -->
+
+  </head>
+  <body>
+    <div id="root"></div>
+    
+    <!-- BigInt serialization fix -->
+    <script>
+      // Fix for BigInt serialization error in React DevTools
+      BigInt.prototype.toJSON = function() {
+        return this.toString();
+      };
+    </script>
+    
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

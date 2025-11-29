@@ -1,0 +1,111 @@
+import { useState } from "react";
+
+interface GMProps {
+  className?: string;
+}
+
+export default function GM({ className }: GMProps) {
+  const [copied, setCopied] = useState(false);
+  const gmAddress = "0x1e2390B4021B64B05Bc7AfF53E0122eb648DdC19";
+  const truncatedAddress = `0x..${gmAddress.slice(-3)}`;
+
+  return (
+    <section className={`w-full px-4 py-4 text-white ${className ?? ""}`}>
+      <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <div className="w-full lg:w-[130px] flex flex-col items-center relative">
+            <div
+              className="absolute -top-2 -left-2
+                         bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
+                         text-white px-3 py-1 text-xs font-bold rounded-full
+                         shadow-lg z-10"
+            >
+              Base
+            </div>
+            <img
+              src="https://bafybeihjwg5c4zsl335gpxu7y4nspp5gcy26udisdbpogt7edrvac6iiwu.ipfs.w3s.link/"
+              alt="HashCoin NFT"
+              className="rounded-xl w-full h-auto"
+            />
+            <div className="pt-6 flex flex-wrap items-center justify-center gap-2">
+              <span
+                className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-500 text-gray-500 bg-transparent"
+                title="Mint a non-transferable NFT."
+              >
+                Burn 30 GM
+              </span>
+            </div>
+          </div>
+
+          <div className="flex-1 space-y-6">
+            <div className="flex justify-between items-center flex-wrap gap-2">
+              <h2 className="text-3xl font-bold text-white">Good morning</h2>
+              <div className="flex items-center gap-2">
+                <div className="px-2 py-1 border border-neutral-700 rounded-md flex items-center justify-center">
+                  <span className="text-white font-semibold text-sm mr-2">
+                    {truncatedAddress}
+                  </span>
+                  <button
+                    className="text-gray-400 hover:text-white dark:hover:text-neutral-200 focus:outline-none"
+                    onClick={() => {
+                      navigator.clipboard.writeText(gmAddress);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+                    }}
+                    title="Copy contract address"
+                  >
+                    {copied ? (
+                      <svg
+                        className="w-4 h-4 text-green-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        ></path>
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2.286a1 1 0 01.714 1.714L17 10m0 0l-3.143 3.143a1 1 0 01-1.714-.714L14 10m0 0H8"
+                        ></path>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-neutral-400">
+              GM is now trading! FARM & STAKE role holders receive tokens every
+              24 hours.
+            </p>
+            <a
+              href="https://app.uniswap.org/explore/pools/base/0x9baf8cd5787c2ff300020a6d91a5fb16a917f8df"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-center px-4 py-2 text-base font-medium rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors mt-4"
+              title="Trade on Uniswap"
+            >
+              UniSwap
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
