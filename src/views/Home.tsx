@@ -1,18 +1,18 @@
-import NFT from "@/partials/NFT";
-import Features from "@/partials/Features";
-import Hero from "@/partials/Hero";
-import Services from "@/partials/Services";
-import Teams from "@/partials/Teams";
-import Forum from "@/partials/Forum";
-import Tips from "@/partials/Tips";
-import { Domain } from "@/partials/Domain";
-import Drub from "@/partials/Drub";
-import Hashchain from "@/partials/Hashchain";
-import Mining from "@/partials/Mining";
-import CarouselCardSection from "@/components/CarouselCardSection";
-import Airdrop from "@/partials/Airdrop"; 
-import Drop from "@/partials/Drop"; 
-import GM from "@/partials/GM";
+import NFT from '@/partials/NFT';
+import Features from '@/partials/Features';
+import Hero from '@/partials/Hero';
+import Services from '@/partials/Services';
+import Teams from '@/partials/Teams';
+import Forum from '@/partials/Forum';
+import Tips from '@/partials/Tips';
+import { Domain } from '@/partials/Domain';
+import Drub from '@/partials/Drub';
+import Hashchain from '@/partials/Hashchain';
+import Mining from '@/partials/Mining';
+import CarouselCardSection from '@/components/CarouselCardSection';
+import Airdrop from '@/partials/Airdrop';
+import Drop from '@/partials/Drop';
+import GM from '@/partials/GM';
 
 export default function Home() {
   return (
@@ -23,8 +23,8 @@ export default function Home() {
         <CarouselCardSection
           className="w-full md:w-1/2"
           items={[
-            { key: "drop", component: <Drop /> },
-            { key: "airdrop", component: <Airdrop /> },
+            { key: 'drop', component: <Drop /> },
+            { key: 'airdrop', component: <Airdrop /> },
           ]}
         />
         <GM className="w-full md:w-1/2" />

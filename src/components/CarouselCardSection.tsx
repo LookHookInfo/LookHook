@@ -25,7 +25,7 @@ const CarouselCardSection: React.FC<CarouselCardSectionProps> = ({ items, classN
 
   const getCardStyle = (index: number) => {
     const offset = (index - activeIndex + items.length) % items.length;
-    
+
     // Scale and translate values adjusted for better containment within parent
     if (offset === 0) {
       // Active card: slightly scaled down and centered

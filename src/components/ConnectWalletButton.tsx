@@ -1,6 +1,6 @@
-import { ConnectButton } from "thirdweb/react";
-import { client } from "../lib/thirdweb/client";
-import { chain } from "../lib/thirdweb/chain";
+import { ConnectButton } from 'thirdweb/react';
+import { client } from '../lib/thirdweb/client';
+import { chain } from '../lib/thirdweb/chain';
 
 export default function ConnectWalletButton() {
   return (
@@ -9,8 +9,8 @@ export default function ConnectWalletButton() {
         client={client}
         chain={chain}
         appMetadata={{
-          name: "LookHook App",
-          url: "https://example.com", // Replace with your app's URL
+          name: 'LookHook App',
+          url: 'https://example.com', // Replace with your app's URL
         }}
       />
     </div>

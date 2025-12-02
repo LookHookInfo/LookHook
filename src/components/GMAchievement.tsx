@@ -1,8 +1,8 @@
-import { useReadContract, useSendAndConfirmTransaction } from "thirdweb/react";
-import type { Wallet } from "thirdweb/wallets";
-import { gmContract } from "../utils/contracts";
-import { prepareContractCall } from "thirdweb";
-import { useEffect, useState } from "react";
+import { useReadContract, useSendAndConfirmTransaction } from 'thirdweb/react';
+import type { Wallet } from 'thirdweb/wallets';
+import { gmContract } from '../utils/contracts';
+import { prepareContractCall } from 'thirdweb';
+import { useEffect, useState } from 'react';
 
 interface GMAchievementProps {
   wallet: Wallet;
@@ -11,19 +11,19 @@ interface GMAchievementProps {
 function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600)
     .toString()
-    .padStart(2, "0");
+    .padStart(2, '0');
   const m = Math.floor((seconds % 3600) / 60)
     .toString()
-    .padStart(2, "0");
+    .padStart(2, '0');
   const s = Math.floor(seconds % 60)
     .toString()
-    .padStart(2, "0");
+    .padStart(2, '0');
   return `${h}:${m}:${s}`;
 }
 
 export function GMAchievement({ wallet }: GMAchievementProps) {
   const ownerAddress = wallet.getAccount()?.address;
-  const [countdown, setCountdown] = useState("");
+  const [countdown, setCountdown] = useState('');
   const [isHovering, setIsHovering] = useState(false);
 
   const {
@@ -32,8 +32,8 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
     refetch: refetchClaimInfo,
   } = useReadContract({
     contract: gmContract,
-    method: "getClaimInfo",
-    params: [ownerAddress || ""],
+    method: 'getClaimInfo',
+    params: [ownerAddress || ''],
     queryOptions: {
       enabled: !!ownerAddress,
     },
@@ -64,12 +64,11 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
 
   const claimTransaction = prepareContractCall({
     contract: gmContract,
-    method: "claim",
+    method: 'claim',
     params: [],
   });
 
-  const { mutate: sendAndConfirmClaim, isPending: isClaiming } =
-    useSendAndConfirmTransaction();
+  const { mutate: sendAndConfirmClaim, isPending: isClaiming } = useSendAndConfirmTransaction();
 
   const handleClaim = async () => {
     if (canClaimNow && ownerAddress && !isClaiming) {
@@ -80,17 +79,14 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
           },
         });
       } catch (error) {
-        console.error("Failed to claim GM:", error);
+        console.error('Failed to claim GM:', error);
       }
     }
   };
 
   if (!ownerAddress) {
     return (
-      <div
-        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center"
-        title="Connect wallet"
-      >
+      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Connect wallet">
         <img src="/assets/GM.webp" alt="GM Achievement" className="size-10" />
       </div>
     );
@@ -98,27 +94,22 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
 
   if (isLoadingClaimInfo) {
     return (
-      <div
-        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center"
-        title="Loading..."
-      >
+      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Loading...">
         <span className="text-neutral-400 text-xs">...</span>
       </div>
     );
   }
 
   const titleText = canClaimNow
-    ? "GM! Click to claim your token"
+    ? 'GM! Click to claim your token'
     : isEligible
-    ? "Hover to see time until next claim"
-    : "Requires Farm NFT or 50k HASH staked (12m)";
+      ? 'Hover to see time until next claim'
+      : 'Requires Farm NFT or 50k HASH staked (12m)';
 
   return (
     <div
       className={`size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden
-        ${canClaimNow ? "cursor-pointer glow-effect" : ""} ${
-        isClaiming ? "cursor-not-allowed" : ""
-      }`}
+        ${canClaimNow ? 'cursor-pointer glow-effect' : ''} ${isClaiming ? 'cursor-not-allowed' : ''}`}
       title={titleText}
       onClick={handleClaim}
       onMouseEnter={() => setIsHovering(true)}
@@ -132,7 +123,7 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
         </div>
       )}
 
-      {!canClaimNow && isHovering && countdown && countdown !== "00:00:00" && (
+      {!canClaimNow && isHovering && countdown && countdown !== '00:00:00' && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-white text-xs font-bold">
           {countdown}
         </div>

@@ -1,21 +1,16 @@
-import { useState } from "react";
-import { useActiveAccount, useReadContract } from "thirdweb/react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from 'react';
+import { useActiveAccount, useReadContract } from 'thirdweb/react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   balanceOf as erc1155BalanceOf,
   getActiveClaimCondition,
   isApprovedForAll,
   claimTo,
-} from "thirdweb/extensions/erc1155";
-import { allowance, approve } from "thirdweb/extensions/erc20";
-import {
-  prepareContractCall,
-  ThirdwebContract,
-  NFT,
-  sendAndConfirmTransaction,
-} from "thirdweb";
-import { formatUnits } from "viem";
-import { usdcContract } from "@/utils/contracts";
+} from 'thirdweb/extensions/erc1155';
+import { allowance, approve } from 'thirdweb/extensions/erc20';
+import { prepareContractCall, ThirdwebContract, NFT, sendAndConfirmTransaction } from 'thirdweb';
+import { formatUnits } from 'viem';
+import { usdcContract } from '@/utils/contracts';
 
 // Props for the hook
 interface UseToolCardLogicProps {
@@ -25,12 +20,7 @@ interface UseToolCardLogicProps {
   contractStaking: ThirdwebContract<any>;
 }
 
-export function useToolCardLogic({
-  tool,
-  address,
-  contractTools,
-  contractStaking,
-}: UseToolCardLogicProps) {
+export function useToolCardLogic({ tool, address, contractTools, contractStaking }: UseToolCardLogicProps) {
   const [quantity, setQuantity] = useState<number>(1);
 
   const incrementQuantity = () => {
@@ -50,30 +40,26 @@ export function useToolCardLogic({
     tokenId: tool.id,
   });
 
-  const { data: tokenAllowance, refetch: refetchTokenAllowance } = useReadContract(
-    allowance,
-    {
-      contract: usdcContract,
-      owner: address,
-      spender: contractTools.address,
-      queryOptions: { enabled: !!address && !!claimCondition },
-    }
-  );
+  const { data: tokenAllowance, refetch: refetchTokenAllowance } = useReadContract(allowance, {
+    contract: usdcContract,
+    owner: address,
+    spender: contractTools.address,
+    queryOptions: { enabled: !!address && !!claimCondition },
+  });
 
   const { data: balance, isLoading: isLoadingBalance } = useQuery({
-    queryKey: ["balance", tool.id.toString(), address],
-    queryFn: () =>
-      erc1155BalanceOf({ contract: contractTools, owner: address, tokenId: tool.id }),
+    queryKey: ['balance', tool.id.toString(), address],
+    queryFn: () => erc1155BalanceOf({ contract: contractTools, owner: address, tokenId: tool.id }),
   });
 
   const { data: stakeInfo, isLoading: isLoadingStakeInfo } = useReadContract({
     contract: contractStaking,
-    method: "function getStakeInfoForToken(uint256 _tokenId, address _staker) external view returns (uint256, uint256)",
+    method: 'function getStakeInfoForToken(uint256 _tokenId, address _staker) external view returns (uint256, uint256)',
     params: [tool.id, address],
   });
 
   const { data: isApprovedForStaking, refetch: refetchStakingApproval } = useQuery({
-    queryKey: ["isApproved", address, contractStaking.address],
+    queryKey: ['isApproved', address, contractStaking.address],
     queryFn: async () => {
       if (!account) return false;
       return isApprovedForAll({
@@ -90,7 +76,7 @@ export function useToolCardLogic({
   const ownAmount = balance || 0n;
 
   const unroundedPrice = claimCondition ? claimCondition.pricePerToken : 0n;
-  const quantityAsBigInt = BigInt(quantity || "1");
+  const quantityAsBigInt = BigInt(quantity || '1');
   const unroundedTotalPrice = unroundedPrice * quantityAsBigInt;
 
   const smallestUnitPerCent = 10000n; // For 6-decimal USDC
@@ -101,17 +87,17 @@ export function useToolCardLogic({
 
   // Transaction handlers
   const handleStake = (amount: bigint) => {
-    if (!account) throw new Error("Not connected");
+    if (!account) throw new Error('Not connected');
     return prepareContractCall({
       contract: contractStaking,
-      method: "function stake(uint256 _tokenId, uint64 _amount)",
+      method: 'function stake(uint256 _tokenId, uint64 _amount)',
       params: [tool.id, amount],
     });
   };
 
   const handleBuy = async () => {
     if (!account || !claimCondition) {
-      throw new Error("Not connected or claim condition not loaded");
+      throw new Error('Not connected or claim condition not loaded');
     }
 
     setIsBuying(true);
@@ -142,9 +128,8 @@ export function useToolCardLogic({
 
       queryClient.invalidateQueries();
     } catch (error) {
-      console.error("Failed to buy NFT", error);
-    }
-    finally {
+      console.error('Failed to buy NFT', error);
+    } finally {
       setIsBuying(false);
     }
   };

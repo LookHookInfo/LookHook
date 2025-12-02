@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { useActiveWallet, useReadContract } from "thirdweb/react";
-import { ConnectButton } from "thirdweb/react";
-import { client } from "../lib/thirdweb/client";
-import { chain } from "../lib/thirdweb/chain";
-import ProfileModal from "./ProfileModal";
-import { nftCollectionContract, whaleContract } from "../utils/contracts";
-import { useNameContract } from "../hooks/useNameContract";
+import { useState } from 'react';
+import { useActiveWallet, useReadContract } from 'thirdweb/react';
+import { ConnectButton } from 'thirdweb/react';
+import { client } from '../lib/thirdweb/client';
+import { chain } from '../lib/thirdweb/chain';
+import ProfileModal from './ProfileModal';
+import { nftCollectionContract, whaleContract } from '../utils/contracts';
+import { useNameContract } from '../hooks/useNameContract';
 
 export default function UserProfile() {
   const wallet = useActiveWallet();
@@ -16,17 +16,17 @@ export default function UserProfile() {
   const { registeredName } = useNameContract(() => {});
 
   const balanceOfAbi = {
-    type: "function",
-    name: "balanceOf",
-    inputs: [{ type: "address", name: "owner" }],
-    outputs: [{ type: "uint256" }],
-    stateMutability: "view",
+    type: 'function',
+    name: 'balanceOf',
+    inputs: [{ type: 'address', name: 'owner' }],
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
   } as const;
 
   const { data: balance, isLoading: isNftBalanceLoading } = useReadContract({
     contract: nftCollectionContract,
     method: balanceOfAbi,
-    params: [account?.address || ""],
+    params: [account?.address || ''],
     queryOptions: {
       enabled: !!account,
     },
@@ -34,8 +34,8 @@ export default function UserProfile() {
 
   const { data: whaleContractData } = useReadContract({
     contract: whaleContract,
-    method: "getUserStatus",
-    params: [account?.address || ""],
+    method: 'getUserStatus',
+    params: [account?.address || ''],
     queryOptions: {
       enabled: !!account,
     },
@@ -59,8 +59,8 @@ export default function UserProfile() {
           client={client}
           chain={chain}
           appMetadata={{
-            name: "LookHook App",
-            url: "https://lookhook.info",
+            name: 'LookHook App',
+            url: 'https://lookhook.info',
           }}
         />
       </div>
@@ -76,7 +76,11 @@ export default function UserProfile() {
   } else if (hasCatNft) {
     iconToDisplay = <img src="/assets/Cat.webp" alt="User NFT" className="size-5 rounded-full" />;
   } else {
-    iconToDisplay = <svg className="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 3c-3.86 0-7 1.69-7 3.79V20h14v-3.21C19 14.69 15.86 13 12 13z" /></svg>;
+    iconToDisplay = (
+      <svg className="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 3c-3.86 0-7 1.69-7 3.79V20h14v-3.21C19 14.69 15.86 13 12 13z" />
+      </svg>
+    );
   }
 
   return (
@@ -88,11 +92,19 @@ export default function UserProfile() {
         {iconToDisplay}
         <span className="font-mono">{displayName}</span>
         <svg className="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M7 10l5 5 5-5z" />
+          <path d="M7 10l5 5 5-5z" />
         </svg>
       </button>
 
-      {isModalOpen && <ProfileModal wallet={wallet} onClose={() => setIsModalOpen(false)} hasCatNft={hasCatNft} isNftLoading={isNftBalanceLoading} registeredName={registeredName} />}
+      {isModalOpen && (
+        <ProfileModal
+          wallet={wallet}
+          onClose={() => setIsModalOpen(false)}
+          hasCatNft={hasCatNft}
+          isNftLoading={isNftBalanceLoading}
+          registeredName={registeredName}
+        />
+      )}
     </>
   );
 }

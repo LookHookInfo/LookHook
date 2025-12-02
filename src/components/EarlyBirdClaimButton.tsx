@@ -1,62 +1,58 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
-import {
-  useActiveWallet,
-  useReadContract,
-  useSendTransaction,
-} from "thirdweb/react";
-import { getContract, prepareContractCall, toWei } from "thirdweb";
-import { earlyBirdContract } from "../utils/contracts";
-import { client } from "../lib/thirdweb/client";
-import { chain } from "../lib/thirdweb/chain";
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useActiveWallet, useReadContract, useSendTransaction } from 'thirdweb/react';
+import { getContract, prepareContractCall, toWei } from 'thirdweb';
+import { earlyBirdContract } from '../utils/contracts';
+import { client } from '../lib/thirdweb/client';
+import { chain } from '../lib/thirdweb/chain';
 
 // --- ABI Snippets ---
 const isClaimOpenAbi = {
-  type: "function",
-  name: "isClaimOpen",
+  type: 'function',
+  name: 'isClaimOpen',
   inputs: [],
-  outputs: [{ type: "bool" }],
-  stateMutability: "view",
+  outputs: [{ type: 'bool' }],
+  stateMutability: 'view',
 } as const;
 const hasClaimedAbi = {
-  type: "function",
-  name: "hasClaimed",
-  inputs: [{ type: "address" }],
-  outputs: [{ type: "bool" }],
-  stateMutability: "view",
+  type: 'function',
+  name: 'hasClaimed',
+  inputs: [{ type: 'address' }],
+  outputs: [{ type: 'bool' }],
+  stateMutability: 'view',
 } as const;
 const claimDeadlineAbi = {
-  type: "function",
-  name: "CLAIM_DEADLINE",
+  type: 'function',
+  name: 'CLAIM_DEADLINE',
   inputs: [],
-  outputs: [{ type: "uint256" }],
-  stateMutability: "view",
+  outputs: [{ type: 'uint256' }],
+  stateMutability: 'view',
 } as const;
 const claimAbi = {
-  type: "function",
-  name: "claim",
-  inputs: [{ internalType: "uint256[]", name: "tokenIds", type: "uint256[]" }],
+  type: 'function',
+  name: 'claim',
+  inputs: [{ internalType: 'uint256[]', name: 'tokenIds', type: 'uint256[]' }],
   outputs: [],
-  stateMutability: "nonpayable",
+  stateMutability: 'nonpayable',
 } as const;
 const getStakingContractAddressAbi = {
-  type: "function",
-  name: "stakingContract",
+  type: 'function',
+  name: 'stakingContract',
   inputs: [],
-  outputs: [{ type: "address" }],
-  stateMutability: "view",
+  outputs: [{ type: 'address' }],
+  stateMutability: 'view',
 } as const;
 const getStakeInfoForTokenAbi = {
-  type: "function",
-  name: "getStakeInfoForToken",
+  type: 'function',
+  name: 'getStakeInfoForToken',
   inputs: [
-    { type: "uint256", name: "_tokenId" },
-    { type: "address", name: "_staker" },
+    { type: 'uint256', name: '_tokenId' },
+    { type: 'address', name: '_staker' },
   ],
   outputs: [
-    { type: "uint256", name: "_tokensStaked" },
-    { type: "uint256", name: "_rewards" },
+    { type: 'uint256', name: '_tokensStaked' },
+    { type: 'uint256', name: '_rewards' },
   ],
-  stateMutability: "view",
+  stateMutability: 'view',
 } as const;
 
 const TOKEN_IDS_TO_CHECK = [0n, 1n, 2n, 3n, 4n, 5n];
@@ -75,20 +71,15 @@ const OpenSeaLinkButton = () => (
 );
 
 // --- Inner Component (handles the main logic) ---
-const ClaimButtonInner = ({
-  stakingContractAddress,
-  address,
-}: {
-  stakingContractAddress: string;
-  address: string;
-}) => {
+const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContractAddress: string; address: string }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const { mutateAsync: sendTx, isPending } = useSendTransaction();
 
   // --- Base contract reads ---
-  const { data: claimDeadline, isLoading: isDeadlineLoading } = useReadContract(
-    { contract: earlyBirdContract, method: claimDeadlineAbi }
-  );
+  const { data: claimDeadline, isLoading: isDeadlineLoading } = useReadContract({
+    contract: earlyBirdContract,
+    method: claimDeadlineAbi,
+  });
   const { data: isClaimOpen, isLoading: isClaimOpenLoading } = useReadContract({
     contract: earlyBirdContract,
     method: isClaimOpenAbi,
@@ -151,21 +142,8 @@ const ClaimButtonInner = ({
     queryOptions: { enabled: !!address },
   });
 
-  const allStakeInfos = [
-    stakeInfo0,
-    stakeInfo1,
-    stakeInfo2,
-    stakeInfo3,
-    stakeInfo4,
-    stakeInfo5,
-  ];
-  const isStakeInfoLoading =
-    isLoading0 ||
-    isLoading1 ||
-    isLoading2 ||
-    isLoading3 ||
-    isLoading4 ||
-    isLoading5;
+  const allStakeInfos = [stakeInfo0, stakeInfo1, stakeInfo2, stakeInfo3, stakeInfo4, stakeInfo5];
+  const isStakeInfoLoading = isLoading0 || isLoading1 || isLoading2 || isLoading3 || isLoading4 || isLoading5;
 
   const totalRewards = allStakeInfos.reduce((acc, query) => {
     if (query && query[1]) {
@@ -174,7 +152,7 @@ const ClaimButtonInner = ({
     return acc;
   }, 0n);
 
-  const hasEnoughHash = totalRewards >= toWei("1");
+  const hasEnoughHash = totalRewards >= toWei('1');
 
   const handleClaim = useCallback(async () => {
     try {
@@ -186,7 +164,7 @@ const ClaimButtonInner = ({
       await sendTx(transaction);
       refetchHasClaimed(); // Refetch claim status after transaction
     } catch (error) {
-      console.error("Claim failed", error);
+      console.error('Claim failed', error);
     }
   }, [sendTx, refetchHasClaimed]);
 
@@ -205,15 +183,10 @@ const ClaimButtonInner = ({
   const days = Math.floor(timeLeft / (60 * 60 * 24));
   const hours = Math.floor((timeLeft % (60 * 60 * 24)) / (60 * 60));
 
-  const isLoading =
-    isDeadlineLoading ||
-    isClaimOpenLoading ||
-    hasClaimedLoading ||
-    isStakeInfoLoading;
-  const isButtonDisabled =
-    isLoading || isPending || !isClaimOpen || hasClaimed || !hasEnoughHash;
+  const isLoading = isDeadlineLoading || isClaimOpenLoading || hasClaimedLoading || isStakeInfoLoading;
+  const isButtonDisabled = isLoading || isPending || !isClaimOpen || hasClaimed || !hasEnoughHash;
 
-  let buttonContent: React.ReactNode = "Claim Early";
+  let buttonContent: React.ReactNode = 'Claim Early';
   if (isPending) {
     buttonContent = (
       <span className="flex items-center justify-center">
@@ -223,21 +196,21 @@ const ClaimButtonInner = ({
     );
   } else if (!address) {
     // Prioritize "Connect Wallet" if address is not available
-    buttonContent = "Connect Wallet";
+    buttonContent = 'Connect Wallet';
   } else if (isLoading) {
-    buttonContent = "Loading...";
+    buttonContent = 'Loading...';
   } else if (!isClaimOpen && timeLeft <= 0) {
-    buttonContent = "Claim ended";
+    buttonContent = 'Claim ended';
   }
 
-  let tooltip = "Claim your Early NFT";
+  let tooltip = 'Claim your Early NFT';
   if (isButtonDisabled && !hasClaimed) {
-    if (isLoading) tooltip = "Loading...";
-    else if (isPending) tooltip = "Processing transaction...";
-    else if (!isClaimOpen && timeLeft <= 0) tooltip = "Claim period is over";
-    else if (!hasEnoughHash) tooltip = "Get 1 HASH token using mining.";
+    if (isLoading) tooltip = 'Loading...';
+    else if (isPending) tooltip = 'Processing transaction...';
+    else if (!isClaimOpen && timeLeft <= 0) tooltip = 'Claim period is over';
+    else if (!hasEnoughHash) tooltip = 'Get 1 HASH token using mining.';
   } else if (hasClaimed) {
-    tooltip = "You have already claimed this NFT";
+    tooltip = 'You have already claimed this NFT';
   }
 
   let mainAction: React.ReactNode;
@@ -251,12 +224,7 @@ const ClaimButtonInner = ({
           viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M5 13l4 4L19 7"
-          ></path>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
         </svg>
         Claimed
       </div>
@@ -266,7 +234,7 @@ const ClaimButtonInner = ({
       <button
         onClick={handleClaim}
         disabled={isButtonDisabled}
-        className={`inline-flex items-center justify-center px-3 py-1 text-sm font-medium rounded-lg border border-neutral-700 text-white bg-neutral-800 hover:bg-neutral-700 transition-colors     ││     disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${!isButtonDisabled ? "glow-effect" : ""}`}
+        className={`inline-flex items-center justify-center px-3 py-1 text-sm font-medium rounded-lg border border-neutral-700 text-white bg-neutral-800 hover:bg-neutral-700 transition-colors     ││     disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${!isButtonDisabled ? 'glow-effect' : ''}`}
       >
         {buttonContent}
       </button>
@@ -293,33 +261,27 @@ export default function EarlyBirdClaimButton() {
   const wallet = useActiveWallet();
   const address = wallet?.getAccount()?.address;
 
-  const { data: stakingContractAddress, isLoading: isStakingAddrLoading } =
-    useReadContract({
-      contract: earlyBirdContract,
-      method: getStakingContractAddressAbi,
-    });
+  const { data: stakingContractAddress, isLoading: isStakingAddrLoading } = useReadContract({
+    contract: earlyBirdContract,
+    method: getStakingContractAddressAbi,
+  });
 
   return (
     <div className="flex items-center justify-center gap-2">
       {isStakingAddrLoading || !address || !stakingContractAddress ? (
         <div
           className="flex items-center justify-center gap-2"
-          title={
-            isStakingAddrLoading ? "Loading..." : "Connect wallet to claim"
-          }
+          title={isStakingAddrLoading ? 'Loading...' : 'Connect wallet to claim'}
         >
           <button
             disabled
             className="inline-flex items-center justify-center px-3 py-1 text-sm font-medium rounded-lg border border-neutral-700 text-white bg-neutral-800 opacity-50 cursor-not-allowed"
           >
-            {isStakingAddrLoading ? "Loading..." : "Claim Early"}
+            {isStakingAddrLoading ? 'Loading...' : 'Claim Early'}
           </button>
         </div>
       ) : (
-        <ClaimButtonInner
-          stakingContractAddress={stakingContractAddress!}
-          address={address}
-        />
+        <ClaimButtonInner stakingContractAddress={stakingContractAddress!} address={address} />
       )}
       <OpenSeaLinkButton />
     </div>

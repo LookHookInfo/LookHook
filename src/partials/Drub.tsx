@@ -4,7 +4,7 @@ interface DrubProps {
 
 export default function Drub({ className }: DrubProps) {
   return (
-    <section className={`w-full px-4 py-4 text-white ${className ?? ""}`}>
+    <section className={`w-full px-4 py-4 text-white ${className ?? ''}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           <div className="w-full lg:w-[160px] flex flex-col items-center relative">
@@ -20,7 +20,7 @@ export default function Drub({ className }: DrubProps) {
               src="https://bafybeidzrpc2umwvsx5vwnlgup44fh5elckp73ecp5qmghrku6kcoxcthm.ipfs.w3s.link/Logo.png"
               alt="HashCoin NFT"
               className="rounded-xl w-full h-auto"
-              style={{ animation: "drubBounce 3s ease-in-out infinite" }}
+              style={{ animation: 'drubBounce 3s ease-in-out infinite' }}
             />
             <div className="pt-6 flex flex-wrap items-center justify-center gap-2">
               <a
@@ -45,9 +45,8 @@ export default function Drub({ className }: DrubProps) {
             </div>
 
             <p className="text-neutral-400">
-              Decentralized Ruble Lending Protocol offers DRUB stablecoin loans
-              using crypto as collateral. The current MVP combines decentralized
-              lending with a centralized oracle.
+              Decentralized Ruble Lending Protocol offers DRUB stablecoin loans using crypto as collateral. The current
+              MVP combines decentralized lending with a centralized oracle.
             </p>
           </div>
         </div>

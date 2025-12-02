@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 interface GMProps {
   className?: string;
@@ -8,7 +8,7 @@ export default function GM({ className }: GMProps) {
   const [copied, setCopied] = useState(false);
   const [gmPriceUsd, setGmPriceUsd] = useState<string | null>(null);
   const [hashPriceUsd, setHashPriceUsd] = useState<string | null>(null);
-  const gmAddress = "0x1e2390B4021B64B05Bc7AfF53E0122eb648DdC19";
+  const gmAddress = '0x1e2390B4021B64B05Bc7AfF53E0122eb648DdC19';
   const truncatedAddress = `0x..${gmAddress.slice(-3)}`;
 
   useEffect(() => {
@@ -16,39 +16,35 @@ export default function GM({ className }: GMProps) {
       try {
         // Fetch GM price
         const gmResponse = await fetch(
-          "https://api.geckoterminal.com/api/v2/networks/base/pools/0x9baf8cd5787c2ff300020a6d91a5fb16a917f8df"
+          'https://api.geckoterminal.com/api/v2/networks/base/pools/0x9baf8cd5787c2ff300020a6d91a5fb16a917f8df',
         );
         const gmData = await gmResponse.json();
-        const gmUsd = parseFloat(gmData.data.attributes.base_token_price_usd).toFixed(
-          2
-        );
+        const gmUsd = parseFloat(gmData.data.attributes.base_token_price_usd).toFixed(2);
         setGmPriceUsd(gmUsd);
 
         // Fetch HASH price
         const hashResponse = await fetch(
-          "https://api.geckoterminal.com/api/v2/networks/base/pools/0x9ab05414f0a3872a78459693f3e3c9ea3f0d6e71"
+          'https://api.geckoterminal.com/api/v2/networks/base/pools/0x9ab05414f0a3872a78459693f3e3c9ea3f0d6e71',
         );
         const hashData = await hashResponse.json();
         const hashUsd = parseFloat(hashData.data.attributes.base_token_price_usd);
         setHashPriceUsd(hashUsd.toString()); // Store as string for calculation later
-
       } catch (error) {
-        console.error("Failed to fetch token prices:", error);
-        setGmPriceUsd("N/A");
-        setHashPriceUsd("N/A");
+        console.error('Failed to fetch token prices:', error);
+        setGmPriceUsd('N/A');
+        setHashPriceUsd('N/A');
       }
     };
     fetchPrices();
   }, []);
 
   const gmToHash =
-    gmPriceUsd && hashPriceUsd && hashPriceUsd !== "N/A" && gmPriceUsd !== "N/A"
+    gmPriceUsd && hashPriceUsd && hashPriceUsd !== 'N/A' && gmPriceUsd !== 'N/A'
       ? (parseFloat(gmPriceUsd) / parseFloat(hashPriceUsd)).toFixed(0)
       : null;
 
-
   return (
-    <section className={`w-full px-4 py-4 text-white ${className ?? ""}`}>
+    <section className={`w-full px-4 py-4 text-white ${className ?? ''}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           <div className="w-full lg:w-[130px] flex flex-col items-center relative">
@@ -80,9 +76,7 @@ export default function GM({ className }: GMProps) {
               <h2 className="text-3xl font-bold text-white">Morning!</h2>
               <div className="flex items-center gap-2">
                 <div className="px-2 py-1 border border-neutral-700 rounded-md flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm mr-2">
-                    {truncatedAddress}
-                  </span>
+                  <span className="text-white font-semibold text-sm mr-2">{truncatedAddress}</span>
                   <button
                     className="text-gray-400 hover:text-white dark:hover:text-neutral-200 focus:outline-none"
                     onClick={() => {
@@ -100,12 +94,7 @@ export default function GM({ className }: GMProps) {
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M5 13l4 4L19 7"
-                        ></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                       </svg>
                     ) : (
                       <svg
@@ -129,8 +118,7 @@ export default function GM({ className }: GMProps) {
             </div>
 
             <p className="text-neutral-400">
-              GM is now trading! FARM & STAKE role holders receive tokens every
-              24 hours.
+              GM is now trading! FARM & STAKE role holders receive tokens every 24 hours.
             </p>
             <a
               href="https://app.uniswap.org/explore/pools/base/0x9baf8cd5787c2ff300020a6d91a5fb16a917f8df"
@@ -141,14 +129,14 @@ export default function GM({ className }: GMProps) {
             >
               {gmPriceUsd && gmToHash ? (
                 <>
-                  <span>1 GM = {gmToHash} HASH&nbsp;</span> 
-                  <span className="text-neutral-400">(</span> 
+                  <span>1 GM = {gmToHash} HASH&nbsp;</span>
+                  <span className="text-neutral-400">(</span>
                   <span className="text-neutral-400">$</span>
                   <span className="text-neutral-400">{gmPriceUsd}</span>
                   <span className="text-neutral-400">)</span>
                 </>
               ) : (
-                "UniSwap"
+                'UniSwap'
               )}
             </a>
           </div>

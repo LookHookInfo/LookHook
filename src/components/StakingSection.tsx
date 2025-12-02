@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { useActiveAccount } from "thirdweb/react";
-import ConnectWalletButton from "./ConnectWalletButton";
-import UserStakesDisplay from "./UserStakesDisplay";
-import { Status } from "../hooks/useStakeContract";
+import { useState, useEffect } from 'react';
+import { useActiveAccount } from 'thirdweb/react';
+import ConnectWalletButton from './ConnectWalletButton';
+import UserStakesDisplay from './UserStakesDisplay';
+import { Status } from '../hooks/useStakeContract';
 
 interface StakingSectionProps {
   className?: string;
@@ -17,13 +17,27 @@ interface StakingSectionProps {
   refreshBalances: () => void;
   isApproved: (amount: string) => boolean;
   refetchAllowance: () => void;
-  status: Status; 
+  status: Status;
   setStatus: (status: Status) => void;
 }
 
-export function StakingSection({ className, tokenSymbol, walletBalance, stakedBalance, userStakes, apr3M, apr6M, apr12M, refreshBalances, isApproved, refetchAllowance, status, setStatus }: StakingSectionProps) {
+export function StakingSection({
+  className,
+  tokenSymbol,
+  walletBalance,
+  stakedBalance,
+  userStakes,
+  apr3M,
+  apr6M,
+  apr12M,
+  refreshBalances,
+  isApproved,
+  refetchAllowance,
+  status,
+  setStatus,
+}: StakingSectionProps) {
   const account = useActiveAccount();
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState('');
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -31,27 +45,20 @@ export function StakingSection({ className, tokenSymbol, walletBalance, stakedBa
   }, [account, refreshBalances]);
 
   return (
-    <section className={`w-full px-4 py-8 text-white ${className ?? ""}`}>
+    <section className={`w-full px-4 py-8 text-white ${className ?? ''}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          
           <div className="flex-1 space-y-6 w-full">
             <div className="flex justify-between items-center flex-wrap gap-2">
-              <h2 className="text-3xl font-bold text-white flex items-center">
-                Stake
-              </h2>
+              <h2 className="text-3xl font-bold text-white flex items-center">Stake</h2>
               <div className="flex items-center gap-2">
                 <div className="px-2 py-1 border border-neutral-700 rounded-md flex items-center justify-center">
                   <span className="font-bold text-sm text-neutral-400 mr-1">Hashcoin:</span>
-                  <span className="text-white font-semibold text-sm mr-2">
-                    0x..445
-                  </span>
+                  <span className="text-white font-semibold text-sm mr-2">0x..445</span>
                   <button
                     className="text-gray-400 hover:text-white dark:hover:text-neutral-200 focus:outline-none"
                     onClick={() => {
-                      navigator.clipboard.writeText(
-                        "0xA9B631ABcc4fd0bc766d7C0C8fCbf866e2bB0445"
-                      );
+                      navigator.clipboard.writeText('0xA9B631ABcc4fd0bc766d7C0C8fCbf866e2bB0445');
                       setCopied(true);
                       setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
                     }}
@@ -65,12 +72,7 @@ export function StakingSection({ className, tokenSymbol, walletBalance, stakedBa
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M5 13l4 4L19 7"
-                        ></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                       </svg>
                     ) : (
                       <svg
@@ -95,15 +97,15 @@ export function StakingSection({ className, tokenSymbol, walletBalance, stakedBa
 
             <div className="bg-black/30 rounded-xl p-4 space-y-2 border border-neutral-700">
               <p className="text-sm text-neutral-400">
-                Wallet balance:{" "}
+                Wallet balance:{' '}
                 <span className="text-white font-semibold">
-                  {walletBalance || "0"} {tokenSymbol || ""}
+                  {walletBalance || '0'} {tokenSymbol || ''}
                 </span>
               </p>
               <p className="text-sm text-neutral-400">
-                Staked balance:{" "}
+                Staked balance:{' '}
                 <span className="text-white font-semibold">
-                  {stakedBalance || "0"} {tokenSymbol || ""}
+                  {stakedBalance || '0'} {tokenSymbol || ''}
                 </span>
               </p>
             </div>
@@ -115,9 +117,7 @@ export function StakingSection({ className, tokenSymbol, walletBalance, stakedBa
                   min="0"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder={`Balance: ${walletBalance || "0"} ${
-                    tokenSymbol || ""
-                  }`}
+                  placeholder={`Balance: ${walletBalance || '0'} ${tokenSymbol || ''}`}
                   className="flex-grow p-2 bg-transparent outline-none text-white text-lg w-full no-spin-buttons"
                 />
                 <button
@@ -132,11 +132,7 @@ export function StakingSection({ className, tokenSymbol, walletBalance, stakedBa
                 min="0"
                 max="100"
                 step="1"
-                value={
-                  amount && walletBalance
-                    ? Math.floor((Number(amount) / Number(walletBalance)) * 100)
-                    : 0
-                }
+                value={amount && walletBalance ? Math.floor((Number(amount) / Number(walletBalance)) * 100) : 0}
                 onChange={(e) => {
                   const percentage = Number(e.target.value);
                   const maxAmount = Number(walletBalance);
@@ -148,10 +144,7 @@ export function StakingSection({ className, tokenSymbol, walletBalance, stakedBa
 
             {!account ? (
               <ConnectWalletButton />
-            ) : userStakes &&
-              apr3M !== undefined &&
-              apr6M !== undefined &&
-              apr12M !== undefined ? (
+            ) : userStakes && apr3M !== undefined && apr6M !== undefined && apr12M !== undefined ? (
               <UserStakesDisplay
                 userStakes={userStakes}
                 apr3M={apr3M}
@@ -166,9 +159,7 @@ export function StakingSection({ className, tokenSymbol, walletBalance, stakedBa
                 setStatus={setStatus}
               />
             ) : (
-              <p className="text-center text-neutral-400">
-                Loading staking data...
-              </p>
+              <p className="text-center text-neutral-400">Loading staking data...</p>
             )}
           </div>
         </div>

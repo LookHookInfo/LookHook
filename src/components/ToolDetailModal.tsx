@@ -1,10 +1,10 @@
-import { useToolCardLogic } from "@/hooks/useToolCardLogic";
-import { ThirdwebContract, NFT } from "thirdweb";
-import { client } from "@/lib/thirdweb/client";
-import { MediaRenderer, TransactionButton } from "thirdweb/react";
-import { formatUnits } from "viem";
-import { setApprovalForAll } from "thirdweb/extensions/erc1155";
-import { prepareContractCall } from "thirdweb";
+import { useToolCardLogic } from '@/hooks/useToolCardLogic';
+import { ThirdwebContract, NFT } from 'thirdweb';
+import { client } from '@/lib/thirdweb/client';
+import { MediaRenderer, TransactionButton } from 'thirdweb/react';
+import { formatUnits } from 'viem';
+import { setApprovalForAll } from 'thirdweb/extensions/erc1155';
+import { prepareContractCall } from 'thirdweb';
 
 interface ToolDetailModalProps {
   tool: NFT;
@@ -44,10 +44,7 @@ export function ToolDetailModal({
   const hasInsufficientFunds = usdcBalance < totalPrice;
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50" onClick={onClose}>
       <div
         className="bg-neutral-800 border border-neutral-700 rounded-xl p-4 w-full max-w-sm mx-4 text-white"
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
@@ -64,12 +61,7 @@ export function ToolDetailModal({
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12"
-              ></path>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
@@ -81,23 +73,15 @@ export function ToolDetailModal({
         ) : (
           <>
             <div className="relative w-full h-64 rounded-lg overflow-hidden mb-4">
-              <MediaRenderer
-                client={client}
-                src={tool.metadata.image}
-                className="w-full h-full object-cover"
-              />
+              <MediaRenderer client={client} src={tool.metadata.image} className="w-full h-full object-cover" />
               {/* Name Overlay */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-fit px-2 py-1 bg-gray-200 bg-opacity-75 rounded-lg text-center">
-                <h3 className="text-xl font-bold text-gray-800 truncate">
-                  {tool.metadata.name}
-                </h3>
+                <h3 className="text-xl font-bold text-gray-800 truncate">{tool.metadata.name}</h3>
               </div>
               {/* Description Overlay */}
               {tool.metadata.description && (
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-fit px-2 py-1 bg-gray-200 bg-opacity-75 rounded-lg text-center">
-                  <p className="text-sm font-bold text-gray-800 truncate">
-                    {tool.metadata.description}
-                  </p>
+                  <p className="text-sm font-bold text-gray-800 truncate">{tool.metadata.description}</p>
                 </div>
               )}
             </div>
@@ -110,9 +94,7 @@ export function ToolDetailModal({
               >
                 -
               </button>
-              <span className="w-12 text-center text-white text-lg font-semibold">
-                {quantity}
-              </span>
+              <span className="w-12 text-center text-white text-lg font-semibold">{quantity}</span>
               <button
                 onClick={incrementQuantity}
                 className="px-3 py-1 border border-neutral-600 rounded-md text-white hover:bg-neutral-700"
@@ -128,9 +110,7 @@ export function ToolDetailModal({
                 disabled={!account || isBuying || hasInsufficientFunds}
                 className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isBuying
-                  ? "Processing..."
-                  : `Buy $${parseFloat(formatUnits(totalPrice, 6)).toFixed(2)}`}
+                {isBuying ? 'Processing...' : `Buy $${parseFloat(formatUnits(totalPrice, 6)).toFixed(2)}`}
               </button>
 
               {/* Equip/Approve Button */}
@@ -141,12 +121,12 @@ export function ToolDetailModal({
                   className="w-full justify-center px-4 py-2 text-sm font-medium bg-neutral-700 border border-neutral-600 text-white rounded-md hover:bg-neutral-600 transition-colors disabled:opacity-50"
                   onTransactionConfirmed={() => queryClient.invalidateQueries()}
                 >
-                  Equip {ownAmount > 0n ? `(${ownAmount.toString()})` : ""}
+                  Equip {ownAmount > 0n ? `(${ownAmount.toString()})` : ''}
                 </TransactionButton>
               ) : (
                 <TransactionButton
                   transaction={() => {
-                    if (!account) throw new Error("Not connected");
+                    if (!account) throw new Error('Not connected');
                     return setApprovalForAll({
                       contract: contractTools,
                       operator: contractStaking.address,
@@ -166,7 +146,7 @@ export function ToolDetailModal({
                 transaction={() =>
                   prepareContractCall({
                     contract: contractStaking,
-                    method: "function withdraw(uint256, uint64)",
+                    method: 'function withdraw(uint256, uint64)',
                     params: [tool.id, BigInt(quantity)],
                   })
                 }
@@ -174,8 +154,7 @@ export function ToolDetailModal({
                 className="w-full justify-center px-4 py-2 text-sm font-medium bg-neutral-700 border border-neutral-600 text-white rounded-md hover:bg-neutral-600 transition-colors disabled:opacity-50"
                 onTransactionConfirmed={() => queryClient.invalidateQueries()}
               >
-                Unequip{" "}
-                {stakedAmount > 0n ? `(${stakedAmount.toString()})` : ""}
+                Unequip {stakedAmount > 0n ? `(${stakedAmount.toString()})` : ''}
               </TransactionButton>
 
               {/* Claim Button */}
@@ -183,7 +162,7 @@ export function ToolDetailModal({
                 transaction={() =>
                   prepareContractCall({
                     contract: contractStaking,
-                    method: "function claimRewards(uint256)",
+                    method: 'function claimRewards(uint256)',
                     params: [tool.id],
                   })
                 }
@@ -191,12 +170,7 @@ export function ToolDetailModal({
                 className="w-full justify-center px-4 py-2 text-sm font-medium bg-neutral-700 border border-neutral-600 text-white rounded-md hover:bg-neutral-600 transition-colors disabled:opacity-50"
                 onTransactionConfirmed={() => queryClient.invalidateQueries()}
               >
-                Claim{" "}
-                {claimableRewards
-                  ? `(${parseFloat(formatUnits(claimableRewards, 18)).toFixed(
-                      4
-                    )})`
-                  : ""}
+                Claim {claimableRewards ? `(${parseFloat(formatUnits(claimableRewards, 18)).toFixed(4)})` : ''}
               </TransactionButton>
             </div>
           </>

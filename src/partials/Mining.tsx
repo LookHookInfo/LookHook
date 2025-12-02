@@ -1,24 +1,15 @@
-import { useState } from "react";
-import {
-  MediaRenderer,
-  useActiveAccount,
-  useReadContract,
-} from "thirdweb/react";
-import { useQuery } from "@tanstack/react-query";
-import { getNFTs } from "thirdweb/extensions/erc1155";
-import { balanceOf as erc20BalanceOf } from "thirdweb/extensions/erc20";
-import { NFT } from "thirdweb";
-import { formatUnits } from "viem";
+import { useState } from 'react';
+import { MediaRenderer, useActiveAccount, useReadContract } from 'thirdweb/react';
+import { useQuery } from '@tanstack/react-query';
+import { getNFTs } from 'thirdweb/extensions/erc1155';
+import { balanceOf as erc20BalanceOf } from 'thirdweb/extensions/erc20';
+import { NFT } from 'thirdweb';
+import { formatUnits } from 'viem';
 
-import { client } from "../lib/thirdweb/client";
-import {
-  contractTools,
-  contractStaking,
-  usdcContract,
-  hashcoinContract,
-} from "../utils/contracts";
-import ConnectWalletButton from "@/components/ConnectWalletButton";
-import { ToolDetailModal } from "@/components/ToolDetailModal";
+import { client } from '../lib/thirdweb/client';
+import { contractTools, contractStaking, usdcContract, hashcoinContract } from '../utils/contracts';
+import ConnectWalletButton from '@/components/ConnectWalletButton';
+import { ToolDetailModal } from '@/components/ToolDetailModal';
 
 // #region Main Game Component
 function Game() {
@@ -27,18 +18,14 @@ function Game() {
 
   const { data: usdcBalanceData } = useReadContract(erc20BalanceOf, {
     contract: usdcContract,
-    address: account?.address || "",
+    address: account?.address || '',
     queryOptions: { enabled: !!account },
   });
   const usdcBalance = usdcBalanceData || 0n;
 
   return (
     <div className="relative">
-      <GameContent
-        account={account}
-        onSelectTool={setSelectedTool}
-        usdcBalance={usdcBalance}
-      />
+      <GameContent account={account} onSelectTool={setSelectedTool} usdcBalance={usdcBalance} />
       {selectedTool && account && (
         <ToolDetailModal
           tool={selectedTool}
@@ -53,9 +40,7 @@ function Game() {
         <div className="absolute inset-0 flex justify-center items-center rounded-xl z-20">
           <div className="text-center p-6 bg-neutral-800/90 border border-neutral-700 rounded-lg shadow-xl">
             <h3 className="text-xl font-bold text-white mb-2">Start Mining</h3>
-            <p className="text-neutral-300 mb-4">
-              Connect your wallet to manage your inventory.
-            </p>
+            <p className="text-neutral-300 mb-4">Connect your wallet to manage your inventory.</p>
             <ConnectWalletButton />
           </div>
         </div>
@@ -74,7 +59,7 @@ function GameContent({
   usdcBalance: bigint;
 }) {
   const { data: allTools, isLoading: isLoadingTools } = useQuery({
-    queryKey: ["allTools"],
+    queryKey: ['allTools'],
     queryFn: () => getNFTs({ contract: contractTools }),
   });
 
@@ -87,9 +72,9 @@ function GameContent({
   }
 
   return (
-    <div className={`${!account ? "pointer-events-none" : ""}`}>
+    <div className={`${!account ? 'pointer-events-none' : ''}`}>
       <ToolGrid
-        address={account?.address || ""}
+        address={account?.address || ''}
         allTools={allTools}
         onSelectTool={onSelectTool}
         usdcBalance={usdcBalance}
@@ -101,13 +86,7 @@ function GameContent({
 
 // #region Helper Components
 
-function Section({
-  title,
-  children,
-}: {
-  title: React.ReactNode;
-  children: React.ReactNode;
-}) {
+function Section({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="border border-neutral-700 rounded-xl p-4">
       <div className="text-lg font-semibold mb-4">{title}</div>
@@ -143,11 +122,7 @@ function ToolGrid({
     <Section title={titleWithBalance}>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {allTools?.map((tool) => (
-          <ToolCard
-            key={tool.id.toString()}
-            tool={tool}
-            onClick={() => onSelectTool(tool)}
-          />
+          <ToolCard key={tool.id.toString()} tool={tool} onClick={() => onSelectTool(tool)} />
         ))}
       </div>
     </Section>
@@ -161,23 +136,15 @@ function ToolCard({ tool, onClick }: { tool: NFT; onClick: () => void }) {
       onClick={onClick}
     >
       <div className="relative w-full h-36 mt-2 rounded-lg aspect-square object-cover overflow-hidden">
-        <MediaRenderer
-          client={client}
-          src={tool.metadata.image}
-          className="w-full h-full object-cover"
-        />
+        <MediaRenderer client={client} src={tool.metadata.image} className="w-full h-full object-cover" />
         {/* Name Overlay */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-fit px-2 py-1 bg-gray-200 bg-opacity-75 rounded-lg text-center">
-          <p className="font-bold text-sm text-gray-800 truncate">
-            {tool.metadata.name}
-          </p>
+          <p className="font-bold text-sm text-gray-800 truncate">{tool.metadata.name}</p>
         </div>
         {/* Description Overlay */}
         {tool.metadata.description && (
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-fit px-2 py-1 bg-gray-200 bg-opacity-75 rounded-lg text-center">
-            <p className="font-bold text-xs text-gray-800 truncate">
-              {tool.metadata.description}
-            </p>
+            <p className="font-bold text-xs text-gray-800 truncate">{tool.metadata.description}</p>
           </div>
         )}
       </div>
@@ -190,13 +157,13 @@ function ToolCard({ tool, onClick }: { tool: NFT; onClick: () => void }) {
 export default function Mining() {
   const { data: totalRewards, isLoading } = useReadContract({
     contract: contractStaking,
-    method: "getRewardTokenBalance",
+    method: 'getRewardTokenBalance',
     params: [],
   });
 
   const { data: tokenSymbol } = useReadContract({
     contract: hashcoinContract,
-    method: "symbol",
+    method: 'symbol',
     params: [],
   });
 
@@ -225,10 +192,8 @@ export default function Mining() {
                 Mining Hash
               </h2>
               <p className="text-neutral-300 text-lg">
-                Mining Hash is an NFT-based mining system where users stake NFT
-                devices to earn $HASH. The stronger your inventory, the faster
-                you mine. Quests and activities expand utility and support a
-                growing ecosystem.
+                Mining Hash is an NFT-based mining system where users stake NFT devices to earn $HASH. The stronger your
+                inventory, the faster you mine. Quests and activities expand utility and support a growing ecosystem.
               </p>
             </div>
 
@@ -240,7 +205,7 @@ export default function Mining() {
                   {isLoading ? (
                     <div className="inline-block loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-4 w-4"></div>
                   ) : (
-                    `${totalRewards ? Math.floor(parseFloat(formatUnits(totalRewards, 18))).toLocaleString() : "0"} ${tokenSymbol || ""}`
+                    `${totalRewards ? Math.floor(parseFloat(formatUnits(totalRewards, 18))).toLocaleString() : '0'} ${tokenSymbol || ''}`
                   )}
                 </span>
               </div>
@@ -306,9 +271,7 @@ export default function Mining() {
               <span className="inline-flex items-center justify-center px-2 py-0.5 h-6 text-xs font-semibold bg-black text-yellow-400 border border-yellow-400 rounded">
                 PoN
               </span>
-              <span className="text-sm text-neutral-400 font-medium leading-none">
-                Proof of NFT
-              </span>
+              <span className="text-sm text-neutral-400 font-medium leading-none">Proof of NFT</span>
             </div>
           </div>
         </div>

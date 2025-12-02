@@ -1,15 +1,10 @@
-import { useActiveAccount } from "thirdweb/react";
-import { airdropContract } from "@/utils/contracts";
-import { useReadContract } from "thirdweb/react";
-import {
-  prepareContractCall,
-  toEther,
-  getContractEvents,
-  prepareEvent,
-} from "thirdweb";
-import { TransactionButton } from "thirdweb/react";
-import ConnectWalletButton from "@/components/ConnectWalletButton";
-import { useState, useEffect } from "react";
+import { useActiveAccount } from 'thirdweb/react';
+import { airdropContract } from '@/utils/contracts';
+import { useReadContract } from 'thirdweb/react';
+import { prepareContractCall, toEther, getContractEvents, prepareEvent } from 'thirdweb';
+import { TransactionButton } from 'thirdweb/react';
+import ConnectWalletButton from '@/components/ConnectWalletButton';
+import { useState, useEffect } from 'react';
 
 interface AirdropProps {
   className?: string;
@@ -17,27 +12,30 @@ interface AirdropProps {
 
 export default function Airdrop({ className }: AirdropProps) {
   const account = useActiveAccount();
-  const [remainingTime, setRemainingTime] = useState<string>("");
+  const [remainingTime, setRemainingTime] = useState<string>('');
   const [claimedCount, setClaimedCount] = useState<number | null>(null);
 
-  const { data: userStatus, isLoading: isUserStatusLoading, refetch: refetchUserStatus } =
-    useReadContract({
-      contract: airdropContract,
-      method: "getUserStatus",
-      params: [account?.address || ""],
-      queryOptions: { enabled: !!account },
-    });
+  const {
+    data: userStatus,
+    isLoading: isUserStatusLoading,
+    refetch: refetchUserStatus,
+  } = useReadContract({
+    contract: airdropContract,
+    method: 'getUserStatus',
+    params: [account?.address || ''],
+    queryOptions: { enabled: !!account },
+  });
 
   const { data: claimDeadline } = useReadContract({
     contract: airdropContract,
-    method: "claimDeadline",
+    method: 'claimDeadline',
     params: [],
   });
 
   useEffect(() => {
     async function fetchClaimedCount() {
       const preparedEvent = prepareEvent({
-        signature: "event Claimed(address indexed user, uint256 amount)",
+        signature: 'event Claimed(address indexed user, uint256 amount)',
       });
       const events = await getContractEvents({
         contract: airdropContract,
@@ -56,7 +54,7 @@ export default function Airdrop({ className }: AirdropProps) {
         const diff = deadline - now;
 
         if (diff <= 0) {
-          setRemainingTime("Airdrop has ended");
+          setRemainingTime('Airdrop has ended');
           clearInterval(interval);
           return;
         }
@@ -74,7 +72,9 @@ export default function Airdrop({ className }: AirdropProps) {
   }, [claimDeadline]);
 
   return (
-    <div className={`w-full h-full text-white bg-neutral-800 rounded-2xl p-4 sm:p-6 shadow-lg border border-neutral-700 flex flex-col ${className ?? ""}`}>
+    <div
+      className={`w-full h-full text-white bg-neutral-800 rounded-2xl p-4 sm:p-6 shadow-lg border border-neutral-700 flex flex-col ${className ?? ''}`}
+    >
       <div className="flex-grow flex flex-col md:flex-row gap-8 items-start">
         {/* Image Block */}
         <div className="flex-shrink-0 w-40 h-40 relative">
@@ -86,11 +86,7 @@ export default function Airdrop({ className }: AirdropProps) {
           >
             Base
           </div>
-          <img
-            src="/assets/Airdrop.webp"
-            alt="Airdrop"
-            className="rounded-xl w-full h-full object-cover"
-          />
+          <img src="/assets/Airdrop.webp" alt="Airdrop" className="rounded-xl w-full h-full object-cover" />
           {claimedCount !== null && (
             <span className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-lg">
               🪂 {claimedCount}
@@ -134,7 +130,7 @@ export default function Airdrop({ className }: AirdropProps) {
                 transaction={() =>
                   prepareContractCall({
                     contract: airdropContract,
-                    method: "claim",
+                    method: 'claim',
                   })
                 }
                 onTransactionConfirmed={() => refetchUserStatus()}

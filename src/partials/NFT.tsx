@@ -4,10 +4,9 @@ interface NFTCardProps {
 
 export default function NFTCard({ className }: NFTCardProps) {
   return (
-    <section className={`w-full px-4 py-4 text-white ${className ?? ""}`}>
+    <section className={`w-full px-4 py-4 text-white ${className ?? ''}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          
           {/* Image and Links */}
           <div className="w-full lg:w-[140px] flex flex-col items-center relative">
             <div
@@ -85,9 +84,8 @@ export default function NFTCard({ className }: NFTCardProps) {
             </div>
 
             <p className="text-neutral-400">
-              <strong>Plasma Cat</strong> is an NFT collection that grants
-              access to community events, quests, and early access to product
-              features. After the mint, we will airdrop the <strong>$CATSH</strong> meme token.
+              <strong>Plasma Cat</strong> is an NFT collection that grants access to community events, quests, and early
+              access to product features. After the mint, we will airdrop the <strong>$CATSH</strong> meme token.
             </p>
           </div>
         </div>

@@ -4,10 +4,9 @@ interface ForumProps {
 
 export default function Forum({ className }: ForumProps) {
   return (
-    <section className={`w-full px-4 py-4 text-white ${className ?? ""}`}>
+    <section className={`w-full px-4 py-4 text-white ${className ?? ''}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-
           {/* Image and Links */}
           <div className="w-full lg:w-[140px] flex flex-col items-center relative">
             <img
@@ -70,9 +69,8 @@ export default function Forum({ className }: ForumProps) {
             </div>
 
             <p className="text-neutral-400">
-              Blockchain Forum - a Telegram community uniting people passionate
-              about testnets, blockchain, and Web3. Join the community and be
-              part of the conversation.
+              Blockchain Forum - a Telegram community uniting people passionate about testnets, blockchain, and Web3.
+              Join the community and be part of the conversation.
             </p>
           </div>
         </div>

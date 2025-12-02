@@ -4,7 +4,7 @@ interface HashchainProps {
 
 export default function Hashchain({ className }: HashchainProps) {
   return (
-    <section className={`w-full px-4 py-4 text-white ${className ?? ""}`}>
+    <section className={`w-full px-4 py-4 text-white ${className ?? ''}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           <div className="w-full lg:w-[130px] flex flex-col items-center relative">
@@ -39,9 +39,8 @@ export default function Hashchain({ className }: HashchainProps) {
             </div>
 
             <p className="text-neutral-400">
-              One transaction - 1 kopeck. Instant confirmations, stable
-              transaction costs without volatility. The perfect solution for
-              micropayments, gaming and everyday transactions.
+              One transaction - 1 kopeck. Instant confirmations, stable transaction costs without volatility. The
+              perfect solution for micropayments, gaming and everyday transactions.
             </p>
           </div>
         </div>

@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
-import { readContract, prepareContractCall, waitForReceipt } from "thirdweb";
-import { client } from "../lib/thirdweb/client";
-import { chain } from "../lib/thirdweb/chain";
-import { nameContract, hashcoinContract } from "../utils/contracts";
-import { useSendTransaction, useActiveAccount } from "thirdweb/react";
+import { useState, useEffect, useCallback } from 'react';
+import { readContract, prepareContractCall, waitForReceipt } from 'thirdweb';
+import { client } from '../lib/thirdweb/client';
+import { chain } from '../lib/thirdweb/chain';
+import { nameContract, hashcoinContract } from '../utils/contracts';
+import { useSendTransaction, useActiveAccount } from 'thirdweb/react';
 
 export function useNameContract(setStatus: (status: any) => void) {
   const account = useActiveAccount();
@@ -28,12 +28,12 @@ export function useNameContract(setStatus: (status: any) => void) {
         try {
           const balance = await readContract({
             contract: nameContract,
-            method: "function balanceOf(address owner) view returns (uint256)",
+            method: 'function balanceOf(address owner) view returns (uint256)',
             params: [account.address],
           });
           setRegisteredNamesCount(Number(balance));
         } catch (e) {
-          console.error("Failed to fetch registered names count:", e);
+          console.error('Failed to fetch registered names count:', e);
           setRegisteredNamesCount(null);
         }
       })();
@@ -48,13 +48,13 @@ export function useNameContract(setStatus: (status: any) => void) {
       try {
         const basePrice = await readContract({
           contract: nameContract,
-          method: "function PRICE() view returns (uint256)",
+          method: 'function PRICE() view returns (uint256)',
           params: [],
         });
         priceBigInt = BigInt(basePrice.toString());
         setPrice(priceBigInt);
       } catch (e) {
-        console.error("Failed to get price:", e);
+        console.error('Failed to get price:', e);
         return;
       }
 
@@ -62,7 +62,7 @@ export function useNameContract(setStatus: (status: any) => void) {
         try {
           const userHasDiscount = await readContract({
             contract: nameContract,
-            method: "function hasDiscount(address user) view returns (bool)",
+            method: 'function hasDiscount(address user) view returns (bool)',
             params: [account.address],
           });
 
@@ -72,9 +72,9 @@ export function useNameContract(setStatus: (status: any) => void) {
             setDisplayPrice(priceBigInt);
           }
         } catch (e) {
-          console.error("Failed to get discount info:", e);
+          console.error('Failed to get discount info:', e);
           setDisplayPrice(priceBigInt);
-          setStatus("error");
+          setStatus('error');
         }
       } else {
         setDisplayPrice(priceBigInt);
@@ -88,12 +88,12 @@ export function useNameContract(setStatus: (status: any) => void) {
         try {
           const name = await readContract({
             contract: nameContract,
-            method: "function getPrimaryName(address user) view returns (string)",
+            method: 'function getPrimaryName(address user) view returns (string)',
             params: [account.address],
           });
           setRegisteredName(name);
         } catch (e) {
-          console.error("Failed to fetch registered name:", e);
+          console.error('Failed to fetch registered name:', e);
           setRegisteredName(null);
         }
       };
@@ -110,7 +110,7 @@ export function useNameContract(setStatus: (status: any) => void) {
     try {
       const call = await prepareContractCall({
         contract: hashcoinContract,
-        method: "approve",
+        method: 'approve',
         params: [nameContract.address, displayPrice],
       });
       const tx = await sendTx(call);
@@ -120,67 +120,76 @@ export function useNameContract(setStatus: (status: any) => void) {
       await waitForReceipt({ client, chain, transactionHash: tx.transactionHash });
       return true;
     } catch (err: any) {
-      console.error("Approve error: ", err);
+      console.error('Approve error: ', err);
       return false;
     }
   }, [displayPrice, hashcoinContract, sendTx, nameContract.address]);
 
-  const register = useCallback(async (name: string) => {
-    setConfirmedHash(null);
-    if (!name) {
-      return false;
-    }
-    try {
-      const call = await prepareContractCall({
-        contract: nameContract,
-        method: "function register(string name_)",
-        params: [name],
-      });
-      const tx = await sendTx(call);
-      if (!tx?.transactionHash) {
+  const register = useCallback(
+    async (name: string) => {
+      setConfirmedHash(null);
+      if (!name) {
         return false;
       }
+      try {
+        const call = await prepareContractCall({
+          contract: nameContract,
+          method: 'function register(string name_)',
+          params: [name],
+        });
+        const tx = await sendTx(call);
+        if (!tx?.transactionHash) {
+          return false;
+        }
+        setIsConfirming(true);
+        const receipt = await waitForReceipt({ client, chain, transactionHash: tx.transactionHash });
+        setConfirmedHash(receipt.transactionHash);
+        setStatus('taken');
+        return true;
+      } catch (err: any) {
+        console.error('Registration error: ', err);
+        return false;
+      } finally {
+        setIsConfirming(false);
+      }
+    },
+    [nameContract, sendTx, setStatus],
+  );
+
+  const unifiedClaim = useCallback(
+    async (name: string) => {
       setIsConfirming(true);
-      const receipt = await waitForReceipt({ client, chain, transactionHash: tx.transactionHash });
-      setConfirmedHash(receipt.transactionHash);
-      setStatus("taken");
-      return true;
-    } catch (err: any) {
-      console.error("Registration error: ", err);
-      return false;
-    } finally {
-      setIsConfirming(false);
-    }
-  }, [nameContract, sendTx, setStatus]);
-
-  const unifiedClaim = useCallback(async (name: string) => {
-    setIsConfirming(true);
-    try {
-      const approved = await approve();
-      if (!approved) {
+      try {
+        const approved = await approve();
+        if (!approved) {
+          setIsConfirming(false);
+          return;
+        }
+        const registered = await register(name);
+        if (!registered) {
+          setIsConfirming(false);
+          return;
+        }
+      } catch (err: any) {
+        console.error('Unified claim error: ', err);
+      } finally {
         setIsConfirming(false);
-        return;
       }
-      const registered = await register(name);
-      if (!registered) {
-        setIsConfirming(false);
-        return;
-      }
-    } catch (err: any) {
-      console.error("Unified claim error: ", err);
-    } finally {
-      setIsConfirming(false);
-    }
-  }, [approve, register]);
+    },
+    [approve, register],
+  );
 
-  const isNameTaken = useCallback(async (name: string): Promise<boolean> => {
-    const taken = await readContract({
-      contract: nameContract,
-      method: "function isNameTaken(string nameToCheck) view returns (bool)",
-      params: [name],
-    });
-    return taken;
-  }, [nameContract]);
+  const isNameTaken = useCallback(
+    async (name: string): Promise<boolean> => {
+      const taken = await readContract({
+        contract: nameContract,
+        method: 'function isNameTaken(string nameToCheck) view returns (bool)',
+        params: [name],
+      });
+      return taken;
+    },
+    [nameContract],
+  );
 
   return {
     price,

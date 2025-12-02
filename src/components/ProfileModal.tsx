@@ -1,10 +1,10 @@
-import { GMAchievement } from "./GMAchievement";
-import { useEffect } from "react";
-import type { Wallet } from "thirdweb/wallets";
-import { useDisconnect, useWalletBalance, useReadContract } from "thirdweb/react";
-import { hashcoinContract, earlyBirdContract, buyMeACoffeeContract, nameContract } from "../utils/contracts";
-import EarlyBirdClaimButton from "./EarlyBirdClaimButton";
-import { DolphinAchievement, SharkAchievement, WhaleAchievement } from "./WhaleAchievements";
+import { GMAchievement } from './GMAchievement';
+import { useEffect } from 'react';
+import type { Wallet } from 'thirdweb/wallets';
+import { useDisconnect, useWalletBalance, useReadContract } from 'thirdweb/react';
+import { hashcoinContract, earlyBirdContract, buyMeACoffeeContract, nameContract } from '../utils/contracts';
+import EarlyBirdClaimButton from './EarlyBirdClaimButton';
+import { DolphinAchievement, SharkAchievement, WhaleAchievement } from './WhaleAchievements';
 
 interface ProfileModalProps {
   wallet: Wallet;
@@ -23,15 +23,16 @@ function HashcoinAchievement({ wallet }: { wallet: Wallet }) {
     tokenAddress: hashcoinContract.address,
   });
 
-  const formattedBalance = balance ? `${parseInt(balance.displayValue).toString()} ${balance.symbol}` : "0 HASH";
+  const formattedBalance = balance ? `${parseInt(balance.displayValue).toString()} ${balance.symbol}` : '0 HASH';
   const HASHCOIN_ACHIEVEMENT_THRESHOLD = 10000;
 
-  const hasEnoughHash = balance && balance.value >= BigInt(HASHCOIN_ACHIEVEMENT_THRESHOLD) * (10n ** BigInt(balance.decimals));
+  const hasEnoughHash =
+    balance && balance.value >= BigInt(HASHCOIN_ACHIEVEMENT_THRESHOLD) * 10n ** BigInt(balance.decimals);
 
   return (
     <div
       className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
-      title={isBalanceLoading ? "Loading..." : `Balance: ${formattedBalance}`}
+      title={isBalanceLoading ? 'Loading...' : `Balance: ${formattedBalance}`}
     >
       <img src="/image.svg" alt="Hashcoin Logo" className={`size-10 ${!hasEnoughHash ? 'opacity-50' : ''}`} />
     </div>
@@ -39,10 +40,13 @@ function HashcoinAchievement({ wallet }: { wallet: Wallet }) {
 }
 
 // Nft Achievement Component
-function NftAchievement({ hasNft, isLoading }: { hasNft: boolean, isLoading: boolean }) {
+function NftAchievement({ hasNft, isLoading }: { hasNft: boolean; isLoading: boolean }) {
   if (isLoading) {
     return (
-      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Loading NFT...">
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Loading NFT..."
+      >
         <span className="text-neutral-400 text-xs">...</span>
       </div>
     );
@@ -51,7 +55,7 @@ function NftAchievement({ hasNft, isLoading }: { hasNft: boolean, isLoading: boo
   return (
     <div
       className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
-      title={hasNft ? "NFT Owned" : "No NFT owned"}
+      title={hasNft ? 'NFT Owned' : 'No NFT owned'}
     >
       <img src="/assets/Cat.webp" alt="NFT Achievement" className={`size-10 ${!hasNft ? 'opacity-50' : ''}`} />
     </div>
@@ -64,8 +68,8 @@ function EarlyNftAchievement({ wallet }: { wallet: Wallet }) {
 
   const { data: balance, isLoading: isBalanceLoading } = useReadContract({
     contract: earlyBirdContract,
-    method: "function balanceOf(address owner) view returns (uint256)",
-    params: [ownerAddress || ""],
+    method: 'function balanceOf(address owner) view returns (uint256)',
+    params: [ownerAddress || ''],
     queryOptions: {
       enabled: !!ownerAddress,
     },
@@ -75,15 +79,21 @@ function EarlyNftAchievement({ wallet }: { wallet: Wallet }) {
 
   if (!ownerAddress) {
     return (
-      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Connect wallet to see achievement">
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Connect wallet to see achievement"
+      >
         <span className="text-neutral-400 text-xs">?</span>
       </div>
     );
   }
-  
+
   if (isBalanceLoading) {
     return (
-      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Loading Early NFT...">
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Loading Early NFT..."
+      >
         <span className="text-neutral-400 text-xs">...</span>
       </div>
     );
@@ -92,7 +102,7 @@ function EarlyNftAchievement({ wallet }: { wallet: Wallet }) {
   return (
     <div
       className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
-      title={hasNft ? "Early NFT Owned" : "Early NFT Not Owned"}
+      title={hasNft ? 'Early NFT Owned' : 'Early NFT Not Owned'}
     >
       <img src="/assets/Early.webp" alt="Early NFT Achievement" className={`size-10 ${!hasNft ? 'opacity-50' : ''}`} />
     </div>
@@ -105,8 +115,8 @@ function TipsAchievement({ wallet }: { wallet: Wallet }) {
 
   const { data: userTips, isLoading: isTipsLoading } = useReadContract({
     contract: buyMeACoffeeContract,
-    method: "tipsFromUsers",
-    params: [ownerAddress || ""],
+    method: 'tipsFromUsers',
+    params: [ownerAddress || ''],
     queryOptions: {
       enabled: !!ownerAddress,
     },
@@ -116,7 +126,10 @@ function TipsAchievement({ wallet }: { wallet: Wallet }) {
 
   if (!ownerAddress) {
     return (
-      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Connect wallet to see achievement">
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Connect wallet to see achievement"
+      >
         <span className="text-neutral-400 text-xs">?</span>
       </div>
     );
@@ -124,7 +137,10 @@ function TipsAchievement({ wallet }: { wallet: Wallet }) {
 
   if (isTipsLoading) {
     return (
-      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Loading Tips...">
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Loading Tips..."
+      >
         <span className="text-neutral-400 text-xs">...</span>
       </div>
     );
@@ -133,7 +149,7 @@ function TipsAchievement({ wallet }: { wallet: Wallet }) {
   return (
     <div
       className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
-      title={hasTipped ? "Coffee Tipper!" : "Tip coffee to get this achievement"}
+      title={hasTipped ? 'Coffee Tipper!' : 'Tip coffee to get this achievement'}
     >
       <img src="/assets/tips.webp" alt="Tips Achievement" className={`size-10 ${!hasTipped ? 'opacity-50' : ''}`} />
     </div>
@@ -146,8 +162,8 @@ function NameAchievement({ wallet }: { wallet: Wallet }) {
 
   const { data: balance, isLoading: isBalanceLoading } = useReadContract({
     contract: nameContract,
-    method: "function balanceOf(address owner) view returns (uint256)",
-    params: [ownerAddress || ""],
+    method: 'function balanceOf(address owner) view returns (uint256)',
+    params: [ownerAddress || ''],
     queryOptions: {
       enabled: !!ownerAddress,
     },
@@ -157,7 +173,10 @@ function NameAchievement({ wallet }: { wallet: Wallet }) {
 
   if (!ownerAddress) {
     return (
-      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Connect wallet to see achievement">
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Connect wallet to see achievement"
+      >
         <span className="text-neutral-400 text-xs">?</span>
       </div>
     );
@@ -165,7 +184,10 @@ function NameAchievement({ wallet }: { wallet: Wallet }) {
 
   if (isBalanceLoading) {
     return (
-      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Loading Name NFT...">
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Loading Name NFT..."
+      >
         <span className="text-neutral-400 text-xs">...</span>
       </div>
     );
@@ -174,9 +196,13 @@ function NameAchievement({ wallet }: { wallet: Wallet }) {
   return (
     <div
       className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
-      title={hasNameNft ? "You own a .hash name!" : "Register a .hash name to unlock"}
+      title={hasNameNft ? 'You own a .hash name!' : 'Register a .hash name to unlock'}
     >
-      <img src="/assets/Name.webp" alt="Name Hash Achievement" className={`size-10 ${!hasNameNft ? 'opacity-50' : ''}`} />
+      <img
+        src="/assets/Name.webp"
+        alt="Name Hash Achievement"
+        className={`size-10 ${!hasNameNft ? 'opacity-50' : ''}`}
+      />
     </div>
   );
 }
@@ -187,12 +213,12 @@ function StakeNftAchievement({ wallet }: { wallet: Wallet }) {
 
   const { data: balance, isLoading: isBalanceLoading } = useReadContract({
     contract: {
-      address: "0x22d015f90111d2b3174af23b2a607e467243b763",
+      address: '0x22d015f90111d2b3174af23b2a607e467243b763',
       chain: hashcoinContract.chain, // Assuming same chain as hashcoin
       client: hashcoinContract.client, // Assuming same client as hashcoin
     },
-    method: "function balanceOf(address owner) view returns (uint256)",
-    params: [ownerAddress || ""],
+    method: 'function balanceOf(address owner) view returns (uint256)',
+    params: [ownerAddress || ''],
     queryOptions: {
       enabled: !!ownerAddress,
     },
@@ -202,7 +228,10 @@ function StakeNftAchievement({ wallet }: { wallet: Wallet }) {
 
   if (!ownerAddress) {
     return (
-      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Connect wallet to see achievement">
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Connect wallet to see achievement"
+      >
         <span className="text-neutral-400 text-xs">?</span>
       </div>
     );
@@ -210,7 +239,10 @@ function StakeNftAchievement({ wallet }: { wallet: Wallet }) {
 
   if (isBalanceLoading) {
     return (
-      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Loading Stake NFT...">
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Loading Stake NFT..."
+      >
         <span className="text-neutral-400 text-xs">...</span>
       </div>
     );
@@ -219,7 +251,7 @@ function StakeNftAchievement({ wallet }: { wallet: Wallet }) {
   return (
     <div
       className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
-      title={hasNft ? "Stake NFT Owned" : "Stake NFT Not Owned"}
+      title={hasNft ? 'Stake NFT Owned' : 'Stake NFT Not Owned'}
     >
       <img src="/assets/Stake.webp" alt="Stake NFT Achievement" className={`size-10 ${!hasNft ? 'opacity-50' : ''}`} />
     </div>
@@ -229,12 +261,12 @@ function StakeNftAchievement({ wallet }: { wallet: Wallet }) {
 export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading, registeredName }: ProfileModalProps) {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         onClose();
       }
     }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
   function onBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -248,10 +280,7 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
   const displayName = registeredName ? `${registeredName}.hash` : shortAddress;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-      onClick={onBackdropClick}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onBackdropClick}>
       <div className="bg-neutral-900 text-neutral-200 max-w-md w-full max-h-[90vh] overflow-auto rounded-xl p-8 shadow-2xl relative">
         <button
           onClick={onClose}
@@ -262,9 +291,7 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
         </button>
         <div className="space-y-6">
           <section className="text-center">
-            <h2 className="text-2xl font-bold mb-2 text-blue-400">
-              Profile
-            </h2>
+            <h2 className="text-2xl font-bold mb-2 text-blue-400">Profile</h2>
             <p className="text-lg font-mono" title={wallet.getAccount()?.address}>
               {displayName}
             </p>
@@ -273,45 +300,49 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
           <div className="border-t border-neutral-700"></div>
 
           <section>
-            <h3 className="text-xl font-semibold text-blue-400 mb-4">
-              Achievements
-            </h3>
+            <h3 className="text-xl font-semibold text-blue-400 mb-4">Achievements</h3>
             <div className="grid grid-cols-4 gap-2">
               <HashcoinAchievement wallet={wallet} />
               <NftAchievement hasNft={hasCatNft} isLoading={isNftLoading} />
               <EarlyNftAchievement wallet={wallet} />
               <TipsAchievement wallet={wallet} />
               <NameAchievement wallet={wallet} />
-              
+
               {/* Empty cells */}
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
-              
+
               <StakeNftAchievement wallet={wallet} />
-              
+
               {/* Empty cells */}
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
-              
-              <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden" title="Soon">
+
+              <div
+                className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
+                title="Soon"
+              >
                 <img src="/assets/WL.webp" alt="WL Achievement" className="size-10 opacity-50" />
               </div>
               <DolphinAchievement wallet={wallet} />
               <SharkAchievement wallet={wallet} />
               <WhaleAchievement wallet={wallet} />
-              
+
               {/* Empty cell */}
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
-              
-              <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden" title="Soon">
+
+              <div
+                className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
+                title="Soon"
+              >
                 <img src="/assets/OG.webp" alt="OG Achievement" className="size-10 opacity-50" />
               </div>
-              
+
               {/* Empty cell */}
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
-              
+
               <GMAchievement wallet={wallet} />
             </div>
           </section>
@@ -323,13 +354,25 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
               <EarlyBirdClaimButton />
             </div>
             <div className="grid grid-cols-3 gap-4 text-center">
-              <button title="Conditions not met" disabled className="inline-flex items-center justify-center w-full px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50 cursor-not-allowed">
+              <button
+                title="Conditions not met"
+                disabled
+                className="inline-flex items-center justify-center w-full px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50 cursor-not-allowed"
+              >
                 OG
               </button>
-              <button title="Conditions not met" disabled className="inline-flex items-center justify-center w-full px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50 cursor-not-allowed">
+              <button
+                title="Conditions not met"
+                disabled
+                className="inline-flex items-center justify-center w-full px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50 cursor-not-allowed"
+              >
                 Beta
               </button>
-              <button title="Via WL" disabled className="inline-flex items-center justify-center w-full px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50 cursor-not-allowed">
+              <button
+                title="Via WL"
+                disabled
+                className="inline-flex items-center justify-center w-full px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50 cursor-not-allowed"
+              >
                 Core
               </button>
             </div>

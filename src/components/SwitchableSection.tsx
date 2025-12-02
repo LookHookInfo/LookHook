@@ -9,9 +9,7 @@ const SwitchableSection: React.FC<{ className?: string }> = ({ className }) => {
 
   const getButtonClass = (tab: Tab) => {
     return `w-full py-2 px-4 text-sm font-medium rounded-lg transition-colors ${
-      activeTab === tab
-        ? 'bg-blue-500 text-white'
-        : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+      activeTab === tab ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
     }`;
   };
 
@@ -19,14 +17,14 @@ const SwitchableSection: React.FC<{ className?: string }> = ({ className }) => {
     <div className={`p-4 rounded-lg bg-gray-800/40 border border-indigo-900/40 backdrop-blur-sm ${className}`}>
       <div className="flex justify-center items-center gap-4 mb-4">
         <div className="w-1/2">
-            <button onClick={() => setActiveTab('airdrop')} className={getButtonClass('airdrop')}>
+          <button onClick={() => setActiveTab('airdrop')} className={getButtonClass('airdrop')}>
             Airdrop
-            </button>
+          </button>
         </div>
         <div className="w-1/2">
-            <button onClick={() => setActiveTab('drop')} className={getButtonClass('drop')}>
+          <button onClick={() => setActiveTab('drop')} className={getButtonClass('drop')}>
             Drop
-            </button>
+          </button>
         </div>
       </div>
       <div>

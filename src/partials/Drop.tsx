@@ -4,7 +4,9 @@ interface DropProps {
 
 export default function Drop({ className }: DropProps) {
   return (
-    <div className={`w-full h-full text-white bg-neutral-800 rounded-2xl p-4 sm:p-6 shadow-lg border border-neutral-700 flex flex-col ${className ?? ""}`}>
+    <div
+      className={`w-full h-full text-white bg-neutral-800 rounded-2xl p-4 sm:p-6 shadow-lg border border-neutral-700 flex flex-col ${className ?? ''}`}
+    >
       <div className="flex-grow flex flex-col md:flex-row gap-8 items-start">
         {/* Image Block */}
         <div className="flex-shrink-0 w-40 h-40 relative">
@@ -16,11 +18,7 @@ export default function Drop({ className }: DropProps) {
           >
             Base
           </div>
-          <img
-            src="/assets/Drop.webp"
-            alt="Winter Gift"
-            className="rounded-full w-full h-full object-cover"
-          />
+          <img src="/assets/Drop.webp" alt="Winter Gift" className="rounded-full w-full h-full object-cover" />
         </div>
 
         {/* Text Content Block */}
@@ -37,16 +35,14 @@ export default function Drop({ className }: DropProps) {
 
             {/* Description with roles */}
             <div className="space-y-3">
-              <p className="text-neutral-300 text-sm">
-                Preparing a snapshot:
-              </p>
-              
+              <p className="text-neutral-300 text-sm">Preparing a snapshot:</p>
+
               {/* Roles in two lines */}
               <div className="flex flex-col gap-1">
                 {/* First line */}
                 <div className="flex flex-wrap gap-1">
                   {['Amba', 'Stake', 'Name'].map((role) => (
-                    <span 
+                    <span
                       key={role}
                       className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg bg-gradient-to-r from-gray-600 to-gray-500 text-gray-300 border border-gray-500"
                     >
@@ -54,11 +50,11 @@ export default function Drop({ className }: DropProps) {
                     </span>
                   ))}
                 </div>
-                
+
                 {/* Second line */}
                 <div className="flex flex-wrap gap-1">
                   {['Early', 'Tips', 'Hold'].map((role) => (
-                    <span 
+                    <span
                       key={role}
                       className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg bg-gradient-to-r from-gray-600 to-gray-500 text-gray-300 border border-gray-500"
                     >
@@ -67,7 +63,7 @@ export default function Drop({ className }: DropProps) {
                   ))}
                 </div>
               </div>
-              
+
               <p className="text-neutral-300 text-sm">
                 and <span className="text-cyan-300 font-semibold">Plasma cat NFT</span> holders
               </p>
@@ -78,10 +74,7 @@ export default function Drop({ className }: DropProps) {
 
       {/* Action Button Block */}
       <div className="mt-4 w-full">
-        <button
-          disabled
-          className="w-full py-3 rounded-lg transition btn-disabled"
-        >
+        <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
           Starts December 25th
         </button>
       </div>

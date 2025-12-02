@@ -31,12 +31,8 @@ export default function Teams() {
     <div className="max-w-[85rem] px-4 py-4 sm:px-6 lg:px-8 lg:py-6 mx-auto">
       {/* Section Title */}
       <div className="max-w-2xl mx-auto text-center mb-10 lg:mb-14">
-        <h2 className="text-2xl font-bold md:text-4xl md:leading-tight dark:text-white">
-          Our Team
-        </h2>
-        <p className="mt-1 text-gray-400 dark:text-neutral-400">
-          Creative people
-        </p>
+        <h2 className="text-2xl font-bold md:text-4xl md:leading-tight dark:text-white">Our Team</h2>
+        <p className="mt-1 text-gray-400 dark:text-neutral-400">Creative people</p>
       </div>
 
       {/* Team Members Grid */}
@@ -50,12 +46,8 @@ export default function Teams() {
               alt="Avatar"
             />
             <div className="grow">
-              <h3 className="font-medium text-gray-800 dark:text-neutral-200">
-                Konstantin Moiseev
-              </h3>
-              <p className="text-xs uppercase text-gray-500 dark:text-neutral-500">
-                Founder / DEV
-              </p>
+              <h3 className="font-medium text-gray-800 dark:text-neutral-200">Konstantin Moiseev</h3>
+              <p className="text-xs uppercase text-gray-500 dark:text-neutral-500">Founder / DEV</p>
             </div>
           </div>
           <p className="mt-3 text-gray-500 dark:text-neutral-500">
@@ -91,17 +83,12 @@ export default function Teams() {
               alt="Avatar"
             />
             <div className="grow">
-              <h3 className="font-medium text-gray-800 dark:text-neutral-200">
-                ArteMois
-              </h3>
-              <p className="text-xs uppercase text-gray-500 dark:text-neutral-500">
-                NFT Creator
-              </p>
+              <h3 className="font-medium text-gray-800 dark:text-neutral-200">ArteMois</h3>
+              <p className="text-xs uppercase text-gray-500 dark:text-neutral-500">NFT Creator</p>
             </div>
           </div>
           <p className="mt-3 text-gray-500 dark:text-neutral-500">
-            Artist crafting unique visual concepts for NFTs and blockchain
-            products.
+            Artist crafting unique visual concepts for NFTs and blockchain products.
           </p>
 
           {/* Social Links */}
@@ -123,17 +110,11 @@ export default function Teams() {
               alt="Avatar"
             />
             <div className="grow">
-              <h3 className="font-medium text-gray-800 dark:text-neutral-200">
-                Chain Inside
-              </h3>
-              <p className="text-xs uppercase text-gray-500 dark:text-neutral-500">
-                Community MOD
-              </p>
+              <h3 className="font-medium text-gray-800 dark:text-neutral-200">Chain Inside</h3>
+              <p className="text-xs uppercase text-gray-500 dark:text-neutral-500">Community MOD</p>
             </div>
           </div>
-          <p className="mt-3 text-gray-500 dark:text-neutral-500">
-            Fostering community growth and engagement in Web3.
-          </p>
+          <p className="mt-3 text-gray-500 dark:text-neutral-500">Fostering community growth and engagement in Web3.</p>
 
           {/* Social Links */}
           <div className="mt-3 space-x-1">

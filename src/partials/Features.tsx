@@ -1,5 +1,5 @@
-import { useStakeContract } from "../hooks/useStakeContract";
-import { StakingSection } from "../components/StakingSection";
+import { useStakeContract } from '../hooks/useStakeContract';
+import { StakingSection } from '../components/StakingSection';
 
 export default function Features() {
   const {
@@ -44,9 +44,8 @@ export default function Features() {
                 Lock Staking
               </h2>
               <p className="text-gray-400 dark:text-neutral-500">
-                A Web3 solution for secure token locking wit Simple logic,
-                transparent terms, and zero complexity — all on-chain and fully
-                under your control.
+                A Web3 solution for secure token locking wit Simple logic, transparent terms, and zero complexity — all
+                on-chain and fully under your control.
               </p>
               <div className="flex justify-center items-center space-x-4 mt-4 gleam-effect">
                 <a
@@ -80,21 +79,23 @@ export default function Features() {
                 <div className="h-4 bg-neutral-700 rounded w-3/4"></div>
                 <div className="h-4 bg-neutral-700 rounded w-1/2"></div>
               </div>
-            ) : poolInfo && (
-              <div className="bg-black/30 rounded-xl p-4 space-y-2 border border-neutral-700">
-                <p className="text-sm text-neutral-400">
-                  Total rewards in pool:{" "}
-                  <span className="text-white font-semibold">
-                    {(poolInfo[1] / 10n ** 18n).toString()} {tokenSymbol || ""}
-                  </span>
-                </p>
-                <p className="text-sm text-neutral-400">
-                  Total staked by users:{" "}
-                  <span className="text-white font-semibold">
-                    {(poolInfo[0] / 10n ** 18n).toString()} {tokenSymbol || ""}
-                  </span>
-                </p>
-              </div>
+            ) : (
+              poolInfo && (
+                <div className="bg-black/30 rounded-xl p-4 space-y-2 border border-neutral-700">
+                  <p className="text-sm text-neutral-400">
+                    Total rewards in pool:{' '}
+                    <span className="text-white font-semibold">
+                      {(poolInfo[1] / 10n ** 18n).toString()} {tokenSymbol || ''}
+                    </span>
+                  </p>
+                  <p className="text-sm text-neutral-400">
+                    Total staked by users:{' '}
+                    <span className="text-white font-semibold">
+                      {(poolInfo[0] / 10n ** 18n).toString()} {tokenSymbol || ''}
+                    </span>
+                  </p>
+                </div>
+              )
             )}
             <ul className="space-y-2 sm:space-y-4">
               {[
@@ -132,9 +133,7 @@ export default function Features() {
                     </svg>
                   </span>
                   <div className="grow">
-                    <span className="text-sm sm:text-base text-gray-300 dark:text-neutral-500">
-                      {item.text}
-                    </span>
+                    <span className="text-sm sm:text-base text-gray-300 dark:text-neutral-500">{item.text}</span>
                   </div>
                 </li>
               ))}

@@ -1,11 +1,8 @@
-import {
-  TransactionButton,
-  useActiveAccount,
-} from "thirdweb/react";
-import { prepareContractCall } from "thirdweb";
-import { buyMeACoffeeContract } from "../utils/contracts";
-import ConnectWalletButton from "../components/ConnectWalletButton";
-import { useBuyCoffeeLogic } from "../hooks/useBuyCoffeeLogic";
+import { TransactionButton, useActiveAccount } from 'thirdweb/react';
+import { prepareContractCall } from 'thirdweb';
+import { buyMeACoffeeContract } from '../utils/contracts';
+import ConnectWalletButton from '../components/ConnectWalletButton';
+import { useBuyCoffeeLogic } from '../hooks/useBuyCoffeeLogic';
 
 interface TipsProps {
   className?: string;
@@ -30,7 +27,7 @@ export default function Tips({ className }: TipsProps) {
   } = useBuyCoffeeLogic();
 
   return (
-    <section className={`w-full px-4 py-4 text-white ${className ?? ""}`}>
+    <section className={`w-full px-4 py-4 text-white ${className ?? ''}`}>
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
           <div className="w-full lg:w-[150px] flex flex-col items-center relative">
@@ -79,7 +76,7 @@ export default function Tips({ className }: TipsProps) {
                   </span>
                 ) : (
                   <span className="inline-flex items-center justify-center px-2 py-0.5 h-6 text-xs font-semibold bg-black text-white border border-white rounded">
-                    {totalCoffee ? totalCoffee.toString() : "0"} Brews
+                    {totalCoffee ? totalCoffee.toString() : '0'} Brews
                   </span>
                 )}
               </div>
@@ -95,13 +92,8 @@ export default function Tips({ className }: TipsProps) {
                 -
               </button>
               <span className="text-lg font-semibold text-white flex-grow text-center">
-                {coffeeCount} Coffee{coffeeCount > 1 ? "s" : ""}
-                {usdValue && (
-                  <span className="text-sm text-neutral-400">
-                    {" "}
-                    (~${usdValue})
-                  </span>
-                )}
+                {coffeeCount} Coffee{coffeeCount > 1 ? 's' : ''}
+                {usdValue && <span className="text-sm text-neutral-400"> (~${usdValue})</span>}
               </span>
               <button
                 onClick={() => setCoffeeCount((prev) => prev + 1)}
@@ -116,22 +108,18 @@ export default function Tips({ className }: TipsProps) {
                 transaction={() =>
                   prepareContractCall({
                     contract: buyMeACoffeeContract,
-                    method: "buyMeMultipleCoffee",
+                    method: 'buyMeMultipleCoffee',
                     params: [BigInt(coffeeCount)],
                     value: totalTipInWei,
                   })
                 }
                 onTransactionSent={() => setCoffeeCount(1)}
-                onError={(error) => console.error("Transaction error", error)}
+                onError={(error) => console.error('Transaction error', error)}
                 className={`!w-full !py-3 !rounded-lg !transition !mb-4 !text-white ${
-                  account
-                    ? "!bg-[#4CAF50] !hover:bg-[#45a049]"
-                    : "!bg-[#555] !text-[#aaa] !cursor-not-allowed"
+                  account ? '!bg-[#4CAF50] !hover:bg-[#45a049]' : '!bg-[#555] !text-[#aaa] !cursor-not-allowed'
                 }`}
               >
-                {isLoadingCoffeePrice
-                  ? "Loading..."
-                  : `Send Coffee (${parseFloat(totalTipInETH).toFixed(4)} ETH)`}
+                {isLoadingCoffeePrice ? 'Loading...' : `Send Coffee (${parseFloat(totalTipInETH).toFixed(4)} ETH)`}
               </TransactionButton>
             ) : (
               <div className="flex flex-col items-center gap-y-3">

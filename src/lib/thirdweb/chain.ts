@@ -1,1 +1,1 @@
-export { base as chain } from "thirdweb/chains";
+export { base as chain } from 'thirdweb/chains';
