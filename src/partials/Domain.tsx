@@ -118,11 +118,11 @@ export function Domain({ className }: DomainProps) {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    50% Active
+                    50%Save
                   </span>
                 ) : (
                   <span className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-500 text-gray-500 opacity-50">
-                    50% Inactive
+                    50%Save
                   </span>
                 ))}
             </div>
@@ -134,11 +134,11 @@ export function Domain({ className }: DomainProps) {
                   disabled={!registeredNamesCount || registeredNamesCount === 0 || isMinting || hasBadge}
                   className={`w-full py-2 rounded-lg transition text-sm font-medium border ${
                     !registeredNamesCount || registeredNamesCount === 0 || hasBadge
-                      ? 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
-                      : 'border-neutral-700 text-white bg-neutral-800 glow-effect'
+                      ? 'border-gray-500 text-gray-500 opacity-50'
+                      : 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
                   }`}
                 >
-                  {isMinting ? 'Minting...' : hasBadge ? 'Badge Minted' : 'Badge'}
+                  {isMinting ? 'Minting...' : hasBadge ? 'Minted' : 'Badge'}
                 </button>
               )}
             </div>

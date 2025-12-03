@@ -5,6 +5,7 @@ import erc20Abi from './erc20';
 import stakingAbi from './stakingAbi';
 import GMAbi from './GMAbi';
 import CoffeeQuestAbi from './buyMeACoffeeAbi';
+import { nameContractAbi } from './nameContractAbi';
 import namebadgeAbi from './namebadgeAbi';
 
 export const airdropContract = getContract({
@@ -150,6 +151,7 @@ export const nameContract = getContract({
   client,
   chain: chain,
   address: '0xA8e00E2ca8b183Edb7EbB6bD7EeBB90047416F95',
+  abi: nameContractAbi,
 });
 
 export const namebadgeContract = getContract({

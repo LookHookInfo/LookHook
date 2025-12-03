@@ -5,39 +5,39 @@ import { prepareContractCall } from 'thirdweb';
 
 export function useNameBadgeContract() {
   const account = useActiveAccount();
-  const { mutate: sendTransaction, isPending: isMinting } = useSendTransaction();
+  const { mutateAsync: sendTransaction, isPending: isMinting } = useSendTransaction();
 
-  const { data: hasBadge, isLoading: isCheckingBadge } = useReadContract({
+  const {
+    data: balance,
+    isLoading: isCheckingBadge,
+    refetch: refetchHasBadge,
+  } = useReadContract({
     contract: namebadgeContract,
-    method: 'badgeClaimed',
-    params: [account?.address || ''],
+    method: 'balanceOf',
+    params: account ? [account.address] : undefined,
     queryOptions: {
       enabled: !!account,
     },
   });
 
+  const hasBadge = balance !== undefined && balance > 0n;
+
   const claimBadge = useCallback(async () => {
-    console.log('claimBadge function called');
     if (!account) {
-      console.log('No account connected, exiting claimBadge.');
       return;
     }
     try {
-      console.log('Preparing claimBadge transaction...');
       const transaction = prepareContractCall({
         contract: namebadgeContract,
         method: 'claimBadge',
         params: [],
       });
-      console.log('Transaction prepared:', transaction);
-
-      console.log('Sending transaction...');
-      const result = await sendTransaction(transaction);
-      console.log('Transaction sent, result:', result);
+      await sendTransaction(transaction);
+      refetchHasBadge();
     } catch (error) {
       console.error('Error claiming badge:', error);
     }
-  }, [account, sendTransaction]);
+  }, [account, sendTransaction, refetchHasBadge]);
 
   return {
     hasBadge,
