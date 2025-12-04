@@ -1,20 +1,26 @@
 import { useState, useEffect } from 'react';
+import { useActiveAccount } from 'thirdweb/react';
+import ConnectWalletButton from '../components/ConnectWalletButton';
+import { useGMNFTContract } from '../hooks/useGMNFTContract';
+import { formatEther } from 'viem';
 
 interface GMProps {
   className?: string;
 }
 
 export default function GM({ className }: GMProps) {
+  const account = useActiveAccount();
   const [copied, setCopied] = useState(false);
   const [gmPriceUsd, setGmPriceUsd] = useState<string | null>(null);
   const [hashPriceUsd, setHashPriceUsd] = useState<string | null>(null);
   const gmAddress = '0x1e2390B4021B64B05Bc7AfF53E0122eb648DdC19';
   const truncatedAddress = `0x..${gmAddress.slice(-3)}`;
 
+  const { gmBalance, BURN_AMOUNT, hasGMNFT, isProcessing, handleUnifiedAction } = useGMNFTContract();
+
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        // Fetch GM price
         const gmResponse = await fetch(
           'https://api.geckoterminal.com/api/v2/networks/base/pools/0x9baf8cd5787c2ff300020a6d91a5fb16a917f8df',
         );
@@ -22,13 +28,12 @@ export default function GM({ className }: GMProps) {
         const gmUsd = parseFloat(gmData.data.attributes.base_token_price_usd).toFixed(2);
         setGmPriceUsd(gmUsd);
 
-        // Fetch HASH price
         const hashResponse = await fetch(
           'https://api.geckoterminal.com/api/v2/networks/base/pools/0x9ab05414f0a3872a78459693f3e3c9ea3f0d6e71',
         );
         const hashData = await hashResponse.json();
         const hashUsd = parseFloat(hashData.data.attributes.base_token_price_usd);
-        setHashPriceUsd(hashUsd.toString()); // Store as string for calculation later
+        setHashPriceUsd(hashUsd.toString());
       } catch (error) {
         console.error('Failed to fetch token prices:', error);
         setGmPriceUsd('N/A');
@@ -42,6 +47,11 @@ export default function GM({ className }: GMProps) {
     gmPriceUsd && hashPriceUsd && hashPriceUsd !== 'N/A' && gmPriceUsd !== 'N/A'
       ? (parseFloat(gmPriceUsd) / parseFloat(hashPriceUsd)).toFixed(0)
       : null;
+
+  const gmBalanceFormatted = gmBalance ? parseFloat(formatEther(gmBalance)).toFixed(2) : '0';
+  const progressPercentage = Math.min((parseFloat(gmBalanceFormatted) / BURN_AMOUNT) * 100, 100);
+  const isButtonDisabled = isProcessing || hasGMNFT || parseFloat(gmBalanceFormatted) < BURN_AMOUNT;
+  const buttonTooltip = `${gmBalanceFormatted} / ${BURN_AMOUNT} GM`;
 
   return (
     <section className={`w-full px-4 py-4 text-white ${className ?? ''}`}>
@@ -61,13 +71,27 @@ export default function GM({ className }: GMProps) {
               alt="HashCoin NFT"
               className="rounded-xl w-full h-auto"
             />
-            <div className="pt-6 flex flex-wrap items-center justify-center gap-2">
-              <span
-                className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-500 text-gray-500 bg-transparent"
-                title="Mint a non-transferable NFT."
-              >
-                Burn 30 GM
-              </span>
+            <div className="pt-6 flex flex-wrap items-center justify-center gap-2 w-full">
+              {!account ? (
+                <ConnectWalletButton />
+              ) : (
+                <button
+                  onClick={handleUnifiedAction}
+                  disabled={isButtonDisabled}
+                  className={`w-full py-2 rounded-lg transition text-sm font-medium border relative overflow-hidden ${
+                    isButtonDisabled
+                      ? 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
+                      : 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
+                  }`}
+                  title={buttonTooltip}
+                >
+                  <div
+                    className="absolute top-0 left-0 h-full bg-sky-500/30"
+                    style={{ width: `${progressPercentage}%` }}
+                  ></div>
+                  <span className="relative z-10">{hasGMNFT ? 'Burned🔥' : 'Burn 30 GM'}</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -118,7 +142,7 @@ export default function GM({ className }: GMProps) {
             </div>
 
             <p className="text-neutral-400">
-              GM is now trading! FARM & STAKE role holders receive tokens every 24 hours.
+              GM is already trading on UniSwap! FARM & STAKE role holders receive tokens every 24 hours. ☕️
             </p>
             <a
               href="https://app.uniswap.org/explore/pools/base/0x9baf8cd5787c2ff300020a6d91a5fb16a917f8df"
@@ -145,3 +169,4 @@ export default function GM({ className }: GMProps) {
     </section>
   );
 }
+

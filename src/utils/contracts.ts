@@ -7,6 +7,7 @@ import GMAbi from './GMAbi';
 import CoffeeQuestAbi from './buyMeACoffeeAbi';
 import { nameContractAbi } from './nameContractAbi';
 import namebadgeAbi from './namebadgeAbi';
+import { gmnftAbi } from './gmnftAbi';
 
 export const airdropContract = getContract({
   client,
@@ -257,3 +258,11 @@ export const gmContract = getContract({
   address: '0x1e2390B4021B64B05Bc7AfF53E0122eb648DdC19',
   abi: GMAbi,
 });
+
+export const gmnftContract = getContract({
+  client,
+  chain: chain,
+  address: '0x3B01Ad4F0aa8663174A7cE44ed9C7223791Fa16f',
+  abi: gmnftAbi,
+});
+
