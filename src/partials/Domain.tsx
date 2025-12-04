@@ -25,6 +25,7 @@ export function Domain({ className }: DomainProps) {
     maxNameLength,
     maxNamesPerAddress,
     registeredNamesCount,
+    hasSufficientBalance,
   } = useNameContract(setStatus);
 
   const { hasBadge, isMinting, claimBadge } = useNameBadgeContract();
@@ -74,9 +75,25 @@ export function Domain({ className }: DomainProps) {
     !price ||
     !maxNameLength ||
     !maxNamesPerAddress ||
-    (registeredNamesCount !== null && maxNamesPerAddress !== null && registeredNamesCount >= maxNamesPerAddress);
+    (registeredNamesCount !== null && maxNamesPerAddress !== null && registeredNamesCount >= maxNamesPerAddress) ||
+    !hasSufficientBalance;
 
   const formattedPrice = displayPrice ? (Number(displayPrice) / 1e18).toLocaleString() : '...';
+
+  const getButtonContent = () => {
+    if (isPending || isConfirming) {
+      return (
+        <span className="flex items-center justify-center">
+          <span className="animate-spin mr-2">⏳</span>
+          Processing...
+        </span>
+      );
+    }
+    if (status === 'available' && !hasSufficientBalance) {
+      return 'Insufficient HASH balance';
+    }
+    return `🎉 Register for ${formattedPrice} HASH`;
+  };
 
   return (
     <section className={`w-full px-4 py-4 text-white ${className ?? ''}`}>
@@ -219,14 +236,7 @@ export function Domain({ className }: DomainProps) {
                       isButtonDisabled ? 'btn-disabled' : 'btn-full-width-green'
                     }`}
                   >
-                    {isPending || isConfirming ? (
-                      <span className="flex items-center justify-center">
-                        <span className="animate-spin mr-2">⏳</span>
-                        Processing...
-                      </span>
-                    ) : (
-                      `🎉 Register for ${formattedPrice} HASH`
-                    )}
+                    {getButtonContent()}
                   </button>
                 </div>
               )}

@@ -3,7 +3,8 @@ import { readContract, prepareContractCall, waitForReceipt } from 'thirdweb';
 import { client } from '../lib/thirdweb/client';
 import { chain } from '../lib/thirdweb/chain';
 import { nameContract, hashcoinContract } from '../utils/contracts';
-import { useSendTransaction, useActiveAccount } from 'thirdweb/react';
+import { useSendTransaction, useActiveAccount, useReadContract } from 'thirdweb/react';
+import erc20Abi from '@/utils/erc20';
 
 export function useNameContract(setStatus: (status: any) => void) {
   const account = useActiveAccount();
@@ -15,7 +16,17 @@ export function useNameContract(setStatus: (status: any) => void) {
   const [maxNameLength, setMaxNameLength] = useState<number | null>(null);
   const [maxNamesPerAddress, setMaxNamesPerAddress] = useState<number | null>(null);
   const [registeredNamesCount, setRegisteredNamesCount] = useState<number | null>(null);
+  const [hasSufficientBalance, setHasSufficientBalance] = useState(false);
   const { mutateAsync: sendTx, isPending } = useSendTransaction();
+
+  const { data: balance, refetch: refetchBalance } = useReadContract({
+    contract: hashcoinContract,
+    method: 'balanceOf',
+    params: account ? [account.address] : [""],
+    queryOptions: {
+      enabled: !!account,
+    },
+  });
 
   useEffect(() => {
     setMaxNameLength(15);
@@ -76,11 +87,20 @@ export function useNameContract(setStatus: (status: any) => void) {
           setDisplayPrice(priceBigInt);
           setStatus('error');
         }
-      } else {
+      }
+      else {
         setDisplayPrice(priceBigInt);
       }
     })();
   }, [nameContract, account?.address]);
+
+  useEffect(() => {
+    if (balance && displayPrice) {
+      setHasSufficientBalance(balance >= displayPrice);
+    } else {
+      setHasSufficientBalance(false);
+    }
+  }, [balance, displayPrice]);
 
   useEffect(() => {
     if (account?.address) {
@@ -144,6 +164,7 @@ export function useNameContract(setStatus: (status: any) => void) {
         setIsConfirming(true);
         const receipt = await waitForReceipt({ client, chain, transactionHash: tx.transactionHash });
         setConfirmedHash(receipt.transactionHash);
+        await refetchBalance();
         setStatus('taken');
         return true;
       } catch (err: any) {
@@ -153,7 +174,7 @@ export function useNameContract(setStatus: (status: any) => void) {
         setIsConfirming(false);
       }
     },
-    [nameContract, sendTx, setStatus],
+    [nameContract, sendTx, setStatus, refetchBalance],
   );
 
   const unifiedClaim = useCallback(
@@ -203,5 +224,7 @@ export function useNameContract(setStatus: (status: any) => void) {
     maxNameLength,
     maxNamesPerAddress,
     registeredNamesCount,
+    balance,
+    hasSufficientBalance,
   };
 }
