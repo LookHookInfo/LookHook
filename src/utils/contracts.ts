@@ -8,6 +8,15 @@ import CoffeeQuestAbi from './buyMeACoffeeAbi';
 import { nameContractAbi } from './nameContractAbi';
 import namebadgeAbi from './namebadgeAbi';
 import { gmnftAbi } from './gmnftAbi';
+import { airdropWinterGiftAbi } from './airdropWinterGiftAbi';
+
+export const airdropWinterGiftContract = getContract({
+  client,
+  chain: chain,
+  address: '0x66987ceEf1c8843315846c013ca38cDFAE813B95',
+  abi: airdropWinterGiftAbi,
+});
+
 
 export const airdropContract = getContract({
   client,

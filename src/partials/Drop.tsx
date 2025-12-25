@@ -1,8 +1,51 @@
+import { useAirdropWinterGift } from '../hooks/useAirdropWinterGift';
+
 interface DropProps {
   className?: string;
 }
 
 export default function Drop({ className }: DropProps) {
+  const {
+    claimableAmount,
+    isClaimed,
+    isWelcomeBonusAvailable,
+    handleClaim,
+    handleWelcomeClaim,
+    isLoading,
+    claimedCount,
+  } = useAirdropWinterGift();
+
+  const canWelcomeClaim = isWelcomeBonusAvailable && !isClaimed;
+  const canAirdropClaim = claimableAmount > 0 && !isClaimed;
+
+  const getButtonContent = () => {
+    if (isLoading) {
+      return 'Loading...';
+    }
+    if (isClaimed) {
+      return 'Claimed☃️';
+    }
+    if (canAirdropClaim) {
+      return `Claim ${claimableAmount.toLocaleString()} Hash`;
+    }
+    if (canWelcomeClaim) {
+      return 'Welcome 500 Hash';
+    }
+    return 'Not eligible';
+  };
+
+  const getButtonAction = () => {
+    if (canAirdropClaim) {
+      return handleClaim;
+    }
+    if (canWelcomeClaim) {
+      return handleWelcomeClaim;
+    }
+    return () => {};
+  };
+
+  const isButtonDisabled = isLoading || isClaimed || (!canAirdropClaim && !canWelcomeClaim);
+
   return (
     <div
       className={`w-full h-full text-white bg-neutral-800 rounded-2xl p-4 sm:p-6 shadow-lg border border-neutral-700 flex flex-col ${className ?? ''}`}
@@ -19,6 +62,11 @@ export default function Drop({ className }: DropProps) {
             Base
           </div>
           <img src="/assets/Drop.webp" alt="Winter Gift" className="rounded-full w-full h-full object-cover" />
+          {claimedCount !== null && (
+            <span className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-lg">
+              ☃️ {claimedCount}
+            </span>
+          )}
         </div>
 
         {/* Text Content Block */}
@@ -74,8 +122,14 @@ export default function Drop({ className }: DropProps) {
 
       {/* Action Button Block */}
       <div className="mt-4 w-full">
-        <button disabled className="w-full py-3 rounded-lg transition btn-disabled">
-          Starts December 25th
+        <button
+          onClick={getButtonAction()}
+          disabled={isButtonDisabled}
+          className={`w-full py-3 rounded-lg transition ${
+            !isButtonDisabled ? 'btn-claim-glow gleam-effect' : 'btn-disabled'
+          }`}
+        >
+          {getButtonContent()}
         </button>
       </div>
     </div>
