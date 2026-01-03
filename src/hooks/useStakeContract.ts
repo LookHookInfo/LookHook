@@ -54,15 +54,18 @@ export function useStakeContract() {
     queryOptions: { enabled: !!account?.address },
   });
 
-  const isApproved = (amount: string) => {
-    if (!allowance) return false;
-    try {
-      const amountWei = toWei(amount);
-      return BigInt(amountWei) <= BigInt(allowance.toString());
-    } catch {
-      return false;
-    }
-  };
+  const isApproved = useCallback(
+    (amount: string) => {
+      if (!allowance) return false;
+      try {
+        const amountWei = toWei(amount);
+        return BigInt(amountWei) <= BigInt(allowance.toString());
+      } catch {
+        return false;
+      }
+    },
+    [allowance],
+  );
 
   const stake = useCallback(
     async (amount: string, tierId: number) => {
@@ -96,7 +99,7 @@ export function useStakeContract() {
         // isSending and isConfirming are handled by useSendAndConfirmTransaction
       }
     },
-    [account, sendAndConfirm, setStatus, refetchUserStakes, refreshBalances, allowance, isApproved, refetchAllowance],
+    [account, sendAndConfirm, setStatus, refetchUserStakes, refreshBalances, isApproved, refetchAllowance],
   );
 
   const unstake = useCallback(

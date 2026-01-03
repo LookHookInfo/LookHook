@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useActiveAccount } from 'thirdweb/react';
 import ConnectWalletButton from './ConnectWalletButton';
-import UserStakesDisplay from './UserStakesDisplay';
+import UserStakesDisplay, { UserStakes } from './UserStakesDisplay';
 import { Status } from '../hooks/useStakeContract';
 
 interface StakingSectionProps {
@@ -10,7 +10,7 @@ interface StakingSectionProps {
   stakeAPY: bigint | undefined;
   walletBalance: string;
   stakedBalance: string;
-  userStakes: any;
+  userStakes: UserStakes | undefined;
   apr3M: bigint | undefined;
   apr6M: bigint | undefined;
   apr12M: bigint | undefined;

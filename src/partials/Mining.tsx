@@ -31,7 +31,6 @@ function Game() {
           tool={selectedTool}
           address={account.address}
           contractTools={contractTools}
-          contractStaking={contractStaking}
           onClose={() => setSelectedTool(null)}
           usdcBalance={usdcBalance}
         />

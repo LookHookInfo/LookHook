@@ -10,7 +10,7 @@ export default function ConnectWalletButton() {
         chain={chain}
         appMetadata={{
           name: 'LookHook App',
-          url: 'https://example.com', // Replace with your app's URL
+          url: 'https://lookhook.info/',
         }}
       />
     </div>

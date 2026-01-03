@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useActiveWallet, useReadContract, useSendTransaction } from 'thirdweb/react';
-import { getContract, prepareContractCall, toWei } from 'thirdweb';
+import { getContract, prepareContractCall, toWei, readContract } from 'thirdweb';
 import { earlyBirdContract } from '../utils/contracts';
 import { client } from '../lib/thirdweb/client';
 import { chain } from '../lib/thirdweb/chain';
+import { useQueries } from '@tanstack/react-query';
 
-// --- ABI Snippets ---
+// --- ABI Snippets from EarlyBird test.tsx ---
 const isClaimOpenAbi = {
   type: 'function',
   name: 'isClaimOpen',
@@ -55,7 +56,7 @@ const getStakeInfoForTokenAbi = {
   stateMutability: 'view',
 } as const;
 
-const TOKEN_IDS_TO_CHECK = [0n, 1n, 2n, 3n, 4n, 5n];
+const TOKEN_IDS_TO_CHECK = [0n, 1n, 2n, 3n, 4n, 5n]; // Still needed for handleClaim's params
 
 // --- Reusable OpenSea Link Button ---
 const OpenSeaLinkButton = () => (
@@ -71,18 +72,18 @@ const OpenSeaLinkButton = () => (
 );
 
 // --- Inner Component (handles the main logic) ---
-const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContractAddress: string; address: string }) => {
+const ClaimButtonInner = ({ stakingContractAddress, address, isStakingAddrLoading }: { stakingContractAddress: string; address: string; isStakingAddrLoading: boolean }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const { mutateAsync: sendTx, isPending } = useSendTransaction();
 
   // --- Base contract reads ---
   const { data: claimDeadline, isLoading: isDeadlineLoading } = useReadContract({
     contract: earlyBirdContract,
-    method: claimDeadlineAbi,
+    method: claimDeadlineAbi.name,
   });
   const { data: isClaimOpen, isLoading: isClaimOpenLoading } = useReadContract({
     contract: earlyBirdContract,
-    method: isClaimOpenAbi,
+    method: isClaimOpenAbi.name,
   });
   const {
     data: hasClaimed,
@@ -90,7 +91,7 @@ const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContract
     refetch: refetchHasClaimed,
   } = useReadContract({
     contract: earlyBirdContract,
-    method: hasClaimedAbi,
+    method: hasClaimedAbi.name,
     params: [address],
     queryOptions: { enabled: !!address },
   });
@@ -104,50 +105,24 @@ const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContract
     });
   }, [stakingContractAddress]);
 
-  // Explicitly call hooks for each token ID to respect the Rules of Hooks
-  const { data: stakeInfo0, isLoading: isLoading0 } = useReadContract({
-    contract: stakingContract,
-    method: getStakeInfoForTokenAbi,
-    params: [TOKEN_IDS_TO_CHECK[0], address],
-    queryOptions: { enabled: !!address },
-  });
-  const { data: stakeInfo1, isLoading: isLoading1 } = useReadContract({
-    contract: stakingContract,
-    method: getStakeInfoForTokenAbi,
-    params: [TOKEN_IDS_TO_CHECK[1], address],
-    queryOptions: { enabled: !!address },
-  });
-  const { data: stakeInfo2, isLoading: isLoading2 } = useReadContract({
-    contract: stakingContract,
-    method: getStakeInfoForTokenAbi,
-    params: [TOKEN_IDS_TO_CHECK[2], address],
-    queryOptions: { enabled: !!address },
-  });
-  const { data: stakeInfo3, isLoading: isLoading3 } = useReadContract({
-    contract: stakingContract,
-    method: getStakeInfoForTokenAbi,
-    params: [TOKEN_IDS_TO_CHECK[3], address],
-    queryOptions: { enabled: !!address },
-  });
-  const { data: stakeInfo4, isLoading: isLoading4 } = useReadContract({
-    contract: stakingContract,
-    method: getStakeInfoForTokenAbi,
-    params: [TOKEN_IDS_TO_CHECK[4], address],
-    queryOptions: { enabled: !!address },
-  });
-  const { data: stakeInfo5, isLoading: isLoading5 } = useReadContract({
-    contract: stakingContract,
-    method: getStakeInfoForTokenAbi,
-    params: [TOKEN_IDS_TO_CHECK[5], address],
-    queryOptions: { enabled: !!address },
+  const stakeQueries = useQueries({
+    queries: TOKEN_IDS_TO_CHECK.map((tokenId) => ({
+      queryKey: ['stakeInfo', tokenId.toString(), address],
+      queryFn: () => readContract({
+        contract: stakingContract,
+        method: getStakeInfoForTokenAbi,
+        params: [tokenId, address],
+      }),
+      enabled: !!address,
+    })),
   });
 
-  const allStakeInfos = [stakeInfo0, stakeInfo1, stakeInfo2, stakeInfo3, stakeInfo4, stakeInfo5];
-  const isStakeInfoLoading = isLoading0 || isLoading1 || isLoading2 || isLoading3 || isLoading4 || isLoading5;
+  const allStakeInfos = stakeQueries.map((query) => query.data);
+  const isStakeInfoLoading = stakeQueries.some((query) => query.isLoading);
 
-  const totalRewards = allStakeInfos.reduce((acc, query) => {
-    if (query && query[1]) {
-      return acc + query[1];
+  const totalRewards = allStakeInfos.reduce((acc, queryData) => {
+    if (queryData && typeof queryData === 'object' && '_rewards' in queryData && typeof queryData._rewards === 'bigint') {
+      return acc + queryData._rewards;
     }
     return acc;
   }, 0n);
@@ -158,7 +133,7 @@ const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContract
     try {
       const transaction = await prepareContractCall({
         contract: earlyBirdContract,
-        method: claimAbi,
+        method: claimAbi.name,
         params: [TOKEN_IDS_TO_CHECK],
       });
       await sendTx(transaction);
@@ -183,9 +158,21 @@ const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContract
   const days = Math.floor(timeLeft / (60 * 60 * 24));
   const hours = Math.floor((timeLeft % (60 * 60 * 24)) / (60 * 60));
 
-  const isLoading = isDeadlineLoading || isClaimOpenLoading || hasClaimedLoading || isStakeInfoLoading;
+  const isLoading = isDeadlineLoading || isClaimOpenLoading || hasClaimedLoading || isStakeInfoLoading || isStakingAddrLoading;
   const isButtonDisabled = isLoading || isPending || !isClaimOpen || hasClaimed || !hasEnoughHash;
 
+  // Debugging logs for Claim Early button
+  console.log('Claim Early Debug:', {
+    address: address,
+    isLoading: isLoading,
+    isPending: isPending,
+    isClaimOpen: isClaimOpen,
+    hasClaimed: hasClaimed,
+    hasEnoughHash: hasEnoughHash,
+    totalRewards: totalRewards.toString(), // Convert BigInt to string for logging
+    claimDeadline: claimDeadline?.toString(),
+    timeLeft: timeLeft,
+  });
   let buttonContent: React.ReactNode = 'Claim Early';
   if (isPending) {
     buttonContent = (
@@ -234,7 +221,7 @@ const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContract
       <button
         onClick={handleClaim}
         disabled={isButtonDisabled}
-        className={`inline-flex items-center justify-center px-3 py-1 text-sm font-medium rounded-lg border border-neutral-700 text-white bg-neutral-800 hover:bg-neutral-700 transition-colors     ││     disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${!isButtonDisabled ? 'glow-effect' : ''}`}
+        className={`inline-flex items-center justify-center px-3 py-1 text-sm font-medium rounded-lg border border-neutral-700 text-white bg-neutral-800 hover:bg-neutral-700 transition-colors     disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${!isButtonDisabled ? 'glow-effect' : ''}`}
       >
         {buttonContent}
       </button>
@@ -263,7 +250,7 @@ export default function EarlyBirdClaimButton() {
 
   const { data: stakingContractAddress, isLoading: isStakingAddrLoading } = useReadContract({
     contract: earlyBirdContract,
-    method: getStakingContractAddressAbi,
+    method: getStakingContractAddressAbi.name,
   });
 
   return (
@@ -281,7 +268,7 @@ export default function EarlyBirdClaimButton() {
           </button>
         </div>
       ) : (
-        <ClaimButtonInner stakingContractAddress={stakingContractAddress!} address={address} />
+        <ClaimButtonInner stakingContractAddress={stakingContractAddress?.toString() || ''} address={address} isStakingAddrLoading={isStakingAddrLoading} />
       )}
       <OpenSeaLinkButton />
     </div>

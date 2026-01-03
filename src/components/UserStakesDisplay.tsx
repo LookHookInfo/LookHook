@@ -150,7 +150,7 @@ function TierDisplay({
                 Unstake
               </TransactionButton>
             ) : (
-              // @ts-ignore
+
               <TransactionButton
                 transaction={() =>
                   prepareContractCall({ contract: stakingContract, method: 'claimReward', params: [tierId] })
@@ -198,8 +198,10 @@ function TierDisplay({
   );
 }
 
+export type UserStakes = readonly [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
+
 interface UserStakesDisplayProps {
-  userStakes: any; // TODO: Define a more specific type for userStakes
+  userStakes: UserStakes;
   apr3M: bigint;
   apr6M: bigint;
   apr12M: bigint;

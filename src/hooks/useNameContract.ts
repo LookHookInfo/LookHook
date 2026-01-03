@@ -4,9 +4,10 @@ import { client } from '../lib/thirdweb/client';
 import { chain } from '../lib/thirdweb/chain';
 import { nameContract, hashcoinContract } from '../utils/contracts';
 import { useSendTransaction, useActiveAccount, useReadContract } from 'thirdweb/react';
-import erc20Abi from '@/utils/erc20';
 
-export function useNameContract(setStatus: (status: any) => void) {
+export type Status = 'idle' | 'checking' | 'available' | 'taken' | 'error';
+
+export function useNameContract(setStatus: (status: Status) => void) {
   const account = useActiveAccount();
   const [price, setPrice] = useState<bigint | null>(null);
   const [displayPrice, setDisplayPrice] = useState<bigint | null>(null);
@@ -39,7 +40,7 @@ export function useNameContract(setStatus: (status: any) => void) {
         try {
           const balance = await readContract({
             contract: nameContract,
-            method: 'function balanceOf(address owner) view returns (uint256)',
+            method: 'balanceOf',
             params: [account.address],
           });
           setRegisteredNamesCount(Number(balance));
@@ -51,7 +52,7 @@ export function useNameContract(setStatus: (status: any) => void) {
     } else {
       setRegisteredNamesCount(null);
     }
-  }, [account?.address, nameContract, confirmedHash]);
+  }, [account?.address, confirmedHash]);
 
   useEffect(() => {
     (async () => {
@@ -59,7 +60,7 @@ export function useNameContract(setStatus: (status: any) => void) {
       try {
         const basePrice = await readContract({
           contract: nameContract,
-          method: 'function PRICE() view returns (uint256)',
+          method: 'PRICE',
           params: [],
         });
         priceBigInt = BigInt(basePrice.toString());
@@ -73,7 +74,7 @@ export function useNameContract(setStatus: (status: any) => void) {
         try {
           const userHasDiscount = await readContract({
             contract: nameContract,
-            method: 'function hasDiscount(address user) view returns (bool)',
+            method: 'hasDiscount',
             params: [account.address],
           });
 
@@ -92,7 +93,7 @@ export function useNameContract(setStatus: (status: any) => void) {
         setDisplayPrice(priceBigInt);
       }
     })();
-  }, [nameContract, account?.address]);
+  }, [account?.address, setStatus]);
 
   useEffect(() => {
     if (balance && displayPrice) {
@@ -108,7 +109,7 @@ export function useNameContract(setStatus: (status: any) => void) {
         try {
           const name = await readContract({
             contract: nameContract,
-            method: 'function getPrimaryName(address user) view returns (string)',
+            method: 'getPrimaryName',
             params: [account.address],
           });
           setRegisteredName(name);
@@ -121,7 +122,7 @@ export function useNameContract(setStatus: (status: any) => void) {
     } else {
       setRegisteredName(null);
     }
-  }, [account?.address, nameContract, confirmedHash]);
+  }, [account?.address, confirmedHash]);
 
   const approve = useCallback(async () => {
     if (!displayPrice) {
@@ -139,11 +140,11 @@ export function useNameContract(setStatus: (status: any) => void) {
       }
       await waitForReceipt({ client, chain, transactionHash: tx.transactionHash });
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Approve error: ', err);
       return false;
     }
-  }, [displayPrice, hashcoinContract, sendTx, nameContract.address]);
+  }, [displayPrice, sendTx]);
 
   const register = useCallback(
     async (name: string) => {
@@ -154,7 +155,7 @@ export function useNameContract(setStatus: (status: any) => void) {
       try {
         const call = await prepareContractCall({
           contract: nameContract,
-          method: 'function register(string name_)',
+          method: 'register',
           params: [name],
         });
         const tx = await sendTx(call);
@@ -167,14 +168,14 @@ export function useNameContract(setStatus: (status: any) => void) {
         await refetchBalance();
         setStatus('taken');
         return true;
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Registration error: ', err);
         return false;
       } finally {
         setIsConfirming(false);
       }
     },
-    [nameContract, sendTx, setStatus, refetchBalance],
+    [sendTx, setStatus, refetchBalance],
   );
 
   const unifiedClaim = useCallback(
@@ -191,7 +192,7 @@ export function useNameContract(setStatus: (status: any) => void) {
           setIsConfirming(false);
           return;
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Unified claim error: ', err);
       } finally {
         setIsConfirming(false);
@@ -204,12 +205,12 @@ export function useNameContract(setStatus: (status: any) => void) {
     async (name: string): Promise<boolean> => {
       const taken = await readContract({
         contract: nameContract,
-        method: 'function isNameTaken(string nameToCheck) view returns (bool)',
+        method: 'isNameTaken',
         params: [name],
       });
       return taken;
     },
-    [nameContract],
+    [],
   );
 
   return {

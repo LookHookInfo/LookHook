@@ -5,13 +5,13 @@ import { MediaRenderer, TransactionButton } from 'thirdweb/react';
 import { formatUnits } from 'viem';
 import { setApprovalForAll } from 'thirdweb/extensions/erc1155';
 import { prepareContractCall } from 'thirdweb';
+import { contractStaking } from '../utils/contracts';
 
 interface ToolDetailModalProps {
   tool: NFT;
   address: string;
   usdcBalance: bigint;
   contractTools: ThirdwebContract;
-  contractStaking: ThirdwebContract<any>;
   onClose: () => void;
 }
 
@@ -20,7 +20,6 @@ export function ToolDetailModal({
   address,
   usdcBalance,
   contractTools,
-  contractStaking,
   onClose,
 }: ToolDetailModalProps) {
   const {
@@ -39,7 +38,7 @@ export function ToolDetailModal({
     handleBuy,
     incrementQuantity,
     decrementQuantity,
-  } = useToolCardLogic({ tool, address, contractTools, contractStaking });
+  } = useToolCardLogic({ tool, address, contractTools });
 
   const hasInsufficientFunds = usdcBalance < totalPrice;
 
@@ -146,7 +145,7 @@ export function ToolDetailModal({
                 transaction={() =>
                   prepareContractCall({
                     contract: contractStaking,
-                    method: 'function withdraw(uint256, uint64)',
+                    method: 'withdraw',
                     params: [tool.id, BigInt(quantity)],
                   })
                 }
@@ -162,7 +161,7 @@ export function ToolDetailModal({
                 transaction={() =>
                   prepareContractCall({
                     contract: contractStaking,
-                    method: 'function claimRewards(uint256)',
+                    method: 'claimRewards',
                     params: [tool.id],
                   })
                 }

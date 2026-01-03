@@ -10,17 +10,16 @@ import {
 import { allowance, approve } from 'thirdweb/extensions/erc20';
 import { prepareContractCall, ThirdwebContract, NFT, sendAndConfirmTransaction } from 'thirdweb';
 import { formatUnits } from 'viem';
-import { usdcContract } from '@/utils/contracts';
+import { usdcContract, contractStaking } from '@/utils/contracts';
 
 // Props for the hook
 interface UseToolCardLogicProps {
   tool: NFT;
   address: string;
   contractTools: ThirdwebContract;
-  contractStaking: ThirdwebContract<any>;
 }
 
-export function useToolCardLogic({ tool, address, contractTools, contractStaking }: UseToolCardLogicProps) {
+export function useToolCardLogic({ tool, address, contractTools }: UseToolCardLogicProps) {
   const [quantity, setQuantity] = useState<number>(1);
 
   const incrementQuantity = () => {
@@ -54,9 +53,14 @@ export function useToolCardLogic({ tool, address, contractTools, contractStaking
 
   const { data: stakeInfo, isLoading: isLoadingStakeInfo } = useReadContract({
     contract: contractStaking,
-    method: 'function getStakeInfoForToken(uint256 _tokenId, address _staker) external view returns (uint256, uint256)',
+    method: 'getStakeInfoForToken',
     params: [tool.id, address],
+    queryOptions: { enabled: !!address },
   });
+
+
+
+
 
   const { data: isApprovedForStaking, refetch: refetchStakingApproval } = useQuery({
     queryKey: ['isApproved', address, contractStaking.address],
@@ -90,7 +94,7 @@ export function useToolCardLogic({ tool, address, contractTools, contractStaking
     if (!account) throw new Error('Not connected');
     return prepareContractCall({
       contract: contractStaking,
-      method: 'function stake(uint256 _tokenId, uint64 _amount)',
+      method: 'stake',
       params: [tool.id, amount],
     });
   };

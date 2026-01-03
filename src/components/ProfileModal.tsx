@@ -2,7 +2,7 @@ import { GMAchievement } from './GMAchievement';
 import { useEffect } from 'react';
 import type { Wallet } from 'thirdweb/wallets';
 import { useDisconnect, useWalletBalance, useReadContract } from 'thirdweb/react';
-import { hashcoinContract, earlyBirdContract, buyMeACoffeeContract, nameContract } from '../utils/contracts';
+import { hashcoinContract, earlyBirdContract, buyMeACoffeeContract, nameContract, stakeNftContract } from '../utils/contracts';
 import EarlyBirdClaimButton from './EarlyBirdClaimButton';
 import { DolphinAchievement, SharkAchievement, WhaleAchievement } from './WhaleAchievements';
 
@@ -68,14 +68,14 @@ function EarlyNftAchievement({ wallet }: { wallet: Wallet }) {
 
   const { data: balance, isLoading: isBalanceLoading } = useReadContract({
     contract: earlyBirdContract,
-    method: 'function balanceOf(address owner) view returns (uint256)',
+    method: 'balanceOf',
     params: [ownerAddress || ''],
     queryOptions: {
       enabled: !!ownerAddress,
     },
   });
 
-  const hasNft = balance && balance > 0n;
+  const hasNft = balance && (balance as bigint) > 0n;
 
   if (!ownerAddress) {
     return (
@@ -122,7 +122,7 @@ function TipsAchievement({ wallet }: { wallet: Wallet }) {
     },
   });
 
-  const hasTipped = userTips && userTips > 0n;
+  const hasTipped = userTips && (userTips as bigint) > 0n;
 
   if (!ownerAddress) {
     return (
@@ -162,14 +162,14 @@ function NameAchievement({ wallet }: { wallet: Wallet }) {
 
   const { data: balance, isLoading: isBalanceLoading } = useReadContract({
     contract: nameContract,
-    method: 'function balanceOf(address owner) view returns (uint256)',
+    method: 'balanceOf',
     params: [ownerAddress || ''],
     queryOptions: {
       enabled: !!ownerAddress,
     },
   });
 
-  const hasNameNft = balance && balance > 0n;
+  const hasNameNft = balance && (balance as bigint) > 0n;
 
   if (!ownerAddress) {
     return (
@@ -212,19 +212,15 @@ function StakeNftAchievement({ wallet }: { wallet: Wallet }) {
   const ownerAddress = wallet.getAccount()?.address;
 
   const { data: balance, isLoading: isBalanceLoading } = useReadContract({
-    contract: {
-      address: '0x22d015f90111d2b3174af23b2a607e467243b763',
-      chain: hashcoinContract.chain, // Assuming same chain as hashcoin
-      client: hashcoinContract.client, // Assuming same client as hashcoin
-    },
-    method: 'function balanceOf(address owner) view returns (uint256)',
+    contract: stakeNftContract,
+    method: 'balanceOf',
     params: [ownerAddress || ''],
     queryOptions: {
       enabled: !!ownerAddress,
     },
   });
 
-  const hasNft = balance && balance > 0n;
+  const hasNft = balance && (balance as bigint) > 0n;
 
   if (!ownerAddress) {
     return (

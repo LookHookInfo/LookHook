@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useActiveAccount, useReadContract, useSendTransaction } from 'thirdweb/react';
 import { balanceOf as erc20BalanceOf, approve } from 'thirdweb/extensions/erc20';
 import { balanceOf as erc721BalanceOf } from 'thirdweb/extensions/erc721';
@@ -6,7 +6,6 @@ import { prepareContractCall, sendAndConfirmTransaction } from 'thirdweb';
 import { parseEther } from 'viem';
 
 import { gmContract, gmnftContract } from '../utils/contracts';
-import { chain } from '../lib/thirdweb/chain';
 
 const BURN_AMOUNT = 30;
 const BURN_AMOUNT_WEI = parseEther(String(BURN_AMOUNT));
@@ -31,7 +30,7 @@ export function useGMNFTContract() {
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     contract: gmContract,
-    method: 'function allowance(address owner, address spender) view returns (uint256)',
+    method: 'allowance',
     params: [account?.address || '', gmnftContract.address],
     queryOptions: { enabled: !!account },
   });
@@ -46,9 +45,8 @@ export function useGMNFTContract() {
     try {
       const transaction = prepareContractCall({
         contract: gmnftContract,
-        method: 'function burnAndMint()',
+        method: 'burnAndMint',
         params: [],
-        chain: chain,
       });
       sendTransaction(transaction, {
         onSuccess: () => {
@@ -89,7 +87,7 @@ export function useGMNFTContract() {
   const isProcessing = isTxPending || isApproving || isBurning;
 
   // Manually update isBurning based on isTxPending
-  useState(() => {
+  useEffect(() => {
     if (!isTxPending) {
       setIsBurning(false);
     }

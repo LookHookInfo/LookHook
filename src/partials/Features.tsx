@@ -1,5 +1,6 @@
 import { useStakeContract } from '../hooks/useStakeContract';
 import { StakingSection } from '../components/StakingSection';
+import { UserStakes } from '../components/UserStakesDisplay';
 
 export default function Features() {
   const {
@@ -146,7 +147,7 @@ export default function Features() {
           stakeAPY={stakeAPY}
           walletBalance={walletBalance}
           stakedBalance={stakedBalance}
-          userStakes={userStakes}
+          userStakes={userStakes as UserStakes | undefined}
           apr3M={apr3M}
           apr6M={apr6M}
           apr12M={apr12M}

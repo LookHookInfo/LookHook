@@ -33,7 +33,7 @@ export function useBuyCoffeeLogic() {
 
   const { data: topDonorName, isLoading: isLoadingTopDonorName } = useReadContract({
     contract: nameContract,
-    method: 'function getPrimaryName(address user) view returns (string)',
+    method: 'getPrimaryName',
     params: [topDonor!],
     queryOptions: {
       enabled: !!topDonor && topDonor !== '0x0000000000000000000000000000000000000000',

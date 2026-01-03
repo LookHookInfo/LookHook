@@ -14,7 +14,7 @@ export function useNameBadgeContract() {
   } = useReadContract({
     contract: namebadgeContract,
     method: 'balanceOf',
-    params: account ? [account.address] : undefined,
+    params: account ? [account.address] : ['0x0000000000000000000000000000000000000000'],
     queryOptions: {
       enabled: !!account,
     },

@@ -64,7 +64,7 @@ export function DolphinAchievement({ wallet }: WhaleAchievementProps) {
           onSuccess: () => {
             refetchWhaleContract();
           },
-          onError: (error: any) => {
+          onError: (error: unknown) => {
             console.error('Failed to mint Dolphin:', error);
           },
         });
@@ -173,7 +173,7 @@ export function SharkAchievement({ wallet }: WhaleAchievementProps) {
           onSuccess: () => {
             refetchWhaleContract();
           },
-          onError: (error: any) => {
+          onError: (error: unknown) => {
             console.error('Failed to mint Shark:', error);
           },
         });
@@ -281,7 +281,7 @@ export function WhaleAchievement({ wallet }: WhaleAchievementProps) {
           onSuccess: () => {
             refetchWhaleContract();
           },
-          onError: (error: any) => {
+          onError: (error: unknown) => {
             console.error('Failed to mint Whale:', error);
           },
         });
