@@ -1,4 +1,3 @@
-export const drubContractAddress = '0x1339c3a22ccdd7560B4Ccacd065Cd4b578BDA12d';
 export const drubContractABI = [
 	{
 		"inputs": [

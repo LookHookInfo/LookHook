@@ -1,4 +1,3 @@
-export const vaultDrubContractAddress = '0xe329417041DA9Ffb6637ba7eDe8B583A207BdA01';
 export const vaultDrubContractABI = [
 	{
 		"inputs": [],

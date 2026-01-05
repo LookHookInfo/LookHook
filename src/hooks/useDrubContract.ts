@@ -1,46 +1,30 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   useReadContract,
   useActiveAccount,
   useSendTransaction,
-  useReadContractData,
 } from 'thirdweb/react';
-import { getContract, formatUnits, parseEther, prepareContractCall } from 'thirdweb';
-import { client } from '@/lib/thirdweb/client';
-import { chain } from '@/lib/thirdweb/chain';
-import { drubContractAddress, drubContractABI } from '@/utils/drubContractAbi';
+import { prepareContractCall, waitForReceipt } from 'thirdweb';
+import { client } from '../lib/thirdweb/client';
+import { chain } from '../lib/thirdweb/chain';
+import { formatUnits, parseEther } from 'ethers';
 import {
-  vaultDrubContractAddress,
-  vaultDrubContractABI,
-} from '@/utils/vaultDrubContractAbi';
-import { HASH_ADDRESS, HASH_ABI } from '@/utils/erc20';
-
-const drubContract = getContract({
-  client,
-  chain,
-  address: drubContractAddress,
-  abi: drubContractABI,
-});
-
-const vaultContract = getContract({
-  client,
-  chain,
-  address: vaultDrubContractAddress,
-  abi: vaultDrubContractABI,
-});
-
-const hashContract = getContract({
-  client,
-  chain,
-  address: HASH_ADDRESS,
-  abi: HASH_ABI,
-});
+  drubContract,
+  vaultDrubContract,
+  hashcoinContract,
+  nfpmContract,
+} from '@/utils/contracts';
 
 export function useDrubContract() {
   const account = useActiveAccount();
-  const { mutate: sendTransaction } = useSendTransaction();
+  const { mutateAsync: sendTx } = useSendTransaction();
   const [status, setStatus] = useState('');
   const [buyAmount, setBuyAmount] = useState('');
+
+  // Individual loading states for each action
+  const [isBuying, setIsBuying] = useState(false);
+  const [isAddingLiquidity, setIsAddingLiquidity] = useState(false);
+  const [isBurning, setIsBurning] = useState(false);
 
   // DRUB Contract Reads
   const { data: drubPerHash, refetch: refetchDrubPerHash } = useReadContract({
@@ -49,103 +33,172 @@ export function useDrubContract() {
     params: [],
   });
 
-  const { data: drubTotalSupply, refetch: refetchDrubTotalSupply } = useReadContract({
-    contract: drubContract,
-    method: 'totalSupply',
-    params: [],
-  });
+  const { data: drubTotalSupply, refetch: refetchDrubTotalSupply } =
+    useReadContract({
+      contract: drubContract,
+      method: 'totalSupply',
+      params: [],
+    });
 
   const { data: drubBalance, refetch: refetchDrubBalance } = useReadContract({
     contract: drubContract,
     method: 'balanceOf',
-    params: [account?.address || ''],
-    queryOptions: { enabled: !!account?.address },
+    params: [account?.address || '0x0000000000000000000000000000000000000000'],
+    queryOptions: { enabled: !!account },
   });
 
   // HASH Contract Reads
   const { data: hashBalance, refetch: refetchHashBalance } = useReadContract({
-    contract: hashContract,
+    contract: hashcoinContract,
     method: 'balanceOf',
-    params: [account?.address || ''],
-    queryOptions: { enabled: !!account?.address },
+    params: [account?.address || '0x0000000000000000000000000000000000000000'],
+    queryOptions: { enabled: !!account },
   });
 
-    const { data: hashAllowance, refetch: refetchHashAllowance } = useReadContract({
-        contract: hashContract,
-        method: 'allowance',
-        params: [account?.address || '', drubContractAddress],
-        queryOptions: { enabled: !!account?.address },
+  const { data: hashAllowanceToDrub, refetch: refetchHashAllowanceToDrub } =
+    useReadContract({
+      contract: hashcoinContract,
+      method: 'allowance',
+      params: [account?.address || '0x0000000000000000000000000000000000000000', drubContract.address],
+      queryOptions: { enabled: !!account },
     });
-
 
   // Vault Contract Reads
-  const { data: vaultPrice, refetch: refetchVaultPrice } = useReadContract({
-    contract: vaultContract,
-    method: 'getPrice',
-    params: [],
+  const { data: vaultHashBalance, refetch: refetchVaultHashBalance } = useReadContract({
+    contract: hashcoinContract,
+    method: 'balanceOf',
+    params: [vaultDrubContract.address],
+    queryOptions: { enabled: true },
   });
 
-  const isApproved = useMemo(() => {
-    if (!hashAllowance || !buyAmount) return false;
-    const buyAmountBigInt = parseEther(buyAmount);
-    return hashAllowance >= buyAmountBigInt;
-  }, [hashAllowance, buyAmount]);
+  const { data: vaultDrubBalance, refetch: refetchVaultDrubBalance } = useReadContract({
+    contract: drubContract,
+    method: 'balanceOf',
+    params: [vaultDrubContract.address],
+    queryOptions: { enabled: true },
+  });
 
+  const { data: lpPositionsCount, refetch: refetchLpPositionsCount } =
+    useReadContract({
+      contract: nfpmContract,
+      method: 'balanceOf',
+      params: [vaultDrubContract.address],
+      queryOptions: { enabled: true },
+    });
 
-  const approve = () => {
+  // Central Bank Rate (Rub per Usd)
+  const { data: rubPerUsd, refetch: refetchRubPerUsd } = useReadContract({
+    contract: drubContract,
+    method: 'rubPerUsd',
+    params: [],
+    queryOptions: { enabled: true },
+  });
+
+  const isVaultEmpty = useMemo(() => {
+    if (vaultHashBalance === undefined || vaultDrubBalance === undefined) {
+      return true;
+    }
+    const oneTokenInWei = parseEther('1');
+    return vaultHashBalance < oneTokenInWei || vaultDrubBalance < oneTokenInWei;
+  }, [vaultHashBalance, vaultDrubBalance]);
+
+  // Unified Buy Function
+  const unifiedBuy = async () => {
     if (!account || !buyAmount) {
-      setStatus('Please connect your wallet and enter an amount.');
+      setStatus('Please connect wallet and enter an amount.');
       return;
     }
+    setIsBuying(true);
+    setStatus('Processing...');
 
-    const amountToApprove = parseEther(buyAmount);
+    try {
+      const amountWei = parseEther(buyAmount);
 
-    const transaction = prepareContractCall({
-      contract: hashContract,
-      method: 'approve',
-      params: [drubContractAddress, amountToApprove],
-    });
+      // Step 1: Use allowance from the hook
+      const currentAllowance = hashAllowanceToDrub ?? 0n;
 
-    setStatus('Approving...');
-    sendTransaction(transaction, {
-      onSuccess: () => {
-        setStatus('Approval successful!');
-        refetchHashAllowance();
-        setTimeout(() => setStatus(''), 3000);
-      },
-      onError: (error) => {
-        setStatus(`Approval failed: ${error.message}`);
-        setTimeout(() => setStatus(''), 5000);
-      },
-    });
-  };
+      // Step 2: Approve if necessary
+      if (currentAllowance < amountWei) {
+        const approveTx = prepareContractCall({
+          contract: hashcoinContract,
+          method: 'approve',
+          params: [drubContract.address, amountWei],
+        });
+        const { transactionHash: approveTxHash } = await sendTx(approveTx);
+        await waitForReceipt({ client, chain, transactionHash: approveTxHash });
+        refetchHashAllowanceToDrub();
+      }
 
-  const buyDrub = () => {
-    if (!account || !buyAmount) {
-        setStatus('Please connect your wallet and enter an amount.');
-        return;
-    }
-
-    const amountToBuy = parseEther(buyAmount);
-
-    const transaction = prepareContractCall({
+      // Step 3: Buy DRUB
+      const buyTx = prepareContractCall({
         contract: drubContract,
         method: 'buyDRUB',
-        params: [amountToBuy],
-    });
+        params: [amountWei],
+      });
+      const { transactionHash: buyTxHash } = await sendTx(buyTx);
+      await waitForReceipt({ client, chain, transactionHash: buyTxHash });
+      
+      refetchAll();
+      setStatus(''); // Clear status on success
+    } catch (error) {
+      setStatus(`Error: ${error instanceof Error ? error.message.substring(0, 50) : 'Transaction failed'}`);
+      setTimeout(() => setStatus(''), 5000);
+    } finally {
+      setIsBuying(false);
+    }
+  };
 
-    setStatus('Processing purchase...');
-    sendTransaction(transaction, {
-        onSuccess: () => {
-            setStatus('Purchase successful!');
-            refetchAll();
-            setTimeout(() => setStatus(''), 3000);
-        },
-        onError: (error) => {
-            setStatus(`Purchase failed: ${error.message}`);
-            setTimeout(() => setStatus(''), 5000);
-        },
-    });
+
+  // Functions for Vault's liquidity management (triggered by user)
+  const addLiquidity = async () => {
+    if (!account) {
+      setStatus('Please connect your wallet.');
+      return;
+    }
+    setIsAddingLiquidity(true);
+    setStatus('Processing...');
+    try {
+      const transaction = prepareContractCall({
+        contract: vaultDrubContract,
+        method: 'addLiquidity',
+        params: [], 
+      });
+
+      const { transactionHash } = await sendTx(transaction);
+      await waitForReceipt({ client, chain, transactionHash });
+      refetchAll(); 
+      setStatus('');
+    } catch (error) {
+      setStatus(`Add liquidity failed: ${error instanceof Error ? error.message.substring(0, 100) : String(error)}`);
+      setTimeout(() => setStatus(''), 5000);
+    } finally {
+      setIsAddingLiquidity(false);
+    }
+  };
+
+  const burnAllPositions = async () => {
+    if (!account) {
+      setStatus('Please connect your wallet.');
+      return;
+    }
+    setIsBurning(true);
+    setStatus('Processing...');
+    try {
+      const transaction = prepareContractCall({
+        contract: vaultDrubContract,
+        method: 'burnAllPositions',
+        params: [],
+      });
+      const { transactionHash } = await sendTx(transaction);
+      await waitForReceipt({ client, chain, transactionHash });
+      refetchAll();
+      setStatus('');
+    } catch (error) {
+      setStatus(`Burn LP failed: ${error instanceof Error ? error.message.substring(0, 100) : String(error)}`);
+      setTimeout(() => setStatus(''), 5000);
+    } finally {
+      setIsBurning(false);
+    }
   };
 
   const refetchAll = () => {
@@ -153,24 +206,32 @@ export function useDrubContract() {
     refetchDrubTotalSupply();
     refetchDrubBalance();
     refetchHashBalance();
-    refetchHashAllowance();
-    refetchVaultPrice();
+    refetchHashAllowanceToDrub();
+    refetchVaultHashBalance();
+    refetchVaultDrubBalance();
+    refetchLpPositionsCount();
+    refetchRubPerUsd(); // Add new refetch
   };
-
 
   return {
     status,
-    setStatus,
     buyAmount,
     setBuyAmount,
-    drubPerHash: drubPerHash ? formatUnits(drubPerHash, 18) : '0',
-    drubTotalSupply: drubTotalSupply ? formatUnits(drubTotalSupply, 18) : '0',
-    drubBalance: drubBalance ? formatUnits(drubBalance, 18) : '0',
-    hashBalance: hashBalance ? formatUnits(hashBalance, 18) : '0',
-    vaultPrice: vaultPrice ? formatUnits(vaultPrice, 18) : '0',
-    isApproved,
-    approve,
-    buyDrub,
+    drubPerHash: drubPerHash ? parseFloat(formatUnits(drubPerHash, 18)).toFixed(4) : '0.0000',
+    drubTotalSupply: drubTotalSupply ? parseFloat(formatUnits(drubTotalSupply, 18)).toFixed(2) : '0.00',
+    drubBalance: drubBalance ? parseFloat(formatUnits(drubBalance, 18)).toFixed(2) : '0.00',
+    hashBalance: hashBalance ? parseFloat(formatUnits(hashBalance, 18)).toFixed(0) : '0',
+    rubPerUsd: rubPerUsd ? parseFloat(formatUnits(rubPerUsd, 18)).toFixed(2) : '0.00', // Return new value
+    unifiedBuy, // The only function needed for the buy button
     refetchAll,
+    isBuying,
+    isAddingLiquidity,
+    isBurning,
+    addLiquidity,
+    burnAllPositions,
+    lpPositionsCount: lpPositionsCount?.toString() || '0', 
+    isVaultEmpty,
+    vaultHashBalance: vaultHashBalance !== undefined ? formatUnits(vaultHashBalance, 18) : '0.00',
+    vaultDrubBalance: vaultDrubBalance !== undefined ? formatUnits(vaultDrubBalance, 18) : '0.00',
   };
 }
