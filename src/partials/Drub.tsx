@@ -137,15 +137,20 @@ export default function Drub() {
                             <>
                               <span className="font-bold">Central bank</span> rate 
                             </>
-                          )},
+                          ), type: 'default' },
                         { text: (
                             <>
                               Decentralized <span className="font-bold">pool</span>
                             </>
-                          )},
+                          ), type: 'default' },
+                        { text: (
+                            <>
+                              Experimental mode
+                            </>
+                          ), type: 'warning' },
                       ].map((item, index) => (
                         <li className="flex gap-x-3" key={index}>
-                          <span className="mt-0.5 size-6 flex justify-center items-center rounded-lg border border-gray-200 text-white dark:border-neutral-700">
+                          <span className={`mt-0.5 size-6 flex justify-center items-center rounded-lg border ${item.type === 'warning' ? 'border-yellow-400 text-yellow-400' : 'border-gray-200 text-white dark:border-neutral-700'}`}>
                             <svg
                               className="size-3.5"
                               xmlns="http://www.w3.org/2000/svg"

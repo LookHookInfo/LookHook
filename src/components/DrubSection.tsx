@@ -66,7 +66,7 @@ export function DrubSection({
           <div className="px-2 py-1 border border-neutral-700 rounded-md flex items-center justify-center text-sm">
             <span className="font-bold text-neutral-400 mr-1">contract:</span>
             <span className="text-white font-semibold mr-2">0x..12d</span>
-            <button onClick={() => handleCopy(drubContractAddress)} title="Copy contract address">
+            <button onClick={() => handleCopy(drubContractAddress)} title="Copy contract address" className="cursor-pointer">
               {contractCopied ? <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg> : <svg className="w-4 h-4 text-gray-400 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2.286a1 1 0 01.714 1.714L17 10m0 0l-3.143 3.143a1 1 0 01-1.714-.714L14 10m0 0H8"></path></svg>}
             </button>
           </div>
@@ -91,7 +91,7 @@ export function DrubSection({
             />
             <button
               onClick={handleSetMaxBuy}
-              className="bg-neutral-700 text-white font-bold py-2 px-4 rounded-md"
+              className="bg-neutral-700 text-white font-bold py-2 px-4 rounded-md cursor-pointer"
             >
               MAX
             </button>
@@ -114,7 +114,7 @@ export function DrubSection({
             <button
                 onClick={handleBuyClick}
                 disabled={!buyAmount || parseFloat(buyAmount) <= 0 || isBuying || parseFloat(buyAmount) > parseFloat(hashBalance)}
-                className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 {isBuying ? (
                     <span className="flex items-center justify-center">
@@ -133,7 +133,7 @@ export function DrubSection({
               <button
                   onClick={addLiquidity}
                   disabled={!account || isAddingLiquidity || isVaultEmpty}
-                  className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 cursor-pointer"
+                  className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-green-600 text-white hover:bg-green-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   title={
                       vaultHashBalance === undefined || vaultDrubBalance === undefined
                           ? 'Loading Vault balances...'
@@ -151,7 +151,7 @@ export function DrubSection({
               <button
                   onClick={burnAllPositions}
                   disabled={!account || isBurning || lpPositionsCount === '0'}
-                  className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:pointer-events-none"
+                  className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-red-600 text-white hover:bg-red-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                   {isBurning ? (
                       <span className="flex items-center justify-center">
