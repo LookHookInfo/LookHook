@@ -19,6 +19,8 @@ import { earlyBirdAbi } from './earlyBirdAbi';
 import { stakeNftAbi } from './stakeNftAbi';
 import { whaleContractAbi } from './whaleContractAbi';
 import { BALANCE_OF_ABI } from './balanceOfAbi'; // New import for generic balanceOf ABI
+import { badgeStakeAbi } from './badgeStakeAbi';
+import { stakeRewardClaimAbi } from './stakeRewardClaimAbi';
 
 // --- CORE TOKENS ---
 
@@ -119,6 +121,13 @@ export const buyMeACoffeeContract = getContract({
   abi: CoffeeQuestAbi,
 });
 
+export const stakeRewardClaimContract = getContract({
+  client,
+  chain: chain,
+  address: '0x3e65390EdD46Ec98F792d0122eD4f1a105bab281',
+  abi: stakeRewardClaimAbi,
+});
+
 
 // --- NFT & IDENTITY ---
 
@@ -161,4 +170,11 @@ export const gmnftContract = getContract({
   chain: chain,
   address: '0x3B01Ad4F0aa8663174A7cE44ed9C7223791Fa16f',
   abi: gmnftAbi,
+});
+
+export const badgeStakeContract = getContract({
+  client,
+  chain: chain,
+  address: '0x6249E34dB9858676950c05fF66eCf96Aee4b7ba5',
+  abi: badgeStakeAbi,
 });

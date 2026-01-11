@@ -1,6 +1,10 @@
+import { useActiveAccount } from 'thirdweb/react';
 import { useStakeContract } from '../hooks/useStakeContract';
 import { StakingSection } from '../components/StakingSection';
 import { UserStakes } from '../components/UserStakesDisplay';
+import { useBadgeStake } from '../hooks/useBadgeStake';
+import { useStakeRewardClaim } from '../hooks/useStakeRewardClaim';
+import { Spinner } from '../components/Spinner'; // Assuming a Spinner component exists
 
 export default function Features() {
   const {
@@ -20,6 +24,23 @@ export default function Features() {
     setStatus, // Get setStatus
     isPoolInfoLoading,
   } = useStakeContract();
+
+  const account = useActiveAccount();
+  const { isEligible, isEligibilityLoading, isClaiming: isClaimingBadge, claimBadge } = useBadgeStake();
+  const { canClaim, isCanClaimLoading, isClaiming: isClaimingReward, claimReward, rewardBalance, refetchCanClaim } = useStakeRewardClaim();
+  
+  const badgeButtonActive = account && !isEligibilityLoading && isEligible && !isClaimingBadge;
+  const rewardButtonActive = account && !isCanClaimLoading && canClaim && !isClaimingReward;
+
+  const handleBadgeClaim = () => {
+    claimBadge({
+      onSuccess: () => {
+        setTimeout(() => {
+          refetchCanClaim?.();
+        }, 1500);
+      },
+    });
+  };
 
   return (
     <div className="max-w-[85rem] px-4 py-4 sm:px-6 lg:px-8 lg:py-6 mx-auto">
@@ -45,34 +66,50 @@ export default function Features() {
                 Lock Staking
               </h2>
               <p className="text-gray-400 dark:text-neutral-500">
-                A Web3 solution for secure token locking wit Simple logic, transparent terms, and zero complexity — all
+                A Web3 solution for secure token locking wit Simple logic, transparent terms, and zero complexity - all
                 on-chain and fully under your control.
               </p>
-              <div className="flex justify-center items-center space-x-4 mt-4 gleam-effect">
+              <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 mt-4 text-center">
                 <a
-                  href="https://app.galxe.com/quest/bAFdwDecXS6NRWsbYqVAgh/"
+                  href="https://app.galxe.com/quest/bAFdwDecXS6NRWsbYqVAgh/GCazut8JD5"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-white font-bold relative z-10"
+                  className="text-gray-400 hover:text-white font-bold"
                 >
                   Galxe
                 </a>
-                <a
-                  href="https://quest.intract.io/project/mining-hash/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-white font-bold relative z-10"
+                
+                <button
+                  onClick={handleBadgeClaim}
+                  disabled={!badgeButtonActive}
+                  className={`relative flex items-center justify-center px-4 py-2 rounded-lg transition text-sm font-medium border ${
+                    badgeButtonActive
+                      ? 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
+                      : 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
+                  }`}
                 >
-                  Intract
-                </a>
-                <a
-                  href="https://guild.xyz/hashcoin/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-white font-bold relative z-10"
-                >
-                  Guild
-                </a>
+                  {isClaimingBadge && <Spinner />}
+                  <span className={isClaimingBadge ? 'ml-2' : ''}>Badge</span>
+                </button>
+
+                <div className="relative group">
+                  <button
+                    onClick={claimReward}
+                    disabled={!rewardButtonActive}
+                    className={`relative flex items-center justify-center px-4 py-2 rounded-lg transition text-sm font-medium border ${
+                      rewardButtonActive
+                        ? 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
+                        : 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    {isClaimingReward && <Spinner />}
+                    <span className={isClaimingReward ? 'ml-2' : ''}>Reward</span>
+                  </button>
+                  <div className="absolute bottom-full mb-2 w-max px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                    {rewardBalance ? `${(Number(rewardBalance) / 1e18).toLocaleString()} HASH available` : 'Loading rewards...'}
+                    <div className="tooltip-arrow" data-popper-arrow></div>
+                  </div>
+                </div>
               </div>
             </div>
             {isPoolInfoLoading ? (
@@ -111,13 +148,6 @@ export default function Features() {
                   text: (
                     <>
                       On-Chain <span className="font-bold">Transparency</span>
-                    </>
-                  ),
-                },
-                {
-                  text: (
-                    <>
-                      <span className="font-bold">Simple</span> & Secure
                     </>
                   ),
                 },
@@ -161,3 +191,5 @@ export default function Features() {
     </div>
   );
 }
+
+
