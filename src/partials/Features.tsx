@@ -107,6 +107,8 @@ export default function Features() {
                   </button>
                   <div className="absolute bottom-full mb-2 w-max px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                     {rewardBalance ? `${(Number(rewardBalance) / 1e18).toLocaleString()} HASH available` : 'Loading rewards...'}
+                    <br />
+                    Earn 4000 HASH on Galxe
                     <div className="tooltip-arrow" data-popper-arrow></div>
                   </div>
                 </div>
