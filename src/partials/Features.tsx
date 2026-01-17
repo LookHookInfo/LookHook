@@ -69,7 +69,7 @@ export default function Features() {
                 A Web3 solution for secure token locking wit Simple logic, transparent terms, and zero complexity - all
                 on-chain and fully under your control.
               </p>
-              <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 mt-4 text-center">
+              <div className="flex flex-row justify-center items-center space-x-4 mt-4 text-center">
                 <a
                   href="https://app.galxe.com/quest/bAFdwDecXS6NRWsbYqVAgh/GCazut8JD5"
                   target="_blank"

@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useActiveAccount } from 'thirdweb/react';
 import { DrubSection } from '../components/DrubSection';
 import { useDrubContract } from '../hooks/useDrubContract';
+import { useDrub100Badge } from '../hooks/useDrub100Badge';
+import { Spinner } from '../components/Spinner';
 
 export default function Drub() {
   const account = useActiveAccount();
@@ -27,6 +29,8 @@ export default function Drub() {
     rubPerUsd,
   } = useDrubContract();
 
+  const { hasBadge, isMinting, status: badgeStatus, canMint, handleMint } = useDrub100Badge();
+
   useEffect(() => {
     if (account) {
       const interval = setInterval(() => {
@@ -51,6 +55,8 @@ export default function Drub() {
   const sliderValueBuy = buyAmount && hashBalance && Number(hashBalance) > 0
     ? Math.floor((Number(buyAmount) / Number(hashBalance)) * 100)
     : 0;
+    
+  const badgeButtonActive = account && !isMinting && !hasBadge && canMint;
 
   return (
     <div className="max-w-[85rem] px-4 py-4 sm:px-6 lg:px-8 lg:py-6 mx-auto">
@@ -92,44 +98,55 @@ export default function Drub() {
                         Locked: <span className="text-white font-semibold">{(parseFloat(drubTotalSupply) / 2).toFixed(2)} DRUB</span>
                       </p>
                     </div>
-                    <div className="flex items-center gap-x-2 mt-2">
-                      <button
-                        disabled
-                        className="py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-gray-500 text-gray-500 opacity-50"
-                      >
-                        100p badge
-                      </button>
-                      <a
-                        href="https://lookhook.info"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-gray-100 dark:hover:bg-neutral-700 opacity-50 pointer-events-none"
-                      >
-                        Website
-                      </a>
-                      <a
-                        href="https://x.com/DRUBcoin"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700"
-                      >
-                        <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
-                          <title>X</title>
-                          <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932Z" />
-                        </svg>
-                      </a>
-                      <a
-                        href="https://discord.com/invite/D55sWhNgcb"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700"
-                      >
-                        <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
-                          <title>Discord</title>
-                          <path d="M20.317 4.3698a19.7913 19.7913 0 0 0-4.8851-1.5152.0741.0741 0 0 0-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 0 0-.0785-.037 19.7363 19.7363 0 0 0-4.8852 1.515.0699.0699 0 0 0-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 0 0 .0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 0 0 .0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 0 0-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 0 1-.0076-.1277c.1258-.0943.2517-.1923.3718-.2916a.0743.0743 0 0 1 .0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 0 1 .0785.0095c.1202.0994.246.1984.3728.292a.077.077 0 0 1-.0065.1276 12.2986 12.2986 0 0 1-1.873.8914.0766.0766 0 0 0-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 0 0 .0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 0 0 .0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 0 0-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.4189 0 1.3333-.9555 2.419-2.1569 2.419zm7.9748 0c-1.1825 0-2.1568-1.0857-2.1568-2.419 0-1.3332.9554-2.4189 2.1568-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.4189 0 1.3333-.946 2.419-2.1568 2.419Z" />
-                        </svg>
-                      </a>
-                    </div>
+              <div className="flex flex-row justify-center items-center space-x-4 mt-4 text-center">
+                <a
+                  href="https://app.galxe.com/quest/3xVdUNg8fS7gA4A5rp1gqT"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-white font-bold"
+                >
+                  Galxe
+                </a>
+                
+                <button
+                  onClick={handleMint}
+                  disabled={!badgeButtonActive}
+                  className={`relative flex items-center justify-center px-4 py-2 rounded-lg transition text-sm font-medium border ${
+                    badgeButtonActive
+                      ? 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
+                      : 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
+                  }`}
+                >
+                  {isMinting && <Spinner />}
+                  <span className={isMinting ? 'ml-2' : ''}>{hasBadge ? 'Owned' : 'Badge'}</span>
+                </button>
+
+                <div className="relative group">
+                  <button
+                    disabled={true}
+                    className="relative flex items-center justify-center px-4 py-2 rounded-lg transition text-sm font-medium border border-gray-500 text-gray-500 opacity-50 cursor-not-allowed"
+                  >
+                    <span>Reward</span>
+                  </button>
+                  <div className="absolute bottom-full mb-2 w-max px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                    Coming soon
+                    <div className="tooltip-arrow" data-popper-arrow></div>
+                  </div>
+                </div>
+
+                <a
+                  href="https://x.com/DRUBcoin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                >
+                  <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
+                    <title>X</title>
+                    <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932Z" />
+                  </svg>
+                </a>
+              </div>
+              {badgeStatus && <p className="text-center text-sm text-gray-400 mt-2">{badgeStatus}</p>}
 
                     <ul className="space-y-1 sm:space-y-2">
                       {[

@@ -21,6 +21,7 @@ import { whaleContractAbi } from './whaleContractAbi';
 import { BALANCE_OF_ABI } from './balanceOfAbi'; // New import for generic balanceOf ABI
 import { badgeStakeAbi } from './badgeStakeAbi';
 import { stakeRewardClaimAbi } from './stakeRewardClaimAbi';
+import { drub100BadgeAbi } from './drub100BadgeAbi';
 
 // --- CORE TOKENS ---
 
@@ -177,4 +178,11 @@ export const badgeStakeContract = getContract({
   chain: chain,
   address: '0x6249E34dB9858676950c05fF66eCf96Aee4b7ba5',
   abi: badgeStakeAbi,
+});
+
+export const drub100BadgeContract = getContract({
+  client,
+  chain: chain,
+  address: '0x366f37820b98F86F7C41d2fB6DB246f85B28b18c',
+  abi: drub100BadgeAbi,
 });
