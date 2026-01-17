@@ -22,6 +22,7 @@ import { BALANCE_OF_ABI } from './balanceOfAbi'; // New import for generic balan
 import { badgeStakeAbi } from './badgeStakeAbi';
 import { stakeRewardClaimAbi } from './stakeRewardClaimAbi';
 import { drub100BadgeAbi } from './drub100BadgeAbi';
+import { drubRewardAbi } from './drubRewardAbi';
 
 // --- CORE TOKENS ---
 
@@ -127,6 +128,13 @@ export const stakeRewardClaimContract = getContract({
   chain: chain,
   address: '0x3e65390EdD46Ec98F792d0122eD4f1a105bab281',
   abi: stakeRewardClaimAbi,
+});
+
+export const drubRewardContract = getContract({
+  client,
+  chain: chain,
+  address: '0x225ebbac1db8fdb1be4a70ae695745f214fc5424',
+  abi: drubRewardAbi,
 });
 
 

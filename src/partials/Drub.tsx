@@ -3,6 +3,7 @@ import { useActiveAccount } from 'thirdweb/react';
 import { DrubSection } from '../components/DrubSection';
 import { useDrubContract } from '../hooks/useDrubContract';
 import { useDrub100Badge } from '../hooks/useDrub100Badge';
+import { useDrubReward } from '../hooks/useDrubReward';
 import { Spinner } from '../components/Spinner';
 
 export default function Drub() {
@@ -30,6 +31,8 @@ export default function Drub() {
   } = useDrubContract();
 
   const { hasBadge, isMinting, status: badgeStatus, canMint, handleMint } = useDrub100Badge();
+  const { canClaim, hasClaimed, isClaiming, rewardAmount, poolRewardBalance, handleClaim, status: rewardStatus } = useDrubReward();
+
 
   useEffect(() => {
     if (account) {
@@ -57,6 +60,7 @@ export default function Drub() {
     : 0;
     
   const badgeButtonActive = account && !isMinting && !hasBadge && canMint;
+  const rewardButtonActive = account && canClaim && !hasClaimed && !isClaiming;
 
   return (
     <div className="max-w-[85rem] px-4 py-4 sm:px-6 lg:px-8 lg:py-6 mx-auto">
@@ -108,28 +112,42 @@ export default function Drub() {
                   Galxe
                 </a>
                 
-                <button
-                  onClick={handleMint}
-                  disabled={!badgeButtonActive}
-                  className={`relative flex items-center justify-center px-4 py-2 rounded-lg transition text-sm font-medium border ${
-                    badgeButtonActive
-                      ? 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
-                      : 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
-                  }`}
-                >
-                  {isMinting && <Spinner />}
-                  <span className={isMinting ? 'ml-2' : ''}>{hasBadge ? 'Owned' : 'Badge'}</span>
-                </button>
+                <div className="relative group">
+                  <button
+                    onClick={handleMint}
+                    disabled={!badgeButtonActive}
+                    className={`relative flex items-center justify-center px-4 py-2 rounded-lg transition text-sm font-medium border ${
+                      badgeButtonActive
+                        ? 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
+                        : 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    {isMinting && <Spinner />}
+                    <span className={isMinting ? 'ml-2' : ''}>{hasBadge ? 'Owned' : 'Badge'}</span>
+                  </button>
+                  <div className="absolute bottom-full mb-2 w-max px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                    Buy for 100 DRUB
+                    <div className="tooltip-arrow" data-popper-arrow></div>
+                  </div>
+                </div>
 
                 <div className="relative group">
                   <button
-                    disabled={true}
-                    className="relative flex items-center justify-center px-4 py-2 rounded-lg transition text-sm font-medium border border-gray-500 text-gray-500 opacity-50 cursor-not-allowed"
+                    onClick={handleClaim}
+                    disabled={!rewardButtonActive}
+                    className={`relative flex items-center justify-center px-4 py-2 rounded-lg transition text-sm font-medium border ${
+                      rewardButtonActive
+                        ? 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
+                        : 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
+                    }`}
                   >
-                    <span>Reward</span>
+                    {isClaiming && <Spinner />}
+                    <span className={isClaiming ? 'ml-2' : ''}>{hasClaimed ? 'Owned' : 'Reward'}</span>
                   </button>
                   <div className="absolute bottom-full mb-2 w-max px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    Coming soon
+                    Pool: {poolRewardBalance} HASH 
+                    <br />
+                    Claim: {rewardAmount} HASH on Galxe
                     <div className="tooltip-arrow" data-popper-arrow></div>
                   </div>
                 </div>
@@ -146,7 +164,7 @@ export default function Drub() {
                   </svg>
                 </a>
               </div>
-              {badgeStatus && <p className="text-center text-sm text-gray-400 mt-2">{badgeStatus}</p>}
+              {(badgeStatus || rewardStatus) && <p className="text-center text-sm text-gray-400 mt-2">{badgeStatus || rewardStatus}</p>}
 
                     <ul className="space-y-1 sm:space-y-2">
                       {[
