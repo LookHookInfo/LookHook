@@ -104,7 +104,7 @@ export default function Drub() {
                     </div>
               <div className="flex flex-row justify-center items-center space-x-4 mt-4 text-center">
                 <a
-                  href="https://app.galxe.com/quest/3xVdUNg8fS7gA4A5rp1gqT"
+                  href="https://app.galxe.com/quest/bAFdwDecXS6NRWsbYqVAgh/GCSNetYMJq"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-400 hover:text-white font-bold"

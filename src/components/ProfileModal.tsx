@@ -2,7 +2,15 @@ import { GMAchievement } from './GMAchievement';
 import { useEffect } from 'react';
 import type { Wallet } from 'thirdweb/wallets';
 import { useDisconnect, useWalletBalance, useReadContract } from 'thirdweb/react';
-import { hashcoinContract, earlyBirdContract, buyMeACoffeeContract, nameContract, stakeNftContract } from '../utils/contracts';
+import {
+  hashcoinContract,
+  earlyBirdContract,
+  buyMeACoffeeContract,
+  nameContract,
+  stakeNftContract,
+  drubContract,
+  drub100BadgeContract,
+} from '../utils/contracts';
 import EarlyBirdClaimButton from './EarlyBirdClaimButton';
 import { DolphinAchievement, SharkAchievement, WhaleAchievement } from './WhaleAchievements';
 
@@ -35,6 +43,86 @@ function HashcoinAchievement({ wallet }: { wallet: Wallet }) {
       title={isBalanceLoading ? 'Loading...' : `Balance: ${formattedBalance}`}
     >
       <img src="/image.svg" alt="Hashcoin Logo" className={`size-10 ${!hasEnoughHash ? 'opacity-50' : ''}`} />
+    </div>
+  );
+}
+
+// Drub Achievement Component
+function DrubAchievement({ wallet }: { wallet: Wallet }) {
+  const { data: balance, isLoading: isBalanceLoading } = useWalletBalance({
+    chain: drubContract.chain,
+    address: wallet.getAccount()?.address,
+    client: drubContract.client,
+    tokenAddress: drubContract.address,
+  });
+
+  const formattedBalance = balance ? `${parseInt(balance.displayValue).toString()} ${balance.symbol}` : '0 DRUB';
+  const DRUB_ACHIEVEMENT_THRESHOLD = 1000;
+
+  const hasEnoughDrub =
+    balance && balance.value >= BigInt(DRUB_ACHIEVEMENT_THRESHOLD) * 10n ** BigInt(balance.decimals);
+
+  return (
+    <div
+      className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+      title={isBalanceLoading ? 'Loading...' : `Balance: ${formattedBalance}`}
+    >
+      <img
+        src="/assets/Drub.webp"
+        alt="Drub Logo"
+        className={`size-10 ${!hasEnoughDrub ? 'opacity-50' : ''}`}
+      />
+    </div>
+  );
+}
+
+// BadgeDrub Achievement Component
+function BadgeDrubAchievement({ wallet }: { wallet: Wallet }) {
+  const ownerAddress = wallet.getAccount()?.address;
+
+  const { data: balance, isLoading: isBalanceLoading } = useReadContract({
+    contract: drub100BadgeContract,
+    method: 'balanceOf',
+    params: [ownerAddress || ''],
+    queryOptions: {
+      enabled: !!ownerAddress,
+    },
+  });
+
+  const hasNft = balance && (balance as bigint) > 0n;
+
+  if (!ownerAddress) {
+    return (
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Connect wallet to see achievement"
+      >
+        <span className="text-neutral-400 text-xs">?</span>
+      </div>
+    );
+  }
+
+  if (isBalanceLoading) {
+    return (
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Loading DRUB Badge NFT..."
+      >
+        <span className="text-neutral-400 text-xs">...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
+      title={hasNft ? 'DRUB Badge Owned' : 'DRUB Badge Not Owned'}
+    >
+      <img
+        src="/assets/BadgeDRUB.webp"
+        alt="DRUB Badge Achievement"
+        className={`size-10 ${!hasNft ? 'opacity-50' : ''}`}
+      />
     </div>
   );
 }
@@ -305,8 +393,8 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
               <NameAchievement wallet={wallet} />
 
               {/* Empty cells */}
-              <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
-              <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
+              <DrubAchievement wallet={wallet} />
+              <BadgeDrubAchievement wallet={wallet} />
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
 
               <StakeNftAchievement wallet={wallet} />
