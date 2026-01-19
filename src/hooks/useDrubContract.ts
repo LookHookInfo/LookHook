@@ -125,9 +125,15 @@ export function useDrubContract() {
       await waitForReceipt({ client, chain, transactionHash: buyTxHash });
       
       // Инвалидируем запросы, которые могли измениться после покупки
-      await queryClient.invalidateQueries({ queryKey: [drubContract.address] });
-      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address] });
-      await queryClient.invalidateQueries({ queryKey: [nfpmContract.address] });
+      await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress], exact: true });
+      await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'totalSupply'], exact: true });
+      await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'getDrubPerHash'], exact: true });
+      await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'rubPerUsd'], exact: true });
+      
+      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress], exact: true });
+      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'allowance'], exact: false });
+      
+      await queryClient.invalidateQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });
       setStatus(''); // Clear status on success
     } catch (error) {
       setStatus(`Error: ${error instanceof Error ? error.message.substring(0, 50) : 'Transaction failed'}`);
@@ -156,10 +162,13 @@ export function useDrubContract() {
       const { transactionHash } = await sendTx(transaction);
       await waitForReceipt({ client, chain, transactionHash });
       // Инвалидируем запросы, которые могли измениться после добавления ликвидности
-      await queryClient.invalidateQueries({ queryKey: [drubContract.address] });
-      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address] });
-      await queryClient.invalidateQueries({ queryKey: [nfpmContract.address] }); 
-      setStatus('');
+      await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress], exact: true });
+      await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'balanceOf', vaultAddress], exact: true });
+      
+      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress], exact: true });
+      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
+      
+      await queryClient.invalidateQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });      setStatus('');
     } catch (error) {
       setStatus(`Add liquidity failed: ${error instanceof Error ? error.message.substring(0, 100) : String(error)}`);
       setTimeout(() => setStatus(''), 5000);
@@ -184,10 +193,13 @@ export function useDrubContract() {
       const { transactionHash } = await sendTx(transaction);
       await waitForReceipt({ client, chain, transactionHash });
       // Инвалидируем запросы, которые могли измениться после сжигания позиций
-      await queryClient.invalidateQueries({ queryKey: [drubContract.address] });
-      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address] });
-      await queryClient.invalidateQueries({ queryKey: [nfpmContract.address] });
-      setStatus('');
+      await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress], exact: true });
+      await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'balanceOf', vaultAddress], exact: true });
+      
+      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress], exact: true });
+      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
+      
+      await queryClient.invalidateQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });      setStatus('');
     } catch (error) {
       setStatus(`Burn LP failed: ${error instanceof Error ? error.message.substring(0, 100) : String(error)}`);
       setTimeout(() => setStatus(''), 5000);
