@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useActiveAccount } from 'thirdweb/react';
 import { DrubSection } from '../components/DrubSection';
 import { useDrubContract } from '../hooks/useDrubContract';
@@ -17,7 +16,6 @@ export default function Drub() {
     drubBalance,
     hashBalance,
     unifiedBuy,
-    refetchAll,
     isBuying,
     isAddingLiquidity,
     isBurning,
@@ -34,14 +32,8 @@ export default function Drub() {
   const { canClaim, hasClaimed, isClaiming, rewardAmount, poolRewardBalance, handleClaim, status: rewardStatus } = useDrubReward();
 
 
-  useEffect(() => {
-    if (account) {
-      const interval = setInterval(() => {
-        refetchAll();
-      }, 15000); 
-      return () => clearInterval(interval);
-    }
-  }, [account, refetchAll]);
+  // useEffect removed as `staleTime` and `refetchInterval` in useQueries handle automatic refetching.
+  // Manual setInterval with refetchAll() is no longer needed and would be redundant/inefficient.
 
   const handleSetMaxBuy = () => {
     const maxAmount = Math.floor(parseFloat(hashBalance) > 0.1 ? (parseFloat(hashBalance) - 0.05) : parseFloat(hashBalance));

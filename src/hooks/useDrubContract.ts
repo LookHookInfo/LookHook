@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
 import {
-  useReadContract,
   useActiveAccount,
   useSendTransaction,
 } from 'thirdweb/react';
-import { prepareContractCall, waitForReceipt } from 'thirdweb';
+import { useQueries, useQueryClient } from '@tanstack/react-query'; // Добавлен useQueryClient
+import { prepareContractCall, waitForReceipt, readContract, type ThirdwebContract } from 'thirdweb';
+import { type Abi } from 'viem';
 import { client } from '../lib/thirdweb/client';
 import { chain } from '../lib/thirdweb/chain';
 import { formatUnits, parseEther } from 'ethers';
@@ -16,6 +17,7 @@ import {
 } from '@/utils/contracts';
 
 export function useDrubContract() {
+  const queryClient = useQueryClient(); // Инициализируем QueryClient
   const account = useActiveAccount();
   const { mutateAsync: sendTx } = useSendTransaction();
   const [status, setStatus] = useState('');
@@ -26,73 +28,57 @@ export function useDrubContract() {
   const [isAddingLiquidity, setIsAddingLiquidity] = useState(false);
   const [isBurning, setIsBurning] = useState(false);
 
-  // DRUB Contract Reads
-  const { data: drubPerHash, refetch: refetchDrubPerHash } = useReadContract({
-    contract: drubContract,
-    method: 'getDrubPerHash',
-    params: [],
+  // New Batched Contract Reads using useQueries
+  const accountAddress = account?.address || '0x0000000000000000000000000000000000000000';
+  const vaultAddress = vaultDrubContract.address;
+
+  // Define a helper function to create Thirdweb contract calls that useQueries can execute
+  const createThirdwebQuery = <TAbi extends Abi, TFunctionName extends string, TArgs extends readonly unknown[]>(
+    contractInstance: ThirdwebContract<TAbi>,
+    methodName: TFunctionName,
+    params: TArgs,
+    enabled: boolean = true,
+  ) => ({
+    queryKey: [contractInstance.address, methodName, ...params],
+    queryFn: () => readContract({ contract: contractInstance, method: methodName as any, params: params as any }),
+    enabled,
+    staleTime: 1000 * 60 * 5, // 5 min
+    refetchInterval: 1000 * 60 * 5, // 5 min
   });
 
-  const { data: drubTotalSupply, refetch: refetchDrubTotalSupply } =
-    useReadContract({
-      contract: drubContract,
-      method: 'totalSupply',
-      params: [],
-    });
+  const queries = useMemo(() => {
+    return [
+      // DRUB Contract Queries
+      createThirdwebQuery(drubContract, 'getDrubPerHash', []),
+      createThirdwebQuery(drubContract, 'totalSupply', []),
+      createThirdwebQuery(drubContract, 'balanceOf', [accountAddress], !!account),
+      createThirdwebQuery(drubContract, 'balanceOf', [vaultAddress]),
+      createThirdwebQuery(drubContract, 'rubPerUsd', []),
 
-  const { data: drubBalance, refetch: refetchDrubBalance } = useReadContract({
-    contract: drubContract,
-    method: 'balanceOf',
-    params: [account?.address || '0x0000000000000000000000000000000000000000'],
-    queryOptions: { enabled: !!account },
-  });
+      // HASH Contract Queries
+      createThirdwebQuery(hashcoinContract, 'balanceOf', [accountAddress], !!account),
+      createThirdwebQuery(hashcoinContract, 'allowance', [accountAddress, drubContract.address], !!account),
+      createThirdwebQuery(hashcoinContract, 'balanceOf', [vaultAddress]),
 
-  // HASH Contract Reads
-  const { data: hashBalance, refetch: refetchHashBalance } = useReadContract({
-    contract: hashcoinContract,
-    method: 'balanceOf',
-    params: [account?.address || '0x0000000000000000000000000000000000000000'],
-    queryOptions: { enabled: !!account },
-  });
+      // NFPM Contract Query
+      createThirdwebQuery(nfpmContract, 'balanceOf', [vaultAddress]),
+    ];
+  }, [account, accountAddress, vaultAddress]);
 
-  const { data: hashAllowanceToDrub, refetch: refetchHashAllowanceToDrub } =
-    useReadContract({
-      contract: hashcoinContract,
-      method: 'allowance',
-      params: [account?.address || '0x0000000000000000000000000000000000000000', drubContract.address],
-      queryOptions: { enabled: !!account },
-    });
+  const results = useQueries({ queries });
 
-  // Vault Contract Reads
-  const { data: vaultHashBalance, refetch: refetchVaultHashBalance } = useReadContract({
-    contract: hashcoinContract,
-    method: 'balanceOf',
-    params: [vaultDrubContract.address],
-    queryOptions: { enabled: true },
-  });
-
-  const { data: vaultDrubBalance, refetch: refetchVaultDrubBalance } = useReadContract({
-    contract: drubContract,
-    method: 'balanceOf',
-    params: [vaultDrubContract.address],
-    queryOptions: { enabled: true },
-  });
-
-  const { data: lpPositionsCount, refetch: refetchLpPositionsCount } =
-    useReadContract({
-      contract: nfpmContract,
-      method: 'balanceOf',
-      params: [vaultDrubContract.address],
-      queryOptions: { enabled: true },
-    });
-
-  // Central Bank Rate (Rub per Usd)
-  const { data: rubPerUsd, refetch: refetchRubPerUsd } = useReadContract({
-    contract: drubContract,
-    method: 'rubPerUsd',
-    params: [],
-    queryOptions: { enabled: true },
-  });
+  // Extract data from results
+  const [
+    { data: drubPerHash },
+    { data: drubTotalSupply },
+    { data: drubBalance },
+    { data: vaultDrubBalance },
+    { data: rubPerUsd },
+    { data: hashBalance },
+    { data: hashAllowanceToDrub },
+    { data: vaultHashBalance },
+    { data: lpPositionsCount },
+  ] = results;
 
   const isVaultEmpty = useMemo(() => {
     if (vaultHashBalance === undefined || vaultDrubBalance === undefined) {
@@ -126,7 +112,7 @@ export function useDrubContract() {
         });
         const { transactionHash: approveTxHash } = await sendTx(approveTx);
         await waitForReceipt({ client, chain, transactionHash: approveTxHash });
-        refetchHashAllowanceToDrub();
+        // refetchAll() удален, так как он будет вызван после покупки
       }
 
       // Step 3: Buy DRUB
@@ -138,7 +124,10 @@ export function useDrubContract() {
       const { transactionHash: buyTxHash } = await sendTx(buyTx);
       await waitForReceipt({ client, chain, transactionHash: buyTxHash });
       
-      refetchAll();
+      // Инвалидируем запросы, которые могли измениться после покупки
+      await queryClient.invalidateQueries({ queryKey: [drubContract.address] });
+      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address] });
+      await queryClient.invalidateQueries({ queryKey: [nfpmContract.address] });
       setStatus(''); // Clear status on success
     } catch (error) {
       setStatus(`Error: ${error instanceof Error ? error.message.substring(0, 50) : 'Transaction failed'}`);
@@ -166,7 +155,10 @@ export function useDrubContract() {
 
       const { transactionHash } = await sendTx(transaction);
       await waitForReceipt({ client, chain, transactionHash });
-      refetchAll(); 
+      // Инвалидируем запросы, которые могли измениться после добавления ликвидности
+      await queryClient.invalidateQueries({ queryKey: [drubContract.address] });
+      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address] });
+      await queryClient.invalidateQueries({ queryKey: [nfpmContract.address] }); 
       setStatus('');
     } catch (error) {
       setStatus(`Add liquidity failed: ${error instanceof Error ? error.message.substring(0, 100) : String(error)}`);
@@ -191,7 +183,10 @@ export function useDrubContract() {
       });
       const { transactionHash } = await sendTx(transaction);
       await waitForReceipt({ client, chain, transactionHash });
-      refetchAll();
+      // Инвалидируем запросы, которые могли измениться после сжигания позиций
+      await queryClient.invalidateQueries({ queryKey: [drubContract.address] });
+      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address] });
+      await queryClient.invalidateQueries({ queryKey: [nfpmContract.address] });
       setStatus('');
     } catch (error) {
       setStatus(`Burn LP failed: ${error instanceof Error ? error.message.substring(0, 100) : String(error)}`);
@@ -199,18 +194,6 @@ export function useDrubContract() {
     } finally {
       setIsBurning(false);
     }
-  };
-
-  const refetchAll = () => {
-    refetchDrubPerHash();
-    refetchDrubTotalSupply();
-    refetchDrubBalance();
-    refetchHashBalance();
-    refetchHashAllowanceToDrub();
-    refetchVaultHashBalance();
-    refetchVaultDrubBalance();
-    refetchLpPositionsCount();
-    refetchRubPerUsd(); // Add new refetch
   };
 
   return {
@@ -223,7 +206,6 @@ export function useDrubContract() {
     hashBalance: hashBalance ? parseFloat(formatUnits(hashBalance, 18)).toFixed(0) : '0',
     rubPerUsd: rubPerUsd ? parseFloat(formatUnits(rubPerUsd, 18)).toFixed(2) : '0.00', // Return new value
     unifiedBuy, // The only function needed for the buy button
-    refetchAll,
     isBuying,
     isAddingLiquidity,
     isBurning,
