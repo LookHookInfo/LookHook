@@ -134,6 +134,12 @@ export function useDrubContract() {
       await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'allowance'], exact: false });
       
       await queryClient.invalidateQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });
+      
+      // Немедленно обновляем запросы, влияющие на кнопки
+      await queryClient.refetchQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress], exact: true });
+      await queryClient.refetchQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
+      await queryClient.refetchQueries({ queryKey: [drubContract.address, 'balanceOf', vaultAddress], exact: true });
+      
       setStatus(''); // Clear status on success
     } catch (error) {
       setStatus(`Error: ${error instanceof Error ? error.message.substring(0, 50) : 'Transaction failed'}`);
@@ -168,7 +174,25 @@ export function useDrubContract() {
       await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress], exact: true });
       await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
       
-      await queryClient.invalidateQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });      setStatus('');
+            await queryClient.invalidateQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true }); 
+      
+            
+      
+            // Немедленно обновляем запросы, влияющие на кнопки и отображение балансов
+      
+            await queryClient.refetchQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress], exact: true });
+      
+            await queryClient.refetchQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress], exact: true });
+      
+            await queryClient.refetchQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
+      
+            await queryClient.refetchQueries({ queryKey: [drubContract.address, 'balanceOf', vaultAddress], exact: true });
+      
+            await queryClient.refetchQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });
+      
+      
+      
+            setStatus('');
     } catch (error) {
       setStatus(`Add liquidity failed: ${error instanceof Error ? error.message.substring(0, 100) : String(error)}`);
       setTimeout(() => setStatus(''), 5000);
@@ -199,7 +223,25 @@ export function useDrubContract() {
       await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress], exact: true });
       await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
       
-      await queryClient.invalidateQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });      setStatus('');
+            await queryClient.invalidateQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });
+      
+            
+      
+            // Немедленно обновляем запросы, влияющие на кнопки и отображение балансов
+      
+            await queryClient.refetchQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress], exact: true });
+      
+            await queryClient.refetchQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress], exact: true });
+      
+            await queryClient.refetchQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
+      
+            await queryClient.refetchQueries({ queryKey: [drubContract.address, 'balanceOf', vaultAddress], exact: true });
+      
+            await queryClient.refetchQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });
+      
+      
+      
+            setStatus('');
     } catch (error) {
       setStatus(`Burn LP failed: ${error instanceof Error ? error.message.substring(0, 100) : String(error)}`);
       setTimeout(() => setStatus(''), 5000);
