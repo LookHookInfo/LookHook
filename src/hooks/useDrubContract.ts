@@ -131,14 +131,12 @@ export function useDrubContract() {
       await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'rubPerUsd'], exact: true });
       
       await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress], exact: true });
-      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'allowance'], exact: false });
+      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'allowance', accountAddress, drubContract.address], exact: true });
       
       await queryClient.invalidateQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });
-      
-      // Немедленно обновляем запросы, влияющие на кнопки
-      await queryClient.refetchQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress], exact: true });
-      await queryClient.refetchQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
-      await queryClient.refetchQueries({ queryKey: [drubContract.address, 'balanceOf', vaultAddress], exact: true });
+
+      // Force refetch for hooks like useDrub100Badge to update button states instantly
+      await queryClient.refetchQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress] });
       
       setStatus(''); // Clear status on success
     } catch (error) {
@@ -167,33 +165,14 @@ export function useDrubContract() {
 
       const { transactionHash } = await sendTx(transaction);
       await waitForReceipt({ client, chain, transactionHash });
-      // Инвалидируем запросы, которые могли измениться после добавления ликвидности
-      await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress], exact: true });
-      await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'balanceOf', vaultAddress], exact: true });
-      
-      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress], exact: true });
-      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
-      
-            await queryClient.invalidateQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true }); 
-      
+            // Инвалидируем запросы, которые могли измениться после добавления ликвидности
+            await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'balanceOf', vaultAddress], exact: true });
             
-      
-            // Немедленно обновляем запросы, влияющие на кнопки и отображение балансов
-      
-            await queryClient.refetchQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress], exact: true });
-      
-            await queryClient.refetchQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress], exact: true });
-      
-            await queryClient.refetchQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
-      
-            await queryClient.refetchQueries({ queryKey: [drubContract.address, 'balanceOf', vaultAddress], exact: true });
-      
-            await queryClient.refetchQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });
-      
-      
-      
-            setStatus('');
-    } catch (error) {
+            await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
+            
+            await queryClient.invalidateQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true }); 
+            
+            setStatus('');    } catch (error) {
       setStatus(`Add liquidity failed: ${error instanceof Error ? error.message.substring(0, 100) : String(error)}`);
       setTimeout(() => setStatus(''), 5000);
     } finally {
@@ -216,33 +195,14 @@ export function useDrubContract() {
       });
       const { transactionHash } = await sendTx(transaction);
       await waitForReceipt({ client, chain, transactionHash });
-      // Инвалидируем запросы, которые могли измениться после сжигания позиций
-      await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress], exact: true });
-      await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'balanceOf', vaultAddress], exact: true });
-      
-      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress], exact: true });
-      await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
-      
-            await queryClient.invalidateQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });
-      
+            // Инвалидируем запросы, которые могли измениться после сжигания позиций
+            await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'balanceOf', vaultAddress], exact: true });
             
-      
-            // Немедленно обновляем запросы, влияющие на кнопки и отображение балансов
-      
-            await queryClient.refetchQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress], exact: true });
-      
-            await queryClient.refetchQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress], exact: true });
-      
-            await queryClient.refetchQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
-      
-            await queryClient.refetchQueries({ queryKey: [drubContract.address, 'balanceOf', vaultAddress], exact: true });
-      
-            await queryClient.refetchQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });
-      
-      
-      
-            setStatus('');
-    } catch (error) {
+            await queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', vaultAddress], exact: true });
+            
+            await queryClient.invalidateQueries({ queryKey: [nfpmContract.address, 'balanceOf', vaultAddress], exact: true });
+            
+            setStatus('');    } catch (error) {
       setStatus(`Burn LP failed: ${error instanceof Error ? error.message.substring(0, 100) : String(error)}`);
       setTimeout(() => setStatus(''), 5000);
     } finally {

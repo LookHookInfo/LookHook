@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useQueryClient, useQueries } from '@tanstack/react-query';
 import {
-  useReadContract,
   useActiveAccount,
   useSendTransaction,
 } from 'thirdweb/react';
-import { prepareContractCall, waitForReceipt } from 'thirdweb';
+import { prepareContractCall, waitForReceipt, readContract, type ThirdwebContract } from 'thirdweb';
+import { type Abi } from 'viem';
 import { client } from '../lib/thirdweb/client';
 import { chain } from '../lib/thirdweb/chain';
 import { parseEther } from 'ethers';
@@ -16,31 +17,41 @@ import {
 const BADGE_PRICE = parseEther('100');
 
 export function useDrub100Badge() {
+  const queryClient = useQueryClient();
   const account = useActiveAccount();
   const { mutateAsync: sendTx } = useSendTransaction();
   const [isMinting, setIsMinting] = useState(false);
   const [status, setStatus] = useState('');
 
-  const { data: hasBadge, refetch: refetchHasBadge } = useReadContract({
-    contract: drub100BadgeContract,
-    method: 'hasBadge',
-    params: [account?.address || '0x0'],
-    queryOptions: { enabled: !!account },
+  const accountAddress = account?.address || '0x0000000000000000000000000000000000000000';
+
+  const createThirdwebQuery = <TAbi extends Abi, TFunctionName extends string, TArgs extends readonly unknown[]>(
+    contractInstance: ThirdwebContract<TAbi>,
+    methodName: TFunctionName,
+    params: TArgs,
+    enabled: boolean = true,
+  ) => ({
+    queryKey: [contractInstance.address, methodName, ...params],
+    queryFn: () => readContract({ contract: contractInstance, method: methodName as any, params: params as any }),
+    enabled,
+    staleTime: 300000, // 5 minutes
   });
 
-  const { data: drubBalance, refetch: refetchDrubBalance } = useReadContract({
-    contract: drubContract,
-    method: 'balanceOf',
-    params: [account?.address || '0x0'],
-    queryOptions: { enabled: !!account },
-  });
+  const queries = useMemo(() => {
+    return [
+      createThirdwebQuery(drub100BadgeContract, 'hasBadge', [accountAddress], !!account),
+      createThirdwebQuery(drubContract, 'balanceOf', [accountAddress], !!account),
+      createThirdwebQuery(drubContract, 'allowance', [accountAddress, drub100BadgeContract.address], !!account),
+    ];
+  }, [account, accountAddress]);
 
-  const { data: drubAllowance, refetch: refetchDrubAllowance } = useReadContract({
-    contract: drubContract,
-    method: 'allowance',
-    params: [account?.address || '0x0', drub100BadgeContract.address],
-    queryOptions: { enabled: !!account },
-  });
+  const results = useQueries({ queries });
+  
+  const [
+    { data: hasBadge },
+    { data: drubBalance },
+    { data: drubAllowance },
+  ] = results;
 
   const canMint = drubBalance !== undefined && drubBalance >= BADGE_PRICE;
 
@@ -50,20 +61,18 @@ export function useDrub100Badge() {
       return;
     }
     if (hasBadge) {
-      // This status is likely still desired, as it's an immediate feedback and not part of the transaction
       setStatus('You already have this badge.');
       setTimeout(() => setStatus(''), 5000);
       return;
     }
     if (!canMint) {
-      // This status is likely still desired
       setStatus('Insufficient DRUB balance.');
       setTimeout(() => setStatus(''), 5000);
       return;
     }
 
     setIsMinting(true);
-    setStatus(''); // Clear any previous status
+    setStatus('');
 
     try {
       if (drubAllowance === undefined || drubAllowance < BADGE_PRICE) {
@@ -74,7 +83,7 @@ export function useDrub100Badge() {
         });
         const { transactionHash: approveTxHash } = await sendTx(approveTx);
         await waitForReceipt({ client, chain, transactionHash: approveTxHash });
-        refetchDrubAllowance();
+        await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'allowance', accountAddress, drub100BadgeContract.address] });
       }
 
       const mintTx = prepareContractCall({
@@ -85,16 +94,14 @@ export function useDrub100Badge() {
       const { transactionHash: mintTxHash } = await sendTx(mintTx);
       await waitForReceipt({ client, chain, transactionHash: mintTxHash });
       
-      refetchHasBadge();
-      refetchDrubBalance();
-      // No success message as per user's request
+      await queryClient.invalidateQueries({ queryKey: [drub100BadgeContract.address, 'hasBadge', accountAddress] });
+      await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress] });
+      
     } catch (error) {
-      // Clear status on error as well, relying on spinner for feedback
-      setStatus(''); 
+      setStatus(`Error: ${error instanceof Error ? error.message.substring(0, 50) : 'Transaction failed'}`);
     } finally {
       setIsMinting(false);
-      // Keep a short delay to clear any remaining status messages
-      setTimeout(() => setStatus(''), 500); 
+      setTimeout(() => setStatus(''), 5000); 
     }
   };
 
