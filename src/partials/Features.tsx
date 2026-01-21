@@ -1,10 +1,10 @@
 import { useActiveAccount } from 'thirdweb/react';
 import { useStakeContract } from '../hooks/useStakeContract';
 import { StakingSection } from '../components/StakingSection';
-import { UserStakes } from '../components/UserStakesDisplay';
 import { useBadgeStake } from '../hooks/useBadgeStake';
 import { useStakeRewardClaim } from '../hooks/useStakeRewardClaim';
 import { Spinner } from '../components/Spinner'; // Assuming a Spinner component exists
+
 
 export default function Features() {
   const {
@@ -16,31 +16,25 @@ export default function Features() {
     apr3M,
     apr6M,
     apr12M,
-    refreshBalances,
     isApproved,
-    refetchAllowance,
     poolInfo,
-    status, // Get status
-    setStatus, // Get setStatus
+    status,
+    setStatus,
     isPoolInfoLoading,
+    stake, // Direct access to stake function
+    unstake, // Direct access to unstake function
+    claim, // Direct access to claim function
+    isStakingPending, // Granular pending states
+    isUnstakingPending,
+    isClaimingRewardsPending,
   } = useStakeContract();
 
   const account = useActiveAccount();
   const { isEligible, isEligibilityLoading, isClaiming: isClaimingBadge, claimBadge } = useBadgeStake();
-  const { canClaim, isCanClaimLoading, isClaiming: isClaimingReward, claimReward, rewardBalance, refetchCanClaim } = useStakeRewardClaim();
+  const { canClaim, isCanClaimLoading, isClaiming: isClaimingReward, claimReward, rewardBalance } = useStakeRewardClaim();
   
   const badgeButtonActive = account && !isEligibilityLoading && isEligible && !isClaimingBadge;
   const rewardButtonActive = account && !isCanClaimLoading && canClaim && !isClaimingReward;
-
-  const handleBadgeClaim = () => {
-    claimBadge({
-      onSuccess: () => {
-        setTimeout(() => {
-          refetchCanClaim?.();
-        }, 1500);
-      },
-    });
-  };
 
   return (
     <div className="max-w-[85rem] px-4 py-4 sm:px-6 lg:px-8 lg:py-6 mx-auto">
@@ -80,7 +74,7 @@ export default function Features() {
                 </a>
                 
                 <button
-                  onClick={handleBadgeClaim}
+                  onClick={() => claimBadge()} // Direct call to claimBadge
                   disabled={!badgeButtonActive}
                   className={`relative flex items-center justify-center px-4 py-2 rounded-lg transition text-sm font-medium border ${
                     badgeButtonActive
@@ -94,7 +88,7 @@ export default function Features() {
 
                 <div className="relative group">
                   <button
-                    onClick={claimReward}
+                    onClick={() => claimReward()} // Direct call to claimReward
                     disabled={!rewardButtonActive}
                     className={`relative flex items-center justify-center px-4 py-2 rounded-lg transition text-sm font-medium border ${
                       rewardButtonActive
@@ -106,7 +100,7 @@ export default function Features() {
                     <span className={isClaimingReward ? 'ml-2' : ''}>Reward</span>
                   </button>
                   <div className="absolute bottom-full mb-2 w-max px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    {rewardBalance ? `${(Number(rewardBalance) / 1e18).toLocaleString()} HASH available` : 'Loading rewards...'}
+                    {rewardBalance ? `${Number(rewardBalance / (10n ** 18n)).toLocaleString()} HASH available` : 'Loading rewards...'}
                     <br />
                     Earn 4000 HASH on Galxe
                     <div className="tooltip-arrow" data-popper-arrow></div>
@@ -179,19 +173,21 @@ export default function Features() {
           stakeAPY={stakeAPY}
           walletBalance={walletBalance}
           stakedBalance={stakedBalance}
-          userStakes={userStakes as UserStakes | undefined}
+          userStakes={userStakes}
           apr3M={apr3M}
           apr6M={apr6M}
           apr12M={apr12M}
-          refreshBalances={refreshBalances}
           isApproved={isApproved}
-          refetchAllowance={refetchAllowance}
           status={status}
           setStatus={setStatus}
+          stake={stake}
+          unstake={unstake}
+          claim={claim}
+          isStakingPending={isStakingPending}
+          isUnstakingPending={isUnstakingPending}
+          isClaimingRewardsPending={isClaimingRewardsPending}
         />
       </div>
     </div>
   );
 }
-
-
