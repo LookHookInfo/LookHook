@@ -1,94 +1,94 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import {
-  useReadContract,
   useActiveAccount,
   useSendTransaction,
 } from 'thirdweb/react';
-import { prepareContractCall, waitForReceipt } from 'thirdweb';
+import { prepareContractCall, waitForReceipt, readContract, type ThirdwebContract } from 'thirdweb';
 import { client } from '../lib/thirdweb/client';
 import { chain } from '../lib/thirdweb/chain';
 import { formatUnits } from 'ethers';
 import { drubRewardContract, hashcoinContract } from '@/utils/contracts';
+import { useQueryClient, useQueries, useMutation } from '@tanstack/react-query';
+import { Abi } from 'viem';
 
 export function useDrubReward() {
   const account = useActiveAccount();
+  const queryClient = useQueryClient();
   const { mutateAsync: sendTx } = useSendTransaction();
-  const [isClaiming, setIsClaiming] = useState(false);
-  const [status, setStatus] = useState('');
+  const accountAddress = account?.address || '0x0000000000000000000000000000000000000000';
 
-  const { data: canClaim, refetch: refetchCanClaim } = useReadContract({
-    contract: drubRewardContract,
-    method: 'canClaim',
-    params: [account?.address || '0x0'],
-    queryOptions: { enabled: !!account },
+  // Helper for consistent query creation
+  const createThirdwebQuery = <TAbi extends Abi, TFunctionName extends string, TArgs extends readonly unknown[]>(
+    contractInstance: ThirdwebContract<TAbi>,
+    methodName: TFunctionName,
+    params: TArgs,
+    enabled: boolean = true,
+  ) => ({
+    queryKey: [contractInstance.address, methodName, ...params, accountAddress], // Added accountAddress to queryKey for better specificity
+    queryFn: () => readContract({ contract: contractInstance, method: methodName as any, params: params as any }),
+    enabled,
+    staleTime: 300000, // 5 minutes
   });
 
-  const { data: hasClaimed, refetch: refetchHasClaimed } = useReadContract({
-    contract: drubRewardContract,
-    method: 'claimed',
-    params: [account?.address || '0x0'],
-    queryOptions: { enabled: !!account },
-  });
+  // 1. Batched Reads with Caching
+  const queries = useMemo(() => {
+    return [
+      createThirdwebQuery(drubRewardContract, 'canClaim', [accountAddress], !!account),
+      createThirdwebQuery(drubRewardContract, 'claimed', [accountAddress], !!account),
+      createThirdwebQuery(drubRewardContract, 'rewardAmount', []),
+      createThirdwebQuery(hashcoinContract, 'balanceOf', [drubRewardContract.address]),
+    ];
+  }, [account, accountAddress]);
 
-  const { data: rewardAmount } = useReadContract({
-    contract: drubRewardContract,
-    method: 'rewardAmount',
-    params: [],
-  });
+  const results = useQueries({ queries });
 
-  const { data: poolRewardBalance } = useReadContract({
-    contract: hashcoinContract, // The REWARD token is hashcoinContract
-    method: 'balanceOf',
-    params: [drubRewardContract.address],
-  });
+  const [
+    { data: canClaim },
+    { data: hasClaimed },
+    { data: rewardAmount },
+    { data: poolRewardBalance },
+  ] = results;
 
-  const handleClaim = async () => {
-    if (!account) {
-      setStatus('Please connect wallet.');
-      setTimeout(() => setStatus(''), 5000);
-      return;
-    }
-    if (!canClaim) {
-      setStatus('You are not eligible to claim.');
-      setTimeout(() => setStatus(''), 5000);
-      return;
-    }
-    if (hasClaimed) {
-      setStatus('You have already claimed this reward.');
-      setTimeout(() => setStatus(''), 5000);
-      return;
-    }
+  // 2. Efficient Transaction Handling with useMutation
+  const claimMutation = useMutation({
+    mutationFn: async () => {
+      if (!account) throw new Error('Please connect wallet.');
+      if (!canClaim) throw new Error('You are not eligible to claim.');
+      if (hasClaimed) throw new Error('You have already claimed this reward.');
 
-    setIsClaiming(true);
-    setStatus('');
-
-    try {
       const tx = prepareContractCall({
         contract: drubRewardContract,
         method: 'claim',
         params: [],
       });
       const { transactionHash } = await sendTx(tx);
-      await waitForReceipt({ client, chain, transactionHash });
-      refetchCanClaim();
-      refetchHasClaimed(); // Refetch claimed status after successful claim
-    } catch (error) {
-      // Error status is cleared quickly as per user preference
-      setStatus('');
+      return waitForReceipt({ client, chain, transactionHash });
+    },
+    onSuccess: () => {
+      // Invalidate relevant queries to trigger background refetch
+      queryClient.invalidateQueries({ queryKey: [drubRewardContract.address, 'canClaim', accountAddress] });
+      queryClient.invalidateQueries({ queryKey: [drubRewardContract.address, 'claimed', accountAddress] });
+      queryClient.invalidateQueries({ queryKey: [drubRewardContract.address, 'rewardAmount'] });
+      queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', drubRewardContract.address] });
+      // Also invalidate user's HASH balance since they receive reward
+      queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress] });
+    },
+    onError: (error) => {
       console.error("Claim failed", error);
-    } finally {
-      setIsClaiming(false);
-      setTimeout(() => setStatus(''), 500);
-    }
+    },
+  });
+
+  const handleClaim = async () => {
+    claimMutation.mutate();
   };
 
   return {
     canClaim,
     hasClaimed,
-    isClaiming,
+    isClaiming: claimMutation.isPending,
     rewardAmount: rewardAmount ? parseFloat(formatUnits(rewardAmount, 18)).toLocaleString() : '0',
     poolRewardBalance: poolRewardBalance ? parseFloat(formatUnits(poolRewardBalance, 18)).toLocaleString() : '0',
     handleClaim,
-    status,
+    status: claimMutation.isError ? `Error: ${claimMutation.error?.message.substring(0, 50)}` : '', // Simplified status
   };
 }

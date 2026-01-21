@@ -2,17 +2,20 @@ import { useActiveAccount } from "thirdweb/react";
 import { useReadContract, useSendTransaction } from "thirdweb/react";
 import { badgeStakeContract } from "../utils/contracts";
 import { prepareContractCall } from "thirdweb";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useBadgeStake = () => {
+    const queryClient = useQueryClient();
     const account = useActiveAccount();
     const address = account?.address;
 
-    const { data: isEligible, isLoading: isEligibilityLoading, refetch: refetchEligibility } = useReadContract({
+    const { data: isEligible, isLoading: isEligibilityLoading } = useReadContract({
         contract: badgeStakeContract,
         method: "isEligible",
         params: address ? [address] : [],
         queryOptions: {
             enabled: !!address,
+            staleTime: 300000, // 5 minutes
         },
     });
 
@@ -27,7 +30,7 @@ export const useBadgeStake = () => {
         });
         sendTx(transaction, {
             onSuccess: () => {
-                refetchEligibility();
+                queryClient.invalidateQueries({ queryKey: [badgeStakeContract.address, "isEligible", address] });
                 onSuccess?.();
             }
         });

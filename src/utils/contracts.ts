@@ -8,7 +8,7 @@ import stakingAbi from './stakingAbi';
 import GMAbi from './GMAbi';
 import CoffeeQuestAbi from './buyMeACoffeeAbi';
 import { nameContractAbi } from './nameContractAbi';
-import namebadgeAbi from './namebadgeAbi';
+import { namebadgeAbi } from './namebadgeAbi';
 import { airdropAbi } from './airdropAbi';
 import { gmnftAbi } from './gmnftAbi';
 import { drubContractABI } from './drubContractAbi';

@@ -1,4 +1,4 @@
-export default [
+export const namebadgeAbi = [
   {
     inputs: [{ internalType: 'address', name: '_nameContract', type: 'address' }],
     stateMutability: 'nonpayable',
