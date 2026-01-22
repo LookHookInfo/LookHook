@@ -9,11 +9,10 @@ import GMAbi from './GMAbi';
 import CoffeeQuestAbi from './buyMeACoffeeAbi';
 import { nameContractAbi } from './nameContractAbi';
 import { namebadgeAbi } from './namebadgeAbi';
-import { airdropAbi } from './airdropAbi';
 import { gmnftAbi } from './gmnftAbi';
 import { drubContractABI } from './drubContractAbi';
 import { vaultDrubContractABI } from './vaultDrubContractAbi';
-import { airdropWinterGiftAbi } from './airdropWinterGiftAbi';
+
 import { contractStakingAbi } from './contractStakingAbi';
 import { earlyBirdAbi } from './earlyBirdAbi';
 import { stakeNftAbi } from './stakeNftAbi';
@@ -94,20 +93,6 @@ export const contractTools = getContract({
 
 
 // --- AIRDROPS & QUESTS ---
-
-export const airdropWinterGiftContract = getContract({
-  client,
-  chain: chain,
-  address: '0x66987ceEf1c8843315846c013ca38cDFAE813B95',
-  abi: airdropWinterGiftAbi,
-});
-
-export const airdropContract = getContract({
-  client,
-  chain: chain,
-  address: '0x69cb90ee92d2f84dd5d77737a0295dcc8aa9dc6a',
-  abi: airdropAbi,
-});
 
 export const earlyBirdContract = getContract({
   client,

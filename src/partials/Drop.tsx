@@ -1,50 +1,19 @@
-import { useAirdropWinterGift } from '../hooks/useAirdropWinterGift';
-
 interface DropProps {
   className?: string;
 }
 
 export default function Drop({ className }: DropProps) {
-  const {
-    claimableAmount,
-    isClaimed,
-    isWelcomeBonusAvailable,
-    handleClaim,
-    handleWelcomeClaim,
-    isLoading,
-    claimedCount,
-  } = useAirdropWinterGift();
-
-  const canWelcomeClaim = isWelcomeBonusAvailable && !isClaimed;
-  const canAirdropClaim = claimableAmount > 0 && !isClaimed;
+  // All logic for airdrop/claim removed as quest is completed
 
   const getButtonContent = () => {
-    if (isLoading) {
-      return 'Loading...';
-    }
-    if (isClaimed) {
-      return 'Claimed☃️';
-    }
-    if (canAirdropClaim) {
-      return `Claim ${claimableAmount.toLocaleString()} Hash`;
-    }
-    if (canWelcomeClaim) {
-      return 'Welcome 500 Hash';
-    }
-    return 'Not eligible';
+    return 'Completed';
   };
 
   const getButtonAction = () => {
-    if (canAirdropClaim) {
-      return handleClaim;
-    }
-    if (canWelcomeClaim) {
-      return handleWelcomeClaim;
-    }
-    return () => {};
+    return () => {}; // No action needed as quest is completed
   };
 
-  const isButtonDisabled = isLoading || isClaimed || (!canAirdropClaim && !canWelcomeClaim);
+  const isButtonDisabled = true; // Button is always disabled as quest is completed
 
   return (
     <div
@@ -62,11 +31,7 @@ export default function Drop({ className }: DropProps) {
             Base
           </div>
           <img src="/assets/Drop.webp" alt="Winter Gift" className="rounded-full w-full h-full object-cover" />
-          {claimedCount !== null && (
-            <span className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-lg">
-              ☃️ {claimedCount}
-            </span>
-          )}
+          {/* claimedCount display removed as quest is completed */}
         </div>
 
         {/* Text Content Block */}
