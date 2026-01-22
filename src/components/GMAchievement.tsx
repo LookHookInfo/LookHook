@@ -3,6 +3,7 @@ import type { Wallet } from 'thirdweb/wallets';
 import { gmContract } from '../utils/contracts';
 import { prepareContractCall } from 'thirdweb';
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface GMAchievementProps {
   wallet: Wallet;
@@ -25,17 +26,19 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
   const ownerAddress = wallet.getAccount()?.address;
   const [countdown, setCountdown] = useState('');
   const [isHovering, setIsHovering] = useState(false);
+  const queryClient = useQueryClient(); // Initialize queryClient
 
   const {
     data: claimInfo,
     isLoading: isLoadingClaimInfo,
-    refetch: refetchClaimInfo,
   } = useReadContract({
     contract: gmContract,
     method: 'getClaimInfo',
     params: [ownerAddress || ''],
     queryOptions: {
       enabled: !!ownerAddress,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchInterval: 5 * 60 * 1000, // 5 minutes
     },
   });
 
@@ -46,21 +49,42 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
   const isEligible = hasNFT || hasStake;
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
+    let animationFrameId: number;
+    let lastUpdateTime = 0;
+
+    const updateCountdown = (now: number) => {
+      // Throttle to update roughly once per second
+      if (now - lastUpdateTime < 1000) {
+        animationFrameId = requestAnimationFrame(updateCountdown);
+        return;
+      }
+
+      lastUpdateTime = now;
+      const nowInSeconds = Math.floor(Date.now() / 1000);
+      const timeLeft = Math.max(0, nextAvailableTimestamp - nowInSeconds);
+      setCountdown(formatTime(timeLeft));
+
+      if (timeLeft > 0) {
+        animationFrameId = requestAnimationFrame(updateCountdown);
+      } else if (!canClaimNow) {
+        queryClient.invalidateQueries({ queryKey: ['getClaimInfo', gmContract.address, ownerAddress || ''] }); // Invalidate after countdown finishes
+      }
+    };
+
     if (nextAvailableTimestamp > 0) {
-      const updateCountdown = () => {
-        const now = Math.floor(Date.now() / 1000);
-        const timeLeft = Math.max(0, nextAvailableTimestamp - now);
-        setCountdown(formatTime(timeLeft));
-        if (timeLeft === 0 && !canClaimNow) {
-          refetchClaimInfo();
+      const now = Math.floor(Date.now() / 1000);
+      if (nextAvailableTimestamp - now > 0) {
+        animationFrameId = requestAnimationFrame(updateCountdown);
+      } else {
+        setCountdown('00:00:00');
+        if (!canClaimNow) {
+          queryClient.invalidateQueries({ queryKey: ['getClaimInfo', gmContract.address, ownerAddress || ''] }); // Invalidate after countdown finishes
         }
-      };
-      updateCountdown();
-      interval = setInterval(updateCountdown, 1000);
+      }
     }
-    return () => clearInterval(interval);
-  }, [nextAvailableTimestamp, refetchClaimInfo, canClaimNow]);
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [nextAvailableTimestamp, canClaimNow, queryClient, ownerAddress]); // Added queryClient and ownerAddress to dependencies
 
   const claimTransaction = prepareContractCall({
     contract: gmContract,
@@ -75,8 +99,9 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
       try {
         await sendAndConfirmClaim(claimTransaction, {
           onSuccess: () => {
-            refetchClaimInfo();
+            queryClient.invalidateQueries({ queryKey: ['getClaimInfo', gmContract.address, ownerAddress || ''] });
           },
+
         });
       } catch (error) {
         console.error('Failed to claim GM:', error);

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Status } from '../hooks/useStakeContract';
 
 // Moved type definitions here from src/types/staking.ts
@@ -44,8 +43,6 @@ function TierDisplay({
   amount,
   apr,
   tokenSymbol,
-  status,
-  setStatus,
   showQuestTooltip,
   stake,
   unstake,

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { useActiveWallet, useReadContract, useSendTransaction } from 'thirdweb/react';
-import { getContract, prepareContractCall, toWei } from 'thirdweb';
+import { useActiveWallet, useSendTransaction } from 'thirdweb/react';
+import { getContract, prepareContractCall, toWei, readContract } from 'thirdweb';
 import { earlyBirdContract } from '../utils/contracts';
 import { client } from '../lib/thirdweb/client';
 import { chain } from '../lib/thirdweb/chain';
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 
 // --- ABI Snippets ---
 const isClaimOpenAbi = {
@@ -73,26 +74,45 @@ const OpenSeaLinkButton = () => (
 // --- Inner Component (handles the main logic) ---
 const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContractAddress: string; address: string }) => {
   const [timeLeft, setTimeLeft] = useState(0);
+  const queryClient = useQueryClient(); // Initialize queryClient
+
   const { mutateAsync: sendTx, isPending } = useSendTransaction();
 
   // --- Base contract reads ---
-  const { data: claimDeadline, isLoading: isDeadlineLoading } = useReadContract({
-    contract: earlyBirdContract,
-    method: claimDeadlineAbi,
+  const { data: claimDeadline, isLoading: isDeadlineLoading } = useQuery({
+    queryKey: ['claimDeadline', earlyBirdContract.address],
+    queryFn: () =>
+      readContract({
+        contract: earlyBirdContract,
+        method: claimDeadlineAbi,
+      }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
-  const { data: isClaimOpen, isLoading: isClaimOpenLoading } = useReadContract({
-    contract: earlyBirdContract,
-    method: isClaimOpenAbi,
+  const { data: isClaimOpen, isLoading: isClaimOpenLoading } = useQuery({
+    queryKey: ['isClaimOpen', earlyBirdContract.address],
+    queryFn: () =>
+      readContract({
+        contract: earlyBirdContract,
+        method: isClaimOpenAbi,
+      }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
   const {
     data: hasClaimed,
     isLoading: hasClaimedLoading,
-    refetch: refetchHasClaimed,
-  } = useReadContract({
-    contract: earlyBirdContract,
-    method: hasClaimedAbi,
-    params: [address],
-    queryOptions: { enabled: !!address },
+  } = useQuery({
+    queryKey: ['hasClaimed', earlyBirdContract.address, address],
+    queryFn: () =>
+      readContract({
+        contract: earlyBirdContract,
+        method: hasClaimedAbi,
+        params: [address],
+      }),
+    enabled: !!address,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
   // --- Staking contract logic ---
@@ -104,46 +124,23 @@ const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContract
     });
   }, [stakingContractAddress]);
 
-  // Explicitly call hooks for each token ID to respect the Rules of Hooks
-  const { data: stakeInfo0, isLoading: isLoading0 } = useReadContract({
-    contract: stakingContract,
-    method: getStakeInfoForTokenAbi,
-    params: [TOKEN_IDS_TO_CHECK[0], address],
-    queryOptions: { enabled: !!address },
-  });
-  const { data: stakeInfo1, isLoading: isLoading1 } = useReadContract({
-    contract: stakingContract,
-    method: getStakeInfoForTokenAbi,
-    params: [TOKEN_IDS_TO_CHECK[1], address],
-    queryOptions: { enabled: !!address },
-  });
-  const { data: stakeInfo2, isLoading: isLoading2 } = useReadContract({
-    contract: stakingContract,
-    method: getStakeInfoForTokenAbi,
-    params: [TOKEN_IDS_TO_CHECK[2], address],
-    queryOptions: { enabled: !!address },
-  });
-  const { data: stakeInfo3, isLoading: isLoading3 } = useReadContract({
-    contract: stakingContract,
-    method: getStakeInfoForTokenAbi,
-    params: [TOKEN_IDS_TO_CHECK[3], address],
-    queryOptions: { enabled: !!address },
-  });
-  const { data: stakeInfo4, isLoading: isLoading4 } = useReadContract({
-    contract: stakingContract,
-    method: getStakeInfoForTokenAbi,
-    params: [TOKEN_IDS_TO_CHECK[4], address],
-    queryOptions: { enabled: !!address },
-  });
-  const { data: stakeInfo5, isLoading: isLoading5 } = useReadContract({
-    contract: stakingContract,
-    method: getStakeInfoForTokenAbi,
-    params: [TOKEN_IDS_TO_CHECK[5], address],
-    queryOptions: { enabled: !!address },
+  const stakeInfoQueries = useQueries({
+    queries: TOKEN_IDS_TO_CHECK.map((tokenId) => ({
+      queryKey: ['getStakeInfoForToken', stakingContractAddress, tokenId.toString(), address],
+      queryFn: () =>
+        readContract({
+          contract: stakingContract,
+          method: getStakeInfoForTokenAbi,
+          params: [tokenId, address],
+        }),
+      enabled: !!address && !!stakingContractAddress,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchInterval: 5 * 60 * 1000, // 5 minutes
+    })),
   });
 
-  const allStakeInfos = [stakeInfo0, stakeInfo1, stakeInfo2, stakeInfo3, stakeInfo4, stakeInfo5];
-  const isStakeInfoLoading = isLoading0 || isLoading1 || isLoading2 || isLoading3 || isLoading4 || isLoading5;
+  const allStakeInfos = stakeInfoQueries.map((query) => query.data);
+  const isStakeInfoLoading = stakeInfoQueries.some((query) => query.isLoading);
 
   const totalRewards = allStakeInfos.reduce((acc, query) => {
     if (query && query[1]) {
@@ -161,23 +158,52 @@ const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContract
         method: claimAbi,
         params: [TOKEN_IDS_TO_CHECK],
       });
-      await sendTx(transaction);
-      refetchHasClaimed(); // Refetch claim status after transaction
+      await sendTx(transaction, {
+        onSuccess: () => {
+          // Invalidate to re-fetch actual data from blockchain
+          queryClient.invalidateQueries({ queryKey: ['hasClaimed', earlyBirdContract.address, address] });
+        },
+      });
     } catch (error) {
       console.error('Claim failed', error);
     }
-  }, [sendTx, refetchHasClaimed]);
+  }, [sendTx, address, queryClient]);
 
   useEffect(() => {
-    if (!claimDeadline) return;
-    const calculateTimeLeft = () => {
-      const now = Math.floor(Date.now() / 1000);
-      const difference = Number(claimDeadline) - now;
+    let animationFrameId: number;
+    let lastUpdateTime = 0;
+
+    const updateCountdown = (now: number) => {
+      if (!claimDeadline) return; // Ensure claimDeadline is available within the loop
+
+      // Throttle to update roughly once per second
+      if (now - lastUpdateTime < 1000) {
+        animationFrameId = requestAnimationFrame(updateCountdown);
+        return;
+      }
+
+      lastUpdateTime = now;
+      const nowInSeconds = Math.floor(Date.now() / 1000);
+      const difference = Number(claimDeadline) - nowInSeconds;
       setTimeLeft(difference > 0 ? difference : 0);
+
+      if (difference > 0) {
+        animationFrameId = requestAnimationFrame(updateCountdown);
+      }
     };
-    calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 1000);
-    return () => clearInterval(timer);
+
+    if (claimDeadline) {
+      // Initial call to set time and start loop if needed
+      const nowInSeconds = Math.floor(Date.now() / 1000);
+      const difference = Number(claimDeadline) - nowInSeconds;
+      setTimeLeft(difference > 0 ? difference : 0);
+
+      if (difference > 0) {
+        animationFrameId = requestAnimationFrame(updateCountdown);
+      }
+    }
+
+    return () => cancelAnimationFrame(animationFrameId);
   }, [claimDeadline]);
 
   const days = Math.floor(timeLeft / (60 * 60 * 24));
@@ -261,9 +287,15 @@ export default function EarlyBirdClaimButton() {
   const wallet = useActiveWallet();
   const address = wallet?.getAccount()?.address;
 
-  const { data: stakingContractAddress, isLoading: isStakingAddrLoading } = useReadContract({
-    contract: earlyBirdContract,
-    method: getStakingContractAddressAbi,
+  const { data: stakingContractAddress, isLoading: isStakingAddrLoading } = useQuery({
+    queryKey: ['stakingContractAddress', earlyBirdContract.address],
+    queryFn: () =>
+      readContract({
+        contract: earlyBirdContract,
+        method: getStakingContractAddressAbi,
+      }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
   return (

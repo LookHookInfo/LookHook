@@ -1,7 +1,8 @@
 import { GMAchievement } from './GMAchievement';
 import { useEffect } from 'react';
 import type { Wallet } from 'thirdweb/wallets';
-import { useDisconnect, useWalletBalance, useReadContract } from 'thirdweb/react';
+import { useDisconnect, useWalletBalance } from 'thirdweb/react';
+import { useQuery } from '@tanstack/react-query'; // Added useQuery import
 import {
   hashcoinContract,
   earlyBirdContract,
@@ -11,6 +12,7 @@ import {
   drubContract,
   drub100BadgeContract,
 } from '../utils/contracts';
+import { readContract } from 'thirdweb'; // Added readContract import
 import EarlyBirdClaimButton from './EarlyBirdClaimButton';
 import { DolphinAchievement, SharkAchievement, WhaleAchievement } from './WhaleAchievements';
 
@@ -29,6 +31,8 @@ function HashcoinAchievement({ wallet }: { wallet: Wallet }) {
     address: wallet.getAccount()?.address,
     client: hashcoinContract.client,
     tokenAddress: hashcoinContract.address,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
   const formattedBalance = balance ? `${parseInt(balance.displayValue).toString()} ${balance.symbol}` : '0 HASH';
@@ -54,6 +58,8 @@ function DrubAchievement({ wallet }: { wallet: Wallet }) {
     address: wallet.getAccount()?.address,
     client: drubContract.client,
     tokenAddress: drubContract.address,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
   const formattedBalance = balance ? `${parseInt(balance.displayValue).toString()} ${balance.symbol}` : '0 DRUB';
@@ -80,16 +86,20 @@ function DrubAchievement({ wallet }: { wallet: Wallet }) {
 function BadgeDrubAchievement({ wallet }: { wallet: Wallet }) {
   const ownerAddress = wallet.getAccount()?.address;
 
-  const { data: balance, isLoading: isBalanceLoading } = useReadContract({
-    contract: drub100BadgeContract,
-    method: 'balanceOf',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-    },
+  const { data: balance, isLoading: isBalanceLoading } = useQuery({
+    queryKey: ['drub100BadgeBalanceOf', drub100BadgeContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: drub100BadgeContract,
+        method: 'balanceOf',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const hasNft = balance && (balance as bigint) > 0n;
+  const hasNft = balance && (Array.isArray(balance) ? (balance[0] as bigint) : (balance as bigint)) > 0n;
 
   if (!ownerAddress) {
     return (
@@ -154,16 +164,20 @@ function NftAchievement({ hasNft, isLoading }: { hasNft: boolean; isLoading: boo
 function EarlyNftAchievement({ wallet }: { wallet: Wallet }) {
   const ownerAddress = wallet.getAccount()?.address;
 
-  const { data: balance, isLoading: isBalanceLoading } = useReadContract({
-    contract: earlyBirdContract,
-    method: 'balanceOf',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-    },
+  const { data: balance, isLoading: isBalanceLoading } = useQuery({
+    queryKey: ['earlyNftBalanceOf', earlyBirdContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: earlyBirdContract,
+        method: 'balanceOf',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const hasNft = balance && (balance as bigint) > 0n;
+  const hasNft = balance && (Array.isArray(balance) ? (balance[0] as bigint) : (balance as bigint)) > 0n;
 
   if (!ownerAddress) {
     return (
@@ -201,16 +215,20 @@ function EarlyNftAchievement({ wallet }: { wallet: Wallet }) {
 function TipsAchievement({ wallet }: { wallet: Wallet }) {
   const ownerAddress = wallet.getAccount()?.address;
 
-  const { data: userTips, isLoading: isTipsLoading } = useReadContract({
-    contract: buyMeACoffeeContract,
-    method: 'tipsFromUsers',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-    },
+  const { data: userTips, isLoading: isTipsLoading } = useQuery({
+    queryKey: ['tipsFromUsers', buyMeACoffeeContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: buyMeACoffeeContract,
+        method: 'tipsFromUsers',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const hasTipped = userTips && (userTips as bigint) > 0n;
+  const hasTipped = userTips && (Array.isArray(userTips) ? (userTips[0] as bigint) : (userTips as bigint)) > 0n;
 
   if (!ownerAddress) {
     return (
@@ -248,16 +266,20 @@ function TipsAchievement({ wallet }: { wallet: Wallet }) {
 function NameAchievement({ wallet }: { wallet: Wallet }) {
   const ownerAddress = wallet.getAccount()?.address;
 
-  const { data: balance, isLoading: isBalanceLoading } = useReadContract({
-    contract: nameContract,
-    method: 'balanceOf',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-    },
+  const { data: balance, isLoading: isBalanceLoading } = useQuery({
+    queryKey: ['nameContractBalanceOf', nameContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: nameContract,
+        method: 'balanceOf',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const hasNameNft = balance && (balance as bigint) > 0n;
+  const hasNameNft = balance && (Array.isArray(balance) ? (balance[0] as bigint) : (balance as bigint)) > 0n;
 
   if (!ownerAddress) {
     return (
@@ -299,16 +321,20 @@ function NameAchievement({ wallet }: { wallet: Wallet }) {
 function StakeNftAchievement({ wallet }: { wallet: Wallet }) {
   const ownerAddress = wallet.getAccount()?.address;
 
-  const { data: balance, isLoading: isBalanceLoading } = useReadContract({
-    contract: stakeNftContract,
-    method: 'balanceOf',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-    },
+  const { data: balance, isLoading: isBalanceLoading } = useQuery({
+    queryKey: ['stakeNftBalanceOf', stakeNftContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: stakeNftContract,
+        method: 'balanceOf',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const hasNft = balance && (balance as bigint) > 0n;
+  const hasNft = balance && (Array.isArray(balance) ? (balance[0] as bigint) : (balance as bigint)) > 0n;
 
   if (!ownerAddress) {
     return (
