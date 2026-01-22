@@ -23,9 +23,9 @@ interface StakingSectionProps {
   unstake: (tierId: number) => Promise<void>;
   claim: (tierId: number) => Promise<void>;
   // Granular pending states
-  isStakingPending: boolean;
-  isUnstakingPending: boolean;
-  isClaimingRewardsPending: boolean;
+  isStakingPending: (tierId: number) => boolean;
+  isUnstakingPending: (tierId: number) => boolean;
+  isClaimingRewardsPending: (tierId: number) => boolean;
 }
 
 export function StakingSection({
@@ -43,9 +43,9 @@ export function StakingSection({
   stake,
   unstake,
   claim,
-  isStakingPending,
-  isUnstakingPending,
-  isClaimingRewardsPending,
+  isStakingPending, // Now a function
+  isUnstakingPending, // Now a function
+  isClaimingRewardsPending, // Now a function
 }: StakingSectionProps) {
   const account = useActiveAccount();
   const [amount, setAmount] = useState('');
@@ -161,15 +161,14 @@ export function StakingSection({
                 apr12M={apr12M}
                 amount={amount}
                 tokenSymbol={tokenSymbol}
-                isApproved={isApproved}
                 status={status}
                 setStatus={setStatus}
                 stake={stake}
                 unstake={unstake}
                 claim={claim}
-                isStakingPending={isStakingPending}
-                isUnstakingPending={isUnstakingPending}
-                isClaimingRewardsPending={isClaimingRewardsPending}
+                isStakingPending={isStakingPending} // Pass the function
+                isUnstakingPending={isUnstakingPending} // Pass the function
+                isClaimingRewardsPending={isClaimingRewardsPending} // Pass the function
               />
             ) : (
               <p className="text-center text-neutral-400">Loading staking data...</p>

@@ -37,9 +37,9 @@ export function useStakeContract() {
   const { mutateAsync: sendAndConfirm } = useSendAndConfirmTransaction(); // Removed isPending from here
 
   // Granular pending states
-  const [isStakingPending, setIsStakingPending] = useState(false);
-  const [isUnstakingPending, setIsUnstakingPending] = useState(false);
-  const [isClaimingRewardsPending, setIsClaimingRewardsPending] = useState(false);
+  const [stakingPending, setStakingPending] = useState<Set<number>>(new Set());
+  const [unstakingPending, setUnstakingPending] = useState<Set<number>>(new Set());
+  const [claimingRewardsPending, setClaimingRewardsPending] = useState<Set<number>>(new Set());
 
   const accountAddress = account?.address || '0x0000000000000000000000000000000000000000';
 
@@ -173,7 +173,7 @@ export function useStakeContract() {
   const stake = useCallback(
     async (amount: string, tierId: number) => {
       if (!account) throw new Error('Not connected');
-      setIsStakingPending(true); // Set specific pending state
+      setStakingPending(prev => new Set(prev).add(tierId)); // Set specific pending state
       setStatus('pending');
       try {
         const amountWei = toWei(amount);
@@ -199,16 +199,16 @@ export function useStakeContract() {
         setStatus('error');
         console.error(err);
       } finally {
-        setIsStakingPending(false); // Reset specific pending state
+        setStakingPending(prev => { const next = new Set(prev); next.delete(tierId); return next; }); // Reset specific pending state
       }
     },
-    [account, sendAndConfirm, setStatus, isApproved, invalidateStakeQueries],
+    [account, sendAndConfirm, setStatus, isApproved, invalidateStakeQueries, setStakingPending],
   );
 
   const unstake = useCallback(
     async (tierId: number) => {
       if (!account) throw new Error('Not connected');
-      setIsUnstakingPending(true); // Set specific pending state
+      setUnstakingPending(prev => new Set(prev).add(tierId)); // Set specific pending state
       setStatus('pending');
       try {
         const unstakeTx = prepareContractCall({
@@ -223,16 +223,16 @@ export function useStakeContract() {
         setStatus('error');
         console.error(err);
       } finally {
-        setIsUnstakingPending(false); // Reset specific pending state
+        setUnstakingPending(prev => { const next = new Set(prev); next.delete(tierId); return next; }); // Reset specific pending state
       }
     },
-    [account, sendAndConfirm, setStatus, invalidateStakeQueries],
+    [account, sendAndConfirm, setStatus, invalidateStakeQueries, setUnstakingPending],
   );
 
   const claim = useCallback(
     async (tierId: number) => {
       if (!account) throw new Error('Not connected');
-      setIsClaimingRewardsPending(true); // Set specific pending state
+      setClaimingRewardsPending(prev => new Set(prev).add(tierId)); // Set specific pending state
       setStatus('pending');
       try {
         const claimTx = prepareContractCall({
@@ -247,10 +247,10 @@ export function useStakeContract() {
         setStatus('error');
         console.error(err);
       } finally {
-        setIsClaimingRewardsPending(false); // Reset specific pending state
+        setClaimingRewardsPending(prev => { const next = new Set(prev); next.delete(tierId); return next; }); // Reset specific pending state
       }
     },
-    [account, sendAndConfirm, setStatus, invalidateStakeQueries],
+    [account, sendAndConfirm, setStatus, invalidateStakeQueries, setClaimingRewardsPending],
   );
 
   return {
@@ -269,9 +269,9 @@ export function useStakeContract() {
     claim,
     isApproved,
     // Return granular pending states
-    isStakingPending,
-    isUnstakingPending,
-    isClaimingRewardsPending,
+    isStakingPending: useCallback((tierId: number) => stakingPending.has(tierId), [stakingPending]),
+    isUnstakingPending: useCallback((tierId: number) => unstakingPending.has(tierId), [unstakingPending]),
+    isClaimingRewardsPending: useCallback((tierId: number) => claimingRewardsPending.has(tierId), [claimingRewardsPending]),
     status,
     setStatus,
   };

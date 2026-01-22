@@ -183,9 +183,9 @@ export default function Features() {
           stake={stake}
           unstake={unstake}
           claim={claim}
-          isStakingPending={isStakingPending}
-          isUnstakingPending={isUnstakingPending}
-          isClaimingRewardsPending={isClaimingRewardsPending}
+          isStakingPending={isStakingPending} // Pass the function
+          isUnstakingPending={isUnstakingPending} // Pass the function
+          isClaimingRewardsPending={isClaimingRewardsPending} // Pass the function
         />
       </div>
     </div>

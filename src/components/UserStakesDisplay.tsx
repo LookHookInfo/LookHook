@@ -31,9 +31,9 @@ interface TierDisplayProps {
   stake: (amount: string, tierId: number) => Promise<void>;
   unstake: (tierId: number) => Promise<void>;
   claim: (tierId: number) => Promise<void>;
-  isStakingPending: boolean;
-  isUnstakingPending: boolean;
-  isClaimingRewardsPending: boolean;
+  isStakingPending: (tierId: number) => boolean;
+  isUnstakingPending: (tierId: number) => boolean;
+  isClaimingRewardsPending: (tierId: number) => boolean;
 }
 
 function TierDisplay({
@@ -47,15 +47,15 @@ function TierDisplay({
   stake,
   unstake,
   claim,
-  isStakingPending,
-  isUnstakingPending,
-  isClaimingRewardsPending,
+  isStakingPending, // Now a function
+  isUnstakingPending, // Now a function
+  isClaimingRewardsPending, // Now a function
 }: TierDisplayProps) {
   const isStaked = stakeData.amount > 0n;
-  const isStakeButtonDisabled = isStakingPending || !amount || Number(amount) <= 0;
+  const isStakeButtonDisabled = isStakingPending(tierId) || !amount || Number(amount) <= 0;
 
-  const getButtonText = (pending: boolean, defaultText: string) => {
-    return pending ? 'Processing...' : defaultText;
+  const getButtonText = (pendingFn: (tierId: number) => boolean, defaultText: string) => {
+    return pendingFn(tierId) ? 'Processing...' : defaultText;
   }
 
   return (
@@ -98,7 +98,7 @@ function TierDisplay({
             {stakeData.timeLeft <= 0n && stakeData.rewards <= 0n ? (
               <button
                 onClick={() => unstake(tierId)}
-                disabled={isUnstakingPending}
+                disabled={isUnstakingPending(tierId)}
                 className="btn-claim"
               >
                 {getButtonText(isUnstakingPending, 'Unstake')}
@@ -106,7 +106,7 @@ function TierDisplay({
             ) : (
               <button
                 onClick={() => claim(tierId)}
-                disabled={isClaimingRewardsPending || stakeData.rewards <= 0n}
+                disabled={isClaimingRewardsPending(tierId) || stakeData.rewards <= 0n}
                 style={{
                   background: 'linear-gradient(90deg, #007bff, #00c6ff)',
                   color: 'white',
@@ -161,9 +161,9 @@ interface UserStakesDisplayProps {
   stake: (amount: string, tierId: number) => Promise<void>;
   unstake: (tierId: number) => Promise<void>;
   claim: (tierId: number) => Promise<void>;
-  isStakingPending: boolean;
-  isUnstakingPending: boolean;
-  isClaimingRewardsPending: boolean;
+  isStakingPending: (tierId: number) => boolean;
+  isUnstakingPending: (tierId: number) => boolean;
+  isClaimingRewardsPending: (tierId: number) => boolean;
 }
 
 export default function UserStakesDisplay({
@@ -178,9 +178,9 @@ export default function UserStakesDisplay({
   stake,
   unstake,
   claim,
-  isStakingPending,
-  isUnstakingPending,
-  isClaimingRewardsPending,
+  isStakingPending, // Granular pending state lookup function
+  isUnstakingPending, // Granular pending state lookup function
+  isClaimingRewardsPending, // Granular pending state lookup function
 }: UserStakesDisplayProps) {
   let s3: UserStakeTierData = { amount: 0n, rewards: 0n, timeLeft: 0n };
   let s6: UserStakeTierData = { amount: 0n, rewards: 0n, timeLeft: 0n };
