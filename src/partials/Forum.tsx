@@ -8,7 +8,7 @@ export default function Forum({ className }: ForumProps) {
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           {/* Image and Links */}
-          <div className="w-full lg:w-[140px] flex flex-col items-center relative">
+          <div className="w-full lg:w-[100px] flex flex-col items-center relative">
             <img
               src="https://ipfs.io/ipfs/QmeWw8gp6H2RicpFG6aFhS77Wf9mZLpjQ3hubi8L1Bs4Lx"
               alt="Blockchain Forum"

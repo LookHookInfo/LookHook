@@ -8,7 +8,7 @@ export default function NFTCard({ className }: NFTCardProps) {
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           {/* Image and Links */}
-          <div className="w-full lg:w-[140px] flex flex-col items-center relative">
+          <div className="w-full lg:w-[120px] flex flex-col items-center relative">
             <div
               className="absolute -top-2 -left-2
                          bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
