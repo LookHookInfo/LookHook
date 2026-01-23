@@ -25,9 +25,9 @@ export default function Home() {
         <CarouselCardSection
           className="w-full md:w-1/2"
           items={[
+            { key: 'HeliDrop', component: <HeliDrop /> },
             { key: 'drop', component: <Drop /> },
             { key: 'airdrop', component: <Airdrop /> },
-            { key: 'HeliDrop', component: <HeliDrop /> },
           ]}
         />
         <GM className="w-full md:w-1/2" />
