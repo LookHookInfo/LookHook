@@ -14,6 +14,7 @@ import Drop from '@/partials/Drop';
 import GM from '@/partials/GM';
 import Drub from '@/partials/Drub';
 import Xrole from '@/partials/Xrole';
+import HeliDrop from '@/partials/HeliDrop';
 
 export default function Home() {
   return (
@@ -26,6 +27,7 @@ export default function Home() {
           items={[
             { key: 'drop', component: <Drop /> },
             { key: 'airdrop', component: <Airdrop /> },
+            { key: 'HeliDrop', component: <HeliDrop /> },
           ]}
         />
         <GM className="w-full md:w-1/2" />
