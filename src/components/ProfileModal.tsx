@@ -11,6 +11,7 @@ import {
   stakeNftContract,
   drubContract,
   drub100BadgeContract,
+  xroleRewardContract,
 } from '../utils/contracts';
 import { readContract } from 'thirdweb'; // Added readContract import
 import EarlyBirdClaimButton from './EarlyBirdClaimButton';
@@ -22,6 +23,59 @@ interface ProfileModalProps {
   hasCatNft: boolean;
   isNftLoading: boolean;
   registeredName: string | null;
+}
+
+// Xrole Achievement Component
+function XroleAchievement({ wallet }: { wallet: Wallet }) {
+  const ownerAddress = wallet.getAccount()?.address;
+
+  const { data: hasClaimed, isLoading: isClaimLoading } = useQuery({
+    queryKey: ['xroleRewardClaimed', xroleRewardContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: xroleRewardContract,
+        method: 'claimed',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
+  });
+
+  if (!ownerAddress) {
+    return (
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Connect wallet to see achievement"
+      >
+        <span className="text-neutral-400 text-xs">?</span>
+      </div>
+    );
+  }
+
+  if (isClaimLoading) {
+    return (
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Loading Xrole achievement..."
+      >
+        <span className="text-neutral-400 text-xs">...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
+      title={hasClaimed ? 'Xrole achievement unlocked!' : 'Xrole achievement not unlocked'}
+    >
+      <img
+        src="/assets/Xrole.webp"
+        alt="Xrole Achievement"
+        className={`size-10 ${!hasClaimed ? 'opacity-50' : ''}`}
+      />
+    </div>
+  );
 }
 
 // Hashcoin Achievement Component
@@ -421,7 +475,7 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
               {/* Empty cells */}
               <DrubAchievement wallet={wallet} />
               <BadgeDrubAchievement wallet={wallet} />
-              <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
+              <XroleAchievement wallet={wallet} />
 
               <StakeNftAchievement wallet={wallet} />
 
