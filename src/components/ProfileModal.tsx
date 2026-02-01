@@ -9,7 +9,6 @@ import {
   buyMeACoffeeContract,
   nameContract,
   stakeNftContract,
-  drubContract,
   drub100BadgeContract,
   xroleRewardContract,
 } from '../utils/contracts';
@@ -101,37 +100,6 @@ function HashcoinAchievement({ wallet }: { wallet: Wallet }) {
       title={isBalanceLoading ? 'Loading...' : `Balance: ${formattedBalance}`}
     >
       <img src="/image.svg" alt="Hashcoin Logo" className={`size-10 ${!hasEnoughHash ? 'opacity-50' : ''}`} />
-    </div>
-  );
-}
-
-// Drub Achievement Component
-function DrubAchievement({ wallet }: { wallet: Wallet }) {
-  const { data: balance, isLoading: isBalanceLoading } = useWalletBalance({
-    chain: drubContract.chain,
-    address: wallet.getAccount()?.address,
-    client: drubContract.client,
-    tokenAddress: drubContract.address,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
-  });
-
-  const formattedBalance = balance ? `${parseInt(balance.displayValue).toString()} ${balance.symbol}` : '0 DRUB';
-  const DRUB_ACHIEVEMENT_THRESHOLD = 1000;
-
-  const hasEnoughDrub =
-    balance && balance.value >= BigInt(DRUB_ACHIEVEMENT_THRESHOLD) * 10n ** BigInt(balance.decimals);
-
-  return (
-    <div
-      className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
-      title={isBalanceLoading ? 'Loading...' : `Balance: ${formattedBalance}`}
-    >
-      <img
-        src="/assets/Drub.webp"
-        alt="Drub Logo"
-        className={`size-10 ${!hasEnoughDrub ? 'opacity-50' : ''}`}
-      />
     </div>
   );
 }
@@ -471,9 +439,7 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
               <EarlyNftAchievement wallet={wallet} />
               <TipsAchievement wallet={wallet} />
               <NameAchievement wallet={wallet} />
-
-              {/* Empty cells */}
-              <DrubAchievement wallet={wallet} />
+              <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
               <BadgeDrubAchievement wallet={wallet} />
               <XroleAchievement wallet={wallet} />
 

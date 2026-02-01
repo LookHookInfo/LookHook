@@ -10,18 +10,14 @@ import CoffeeQuestAbi from './buyMeACoffeeAbi';
 import { nameContractAbi } from './nameContractAbi';
 import { namebadgeAbi } from './namebadgeAbi';
 import { gmnftAbi } from './gmnftAbi';
-import { drubContractABI } from './drubContractAbi';
-import { vaultDrubContractABI } from './vaultDrubContractAbi';
 
 import { contractStakingAbi } from './contractStakingAbi';
 import { earlyBirdAbi } from './earlyBirdAbi';
 import { stakeNftAbi } from './stakeNftAbi';
 import { whaleContractAbi } from './whaleContractAbi';
-import { BALANCE_OF_ABI } from './balanceOfAbi'; // New import for generic balanceOf ABI
 import { badgeStakeAbi } from './badgeStakeAbi';
 import { stakeRewardClaimAbi } from './stakeRewardClaimAbi';
 import { drub100BadgeAbi } from './drub100BadgeAbi';
-import { drubRewardAbi } from './drubRewardAbi';
 import { xroleRewardAbi } from './xroleRewardAbi';
 
 // --- CORE TOKENS ---
@@ -38,27 +34,6 @@ export const usdcContract = getContract({
   chain: chain,
   address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
   abi: erc20Abi,
-});
-
-export const drubContract = getContract({
-  client,
-  chain: chain,
-  address: '0x1339c3a22ccdd7560B4Ccacd065Cd4b578BDA12d',
-  abi: drubContractABI,
-});
-
-export const vaultDrubContract = getContract({
-  client,
-  chain: chain,
-  address: '0xd2237A2f81C8Fce8d61919e2e35639897848722d',
-  abi: vaultDrubContractABI,
-});
-
-export const nfpmContract = getContract({
-  client,
-  chain: chain,
-  address: '0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1', // pool hash/drub
-  abi: BALANCE_OF_ABI,
 });
 
 
@@ -114,13 +89,6 @@ export const stakeRewardClaimContract = getContract({
   chain: chain,
   address: '0x3e65390EdD46Ec98F792d0122eD4f1a105bab281',
   abi: stakeRewardClaimAbi,
-});
-
-export const drubRewardContract = getContract({
-  client,
-  chain: chain,
-  address: '0x225ebbac1db8fdb1be4a70ae695745f214fc5424',
-  abi: drubRewardAbi,
 });
 
 export const xroleRewardContract = getContract({
