@@ -8,8 +8,8 @@ import stakingAbi from './stakingAbi';
 import GMAbi from './GMAbi';
 import CoffeeQuestAbi from './buyMeACoffeeAbi';
 import { nameContractAbi } from './nameContractAbi';
-import { namebadgeAbi } from './namebadgeAbi';
 import { gmnftAbi } from './gmnftAbi';
+import { nameRewardAbi } from './nameRewardAbi';
 
 import { contractStakingAbi } from './contractStakingAbi';
 import { earlyBirdAbi } from './earlyBirdAbi';
@@ -98,6 +98,13 @@ export const xroleRewardContract = getContract({
   abi: xroleRewardAbi,
 });
 
+export const nameRewardContract = getContract({
+  client,
+  chain: chain,
+  address: '0x9951b4DB6198b04E5b4Ca6684A8e7d1C2148dD6B',
+  abi: nameRewardAbi,
+});
+
 
 // --- NFT & IDENTITY ---
 
@@ -107,18 +114,18 @@ export const nftCollectionContract = getContract({
   address: '0x30ccb676de89af3da144dde2cff647152e5c2770',
 });
 
+export const ourNftContract = getContract({
+  client,
+  chain: chain,
+  address: '0x8F45ee49fC8613661DF64Da7f0ce1Eb0a4c3794B',
+  abi: gmnftAbi,
+});
+
 export const nameContract = getContract({
   client,
   chain: chain,
   address: '0xA8e00E2ca8b183Edb7EbB6bD7EeBB90047416F95',
   abi: nameContractAbi,
-});
-
-export const namebadgeContract = getContract({
-  client,
-  chain: chain,
-  address: '0xCe6d7DF4a3F945B35E7b4d93F8Ff6731923Fa1E8',
-  abi: namebadgeAbi,
 });
 
 export const whaleContract = getContract({

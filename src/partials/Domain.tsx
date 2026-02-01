@@ -2,7 +2,9 @@ import { useCallback, useMemo } from 'react';
 import { useActiveAccount } from 'thirdweb/react';
 import ConnectWalletButton from '../components/ConnectWalletButton';
 import { useNameContract } from '../hooks/useNameContract';
-import { useNameBadgeContract } from '../hooks/useNameBadgeContract';
+import { useNameRewardContract } from '../hooks/useNameRewardContract';
+import { Spinner } from '../components/Spinner';
+
 
 interface DomainProps {
   className?: string;
@@ -26,7 +28,7 @@ export function Domain({ className }: DomainProps) {
     hasSufficientBalance,
   } = useNameContract();
 
-  const { hasBadge, isMinting, claimBadge } = useNameBadgeContract();
+  const { canClaim, hasClaimed, isClaiming, claimReward, poolRewardBalance, isDataLoading } = useNameRewardContract();
 
   const handleUnifiedClaim = useCallback(() => {
     unifiedClaim();
@@ -157,17 +159,34 @@ export function Domain({ className }: DomainProps) {
 
             <div className="mt-4 w-full">
               {account && (
-                <button
-                  onClick={claimBadge}
-                  disabled={!registeredNamesCount || isMinting || hasBadge}
-                  className={`w-full py-2 rounded-lg transition text-sm font-medium border ${
-                    !registeredNamesCount || isMinting || hasBadge
-                      ? 'border-gray-500 text-gray-500 opacity-50'
-                      : 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
-                  }`}
-                >
-                  {isMinting ? 'Minting...' : hasBadge ? 'Minted' : 'Badge'}
-                </button>
+                <div className="relative group w-full">
+                  <button
+                    onClick={claimReward}
+                    disabled={!canClaim || isClaiming || isDataLoading}
+                    className={`relative flex items-center justify-center w-full px-4 py-2 rounded-lg transition text-sm font-medium border ${
+                      canClaim && !isClaiming && !isDataLoading
+                        ? 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
+                        : 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    {isClaiming ? (
+                      <>
+                        <Spinner className="w-4 h-4 mr-2" />
+                        Claiming...
+                      </>
+                    ) : hasClaimed ? (
+                      'Claimed'
+                    ) : (
+                      'Reward'
+                    )}
+                  </button>
+                  <div className="absolute z-50 bottom-full mb-2 w-max px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                    Pool: {poolRewardBalance} HASH
+                    <br />
+                    Complete the Galxe quest
+                    <div className="tooltip-arrow" data-popper-arrow></div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
