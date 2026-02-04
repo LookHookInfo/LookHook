@@ -1,5 +1,11 @@
-import { useHeliDrop } from '../hooks/useHeliDrop';
+import { useActiveAccount } from 'thirdweb/react';
+import { useCountdown } from '../hooks/useCountdown';
+import { useHeliDropEligibility } from '../hooks/useHeliDropEligibility';
 import { Spinner } from '../components/Spinner';
+
+interface HeliDropProps {
+  className?: string;
+}
 
 const EligibilityIndicator = ({ tooltip, status, icon }: { tooltip: string, status: boolean, icon: string }) => (
     <div className="relative group flex items-center">
@@ -14,19 +20,22 @@ const EligibilityIndicator = ({ tooltip, status, icon }: { tooltip: string, stat
 );
 
 
-export default function HeliDrop() {
-  const {
-    isLoading,
-    hasGmnft,
-    hasBadge,
-    hasEarlyBird,
-    canClaim,
-    hasClaimed,
-    rewardAmount,
-    isClaiming,
-    handleClaim,
-    poolRewardBalance,
-  } = useHeliDrop();
+
+
+export default function Lambos({ className }: HeliDropProps) {
+  const targetDate = '2026-05-15T00:00:00';
+  const { days, hours, minutes, seconds } = useCountdown(targetDate);
+  const account = useActiveAccount();
+  const { isLoading, hasGmnft, hasBadge, hasEarlyBird } = useHeliDropEligibility();
+
+  const pad = (num: number) => num.toString().padStart(2, '0');
+
+  const getTimerContent = () => {
+    if (days + hours + minutes + seconds <= 0) {
+      return '00:00:00:00';
+    }
+    return `${pad(days)}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  };
 
   const eligibilityCriteria = [
       { key: 'hasGmnft', tooltip: 'GM role', status: hasGmnft, icon: '/assets/GM.webp' },
@@ -35,6 +44,12 @@ export default function HeliDrop() {
   ];
 
   const renderEligibility = () => {
+    if (!account) {
+        return <p className="text-neutral-400 text-sm text-center">Connect your wallet to check eligibility.</p>
+    }
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-full"><Spinner /></div>;
+    }
     return (
         <div className="flex flex-row gap-3">
             {eligibilityCriteria.map(criterion => (
@@ -44,21 +59,19 @@ export default function HeliDrop() {
     );
   }
 
-  // Calculate progress percentage
-  let progressPercentage = 10; // Base 10%
-  if (hasGmnft) progressPercentage += 30;
-  if (hasBadge) progressPercentage += 30;
-  if (hasEarlyBird) progressPercentage += 30;
-
-
   return (
     <div
-      className="w-full h-full text-white bg-neutral-800 rounded-2xl p-4 sm:p-6 shadow-lg border border-neutral-700 flex flex-col"
+      className={`w-full h-full text-white bg-neutral-800 rounded-2xl p-4 sm:p-6 shadow-lg border border-neutral-700 flex flex-col ${className ?? ''}`}
     >
       <div className="flex-grow flex flex-col md:flex-row gap-8 items-start">
         {/* Image Block */}
         <div className="flex-shrink-0 w-40 h-40 relative">
-          <div className="absolute -top-2 -left-2 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 text-white px-2 py-1 text-xs font-bold rounded-full shadow-lg z-10">
+          <div
+            className="absolute -top-2 -left-2
+                         bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
+                         text-white px-2 py-1 text-xs font-bold rounded-full
+                         shadow-lg z-10"
+          >
             Base
           </div>
           <img src="/assets/HeliDrop.webp" alt="HeliDrop" className="rounded-full w-full h-full object-cover" />
@@ -87,43 +100,15 @@ export default function HeliDrop() {
             </div>
           </div>
 
-          {/* Claim Button */}
+          {/* Timer button with slow glow effect */}
           <div className="mt-auto pt-4 w-full relative">
-            <div className="relative group w-full">
-                <button
-                onClick={handleClaim}
-                disabled={!canClaim || isClaiming || hasClaimed}
-                className={`relative flex items-center justify-center w-full py-3 rounded-lg text-xl font-bold border transition-colors overflow-hidden ${
-                    canClaim && !hasClaimed ? 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer' 
-                    : 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
-                }`}
-                >
-                {isLoading ? (
-                    <Spinner className="w-6 h-6" />
-                ) : isClaiming ? (
-                    <>
-                    <Spinner className="w-5 h-5 mr-2" />
-                    Claiming...
-                    </>
-                ) : hasClaimed ? (
-                    'Claimed'
-                ) : canClaim ? (
-                    <span>Claim {rewardAmount} HASH</span>
-                ) : (
-                    <>
-                        <div
-                            className="absolute top-0 left-0 h-full bg-sky-500/30"
-                            style={{ width: `${progressPercentage}%` }}
-                        ></div>
-                        <span className="relative z-10">Progress to Claim: {progressPercentage}%</span>
-                    </>
-                )}
-                </button>
-                <div className="absolute bottom-full mb-2 w-max px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    Pool: {poolRewardBalance} HASH
-                    <div className="tooltip-arrow" data-popper-arrow></div>
-                </div>
-            </div>
+            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-gray-700/30 via-gray-600/30 to-gray-500/30 animate-pulse-slow blur-sm"></div>
+            <button
+              disabled={true}
+              className="relative flex items-center justify-center w-full py-3 rounded-lg text-xl font-bold border border-neutral-700 text-white bg-neutral-800 cursor-default"
+            >
+              {getTimerContent()}
+            </button>
           </div>
         </div>
       </div>

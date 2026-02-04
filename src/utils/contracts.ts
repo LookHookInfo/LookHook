@@ -19,6 +19,7 @@ import { badgeStakeAbi } from './badgeStakeAbi';
 import { stakeRewardClaimAbi } from './stakeRewardClaimAbi';
 import { drub100BadgeAbi } from './drub100BadgeAbi';
 import { xroleRewardAbi } from './xroleRewardAbi';
+import { heliRewardAbi } from './heliRewardAbi';
 
 // --- CORE TOKENS ---
 
@@ -96,6 +97,13 @@ export const xroleRewardContract = getContract({
   chain: chain,
   address: '0xB3A9FB099c0733281722e23004c2923d3318FD22',
   abi: xroleRewardAbi,
+});
+
+export const heliRewardContract = getContract({
+  client,
+  chain: chain,
+  address: '0x3EB421C3fC1BFcd50fE539a5f92D01bB74Aa27E2',
+  abi: heliRewardAbi,
 });
 
 export const nameRewardContract = getContract({
