@@ -24,36 +24,30 @@ const CarouselCardSection: React.FC<CarouselCardSectionProps> = ({ items, classN
   }
 
   const getCardStyle = (index: number) => {
-    const offset = (index - activeIndex + items.length) % items.length;
+    const isActive = index === activeIndex;
 
-    // Scale and translate values adjusted for better containment within parent
-    if (offset === 0) {
-      // Active card: slightly scaled down and centered
+    if (isActive) {
       return {
-        transform: 'scale(0.85) translateX(0)',
+        transform: 'scale(0.9) translateX(0)', // Active card, slightly scaled down for compactness
         zIndex: 10,
         opacity: 1,
-      };
-    } else if (offset === 1) {
-      // Card directly behind the active one (peeking from the right)
-      return {
-        transform: 'scale(0.833) translateX(5px)', // Minimal peek
-        zIndex: 5,
-        opacity: 1, // Must be opaque
-        filter: 'brightness(0.8)',
+        pointerEvents: 'auto',
+        filter: 'none',
       };
     } else {
-      // Other cards further behind (hidden)
+      // For all non-active cards, hide them and place them behind the active one
       return {
-        transform: 'scale(0.816) translateX(10px)',
+        transform: 'scale(0.8) translateX(0)', // Keep them scaled and centered behind
         zIndex: 0,
-        opacity: 0,
+        opacity: 0, // Fully hide
+        pointerEvents: 'none', // Disable interaction
+        filter: 'brightness(0.5)', // Optional dimming for effect, even if hidden
       };
     }
   };
 
   return (
-    <div className={`relative flex flex-col justify-center min-h-[550px] md:min-h-0 ${className}`}>
+    <div className={`relative flex flex-col justify-center min-h-[700px] md:min-h-0 ${className}`}>
       {/* Container for the stacked cards */}
       <div className="relative flex-grow flex items-center justify-center">
         {items.map((item, index) => (

@@ -30,14 +30,14 @@ export default function Welcome() {
   const galxeButtonGlow = account && !canClaim && !hasClaimed && !isClaiming && !isLoading;
 
   return (
-    <div className="w-full h-full text-white bg-neutral-800 rounded-2xl p-4 sm:p-6 shadow-lg border border-neutral-700 flex flex-col">
+    <div className="w-full text-white bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 flex flex-col">
       <div className="flex-grow flex flex-col md:flex-row gap-8 items-start">
         {/* Image Block */}
-        <div className="flex-shrink-0 w-40 h-40 relative flex flex-col items-center">
+        <div className="w-1/2 mx-auto md:w-40 lg:w-[140px] flex-shrink-0 relative flex flex-col items-center">
           <div className="absolute -top-2 -left-2 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 text-white px-2 py-1 text-xs font-bold rounded-full shadow-lg z-10">
             Base
           </div>
-          <img src="/assets/welcome.webp" alt="welcome" className="rounded-full w-full h-full object-cover" />
+          <img src="/assets/welcome.webp" alt="welcome" className="rounded-full w-full h-auto object-cover" />
           <a
             href="https://zealy.io/c/hashcoin"
             target="_blank"
@@ -53,7 +53,7 @@ export default function Welcome() {
         </div>
 
         {/* Text Content Block */}
-        <div className="flex-1 space-y-4 flex flex-col">
+        <div className="flex-1 w-full min-w-0 space-y-4 flex flex-col">
           <div className="flex-grow">
             <div className="flex justify-between items-center flex-wrap gap-2 relative mb-4">
               <h2 className="text-3xl font-bold text-white line-clamp-1">Welcome</h2>

@@ -7,10 +7,10 @@ const EligibilityIndicator = ({ tooltip, status, icon }: { tooltip: string; stat
       <img
         src={icon}
         alt={tooltip}
-        className="w-14 h-14 rounded-full object-cover border-2 border-neutral-600 group-hover:border-neutral-500 transition-all duration-200"
+        className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover border-2 border-neutral-600 group-hover:border-neutral-500 transition-all duration-200"
       />
       <div
-        className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-neutral-800 ${status ? 'bg-green-500' : 'bg-neutral-500'}`}
+        className={`absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 border-neutral-800 ${status ? 'bg-green-500' : 'bg-neutral-500'}`}
       ></div>
     </div>
     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-900 text-white text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
@@ -61,18 +61,18 @@ export default function HeliDrop() {
   if (hasEarlyBird) progressPercentage += 30;
 
   return (
-    <div className="w-full h-full text-white bg-neutral-800 rounded-2xl p-4 sm:p-6 shadow-lg border border-neutral-700 flex flex-col">
+    <div className="w-full text-white bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 flex flex-col">
       <div className="flex-grow flex flex-col md:flex-row gap-8 items-start">
         {/* Image Block */}
-        <div className="flex-shrink-0 w-40 h-40 relative">
+        <div className="w-1/2 mx-auto md:w-40 lg:w-[140px] flex-shrink-0 relative flex flex-col items-center">
           <div className="absolute -top-2 -left-2 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 text-white px-2 py-1 text-xs font-bold rounded-full shadow-lg z-10">
             Base
           </div>
-          <img src="/assets/HeliDrop.webp" alt="HeliDrop" className="rounded-full w-full h-full object-cover" />
+          <img src="/assets/HeliDrop.webp" alt="HeliDrop" className="rounded-full w-full h-auto object-cover" />
         </div>
 
         {/* Text Content Block */}
-        <div className="flex-1 space-y-4 flex flex-col">
+        <div className="flex-1 w-full min-w-0 space-y-4 flex flex-col">
           <div className="flex-grow">
             <div className="flex justify-between items-center flex-wrap gap-2 relative mb-4">
               <h2 className="text-3xl font-bold text-white line-clamp-1">HeliDrop</h2>
@@ -84,8 +84,8 @@ export default function HeliDrop() {
             </div>
 
             <div className="space-y-4">
-              <p className="text-neutral-300 text-sm">
-                A surprise reward that drops from above for those who actively participate in and support Mining Hash.
+              <p className="text-neutral-300">
+                Additional reward for Hashcoin miners.
               </p>
 
               <div className="flex flex-wrap gap-2">{renderEligibility()}</div>
