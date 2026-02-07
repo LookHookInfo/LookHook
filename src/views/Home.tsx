@@ -12,7 +12,9 @@ import CarouselCardSection from '@/components/CarouselCardSection';
 import Airdrop from '@/partials/Airdrop';
 import Drop from '@/partials/Drop';
 import GM from '@/partials/GM';
-import Drub from '@/partials/Drub';
+import Xrole from '@/partials/Xrole';
+import HeliDrop from '@/partials/HeliDrop';
+import Welcome from '@/partials/Welcome';
 
 export default function Home() {
   return (
@@ -23,6 +25,8 @@ export default function Home() {
         <CarouselCardSection
           className="w-full md:w-1/2"
           items={[
+            { key: 'Welcome', component: <Welcome /> },
+            { key: 'HeliDrop', component: <HeliDrop /> },
             { key: 'drop', component: <Drop /> },
             { key: 'airdrop', component: <Airdrop /> },
           ]}
@@ -34,13 +38,13 @@ export default function Home() {
         <Tips className="w-full md:w-1/2" />
         <Domain className="w-full md:w-1/2" />
       </div>
-      <Drub />
       <div className="flex flex-col md:flex-row gap-4 my-2">
         <NFT className="w-full md:w-1/2" />
-        <Forum className="w-full md:w-1/2" />
+        <Xrole className="w-full md:w-1/2" />
       </div>
       <div className="flex flex-col md:flex-row gap-4 my-2">
         <Hashchain className="w-full md:w-1/2" />
+        <Forum className="w-full md:w-1/2" />
       </div>
 
       <Services />

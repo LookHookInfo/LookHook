@@ -1,24 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useActiveAccount } from 'thirdweb/react';
 import ConnectWalletButton from './ConnectWalletButton';
-import UserStakesDisplay, { UserStakes } from './UserStakesDisplay';
+import UserStakesDisplay from './UserStakesDisplay';
 import { Status } from '../hooks/useStakeContract';
+import { UserStakes } from './UserStakesDisplay'; // Import UserStakes from its new location
 
 interface StakingSectionProps {
   className?: string;
-  tokenSymbol: string;
+  tokenSymbol: string | undefined;
   stakeAPY: bigint | undefined;
-  walletBalance: string;
-  stakedBalance: string;
+  walletBalance: string | undefined;
+  stakedBalance: string | undefined;
   userStakes: UserStakes | undefined;
   apr3M: bigint | undefined;
   apr6M: bigint | undefined;
   apr12M: bigint | undefined;
-  refreshBalances: () => void;
   isApproved: (amount: string) => boolean;
-  refetchAllowance: () => void;
   status: Status;
   setStatus: (status: Status) => void;
+  // Transaction functions
+  stake: (amount: string, tierId: number) => Promise<void>;
+  unstake: (tierId: number) => Promise<void>;
+  claim: (tierId: number) => Promise<void>;
+  // Granular pending states
+  isStakingPending: (tierId: number) => boolean;
+  isUnstakingPending: (tierId: number) => boolean;
+  isClaimingRewardsPending: (tierId: number) => boolean;
 }
 
 export function StakingSection({
@@ -30,19 +37,20 @@ export function StakingSection({
   apr3M,
   apr6M,
   apr12M,
-  refreshBalances,
-  isApproved,
-  refetchAllowance,
   status,
   setStatus,
+  stake,
+  unstake,
+  claim,
+  isStakingPending, // Now a function
+  isUnstakingPending, // Now a function
+  isClaimingRewardsPending, // Now a function
 }: StakingSectionProps) {
   const account = useActiveAccount();
   const [amount, setAmount] = useState('');
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (account) refreshBalances();
-  }, [account, refreshBalances]);
+  // Removed useEffect for refreshBalances as invalidation is handled in hook
 
   return (
     <section className={`w-full px-4 py-8 text-white ${className ?? ''}`}>
@@ -152,11 +160,14 @@ export function StakingSection({
                 apr12M={apr12M}
                 amount={amount}
                 tokenSymbol={tokenSymbol}
-                refreshBalances={refreshBalances}
-                refetchAllowance={refetchAllowance}
-                isApproved={isApproved}
                 status={status}
                 setStatus={setStatus}
+                stake={stake}
+                unstake={unstake}
+                claim={claim}
+                isStakingPending={isStakingPending} // Pass the function
+                isUnstakingPending={isUnstakingPending} // Pass the function
+                isClaimingRewardsPending={isClaimingRewardsPending} // Pass the function
               />
             ) : (
               <p className="text-center text-neutral-400">Loading staking data...</p>

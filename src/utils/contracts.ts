@@ -8,21 +8,19 @@ import stakingAbi from './stakingAbi';
 import GMAbi from './GMAbi';
 import CoffeeQuestAbi from './buyMeACoffeeAbi';
 import { nameContractAbi } from './nameContractAbi';
-import namebadgeAbi from './namebadgeAbi';
-import { airdropAbi } from './airdropAbi';
 import { gmnftAbi } from './gmnftAbi';
-import { drubContractABI } from './drubContractAbi';
-import { vaultDrubContractABI } from './vaultDrubContractAbi';
-import { airdropWinterGiftAbi } from './airdropWinterGiftAbi';
+import { nameRewardAbi } from './nameRewardAbi';
+
 import { contractStakingAbi } from './contractStakingAbi';
 import { earlyBirdAbi } from './earlyBirdAbi';
 import { stakeNftAbi } from './stakeNftAbi';
 import { whaleContractAbi } from './whaleContractAbi';
-import { BALANCE_OF_ABI } from './balanceOfAbi'; // New import for generic balanceOf ABI
 import { badgeStakeAbi } from './badgeStakeAbi';
 import { stakeRewardClaimAbi } from './stakeRewardClaimAbi';
 import { drub100BadgeAbi } from './drub100BadgeAbi';
-import { drubRewardAbi } from './drubRewardAbi';
+import { xroleRewardAbi } from './xroleRewardAbi';
+import { heliRewardAbi } from './heliRewardAbi';
+import welcomeRewardAbi from './welcomeRewardAbi';
 
 // --- CORE TOKENS ---
 
@@ -39,29 +37,6 @@ export const usdcContract = getContract({
   address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
   abi: erc20Abi,
 });
-
-export const drubContract = getContract({
-  client,
-  chain: chain,
-  address: '0x1339c3a22ccdd7560B4Ccacd065Cd4b578BDA12d',
-  abi: drubContractABI,
-});
-
-export const vaultDrubContract = getContract({
-  client,
-  chain: chain,
-  address: '0xd2237A2f81C8Fce8d61919e2e35639897848722d',
-  abi: vaultDrubContractABI,
-});
-
-export const nfpmContract = getContract({
-  client,
-  chain: chain,
-  address: '0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1', // pool hash/drub
-  abi: BALANCE_OF_ABI,
-});
-
-
 
 // --- STAKING & TOOLS ---
 
@@ -92,22 +67,7 @@ export const contractTools = getContract({
   address: '0x13CE10a3e09FA8000BA8A13fCbe8813f476584e7',
 });
 
-
 // --- AIRDROPS & QUESTS ---
-
-export const airdropWinterGiftContract = getContract({
-  client,
-  chain: chain,
-  address: '0x66987ceEf1c8843315846c013ca38cDFAE813B95',
-  abi: airdropWinterGiftAbi,
-});
-
-export const airdropContract = getContract({
-  client,
-  chain: chain,
-  address: '0x69cb90ee92d2f84dd5d77737a0295dcc8aa9dc6a',
-  abi: airdropAbi,
-});
 
 export const earlyBirdContract = getContract({
   client,
@@ -130,13 +90,33 @@ export const stakeRewardClaimContract = getContract({
   abi: stakeRewardClaimAbi,
 });
 
-export const drubRewardContract = getContract({
+export const xroleRewardContract = getContract({
   client,
   chain: chain,
-  address: '0x225ebbac1db8fdb1be4a70ae695745f214fc5424',
-  abi: drubRewardAbi,
+  address: '0xB3A9FB099c0733281722e23004c2923d3318FD22',
+  abi: xroleRewardAbi,
 });
 
+export const heliRewardContract = getContract({
+  client,
+  chain: chain,
+  address: '0x3EB421C3fC1BFcd50fE539a5f92D01bB74Aa27E2',
+  abi: heliRewardAbi,
+});
+
+export const nameRewardContract = getContract({
+  client,
+  chain: chain,
+  address: '0x9951b4DB6198b04E5b4Ca6684A8e7d1C2148dD6B',
+  abi: nameRewardAbi,
+});
+
+export const welcomeRewardContract = getContract({
+  client,
+  chain: chain,
+  address: '0xA2116B995A314c0F5Bcb67c32B62d5e2F17a5424',
+  abi: welcomeRewardAbi,
+});
 
 // --- NFT & IDENTITY ---
 
@@ -146,18 +126,18 @@ export const nftCollectionContract = getContract({
   address: '0x30ccb676de89af3da144dde2cff647152e5c2770',
 });
 
+export const ourNftContract = getContract({
+  client,
+  chain: chain,
+  address: '0x8F45ee49fC8613661DF64Da7f0ce1Eb0a4c3794B',
+  abi: gmnftAbi,
+});
+
 export const nameContract = getContract({
   client,
   chain: chain,
   address: '0xA8e00E2ca8b183Edb7EbB6bD7EeBB90047416F95',
   abi: nameContractAbi,
-});
-
-export const namebadgeContract = getContract({
-  client,
-  chain: chain,
-  address: '0xCe6d7DF4a3F945B35E7b4d93F8Ff6731923Fa1E8',
-  abi: namebadgeAbi,
 });
 
 export const whaleContract = getContract({

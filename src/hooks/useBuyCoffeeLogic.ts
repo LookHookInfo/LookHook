@@ -1,43 +1,55 @@
-import { useState } from 'react';
-import { useReadContract } from 'thirdweb/react';
-import { toEther } from 'thirdweb';
+import { useState, useMemo } from 'react';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { readContract, type ThirdwebContract } from 'thirdweb';
+import { toEther } from 'thirdweb/utils';
+import { type Abi } from 'viem';
 import { buyMeACoffeeContract, nameContract } from '../utils/contracts';
 
 export function useBuyCoffeeLogic() {
   const [coffeeCount, setCoffeeCount] = useState(1);
   const COFFEE_PRICE_USD = 5;
 
-  const { data: totalCoffee, isLoading: isLoadingTotalCoffee } = useReadContract({
-    contract: buyMeACoffeeContract,
-    method: 'totalCoffee',
-    params: [],
+  const createThirdwebQuery = <TAbi extends Abi, TFunctionName extends string, TArgs extends readonly unknown[]>(
+    contractInstance: ThirdwebContract<TAbi>,
+    methodName: TFunctionName,
+    params: TArgs,
+    enabled: boolean = true,
+  ) => ({
+    queryKey: [contractInstance.address, methodName, ...params],
+    queryFn: () => readContract({ contract: contractInstance, method: methodName as any, params: params as any }),
+    enabled,
+    staleTime: 300000, // 5 minutes
   });
 
-  const { data: topDonor, isLoading: isLoadingTopDonor } = useReadContract({
-    contract: buyMeACoffeeContract,
-    method: 'topDonor',
-    params: [],
-  });
+  const queries = useMemo(() => {
+    return [
+      createThirdwebQuery(buyMeACoffeeContract, 'totalCoffee', []),
+      createThirdwebQuery(buyMeACoffeeContract, 'topDonor', []),
+      createThirdwebQuery(buyMeACoffeeContract, 'topDonorAmount', []),
+      createThirdwebQuery(buyMeACoffeeContract, 'getCoffeePriceInETH', []),
+    ];
+  }, []);
 
-  const { data: topDonorAmount } = useReadContract({
-    contract: buyMeACoffeeContract,
-    method: 'topDonorAmount',
-    params: [],
-  });
+  const results = useQueries({ queries });
 
-  const { data: coffeePriceInETH, isLoading: isLoadingCoffeePrice } = useReadContract({
-    contract: buyMeACoffeeContract,
-    method: 'getCoffeePriceInETH',
-    params: [],
-  });
+  const [
+    { data: totalCoffee, isLoading: isLoadingTotalCoffee },
+    { data: topDonor, isLoading: isLoadingTopDonor },
+    { data: topDonorAmount },
+    { data: coffeePriceInETH, isLoading: isLoadingCoffeePrice },
+  ] = results;
 
-  const { data: topDonorName, isLoading: isLoadingTopDonorName } = useReadContract({
-    contract: nameContract,
-    method: 'getPrimaryName',
-    params: [topDonor!],
-    queryOptions: {
-      enabled: !!topDonor && topDonor !== '0x0000000000000000000000000000000000000000',
-    },
+  // Dependent query for topDonorName using useQuery for better readability
+  const { data: topDonorName, isLoading: isLoadingTopDonorName } = useQuery({
+    queryKey: [nameContract.address, 'getPrimaryName', topDonor],
+    queryFn: () =>
+      readContract({
+        contract: nameContract,
+        method: 'getPrimaryName',
+        params: [topDonor!],
+      }),
+    enabled: !!topDonor && topDonor !== '0x0000000000000000000000000000000000000000',
+    staleTime: 300000, // 5 minutes
   });
 
   const totalTipInWei = coffeePriceInETH ? BigInt(coffeeCount) * coffeePriceInETH : 0n;

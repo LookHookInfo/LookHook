@@ -1,16 +1,18 @@
 import { GMAchievement } from './GMAchievement';
 import { useEffect } from 'react';
 import type { Wallet } from 'thirdweb/wallets';
-import { useDisconnect, useWalletBalance, useReadContract } from 'thirdweb/react';
+import { useDisconnect, useWalletBalance } from 'thirdweb/react';
+import { useQuery } from '@tanstack/react-query'; // Added useQuery import
 import {
   hashcoinContract,
   earlyBirdContract,
   buyMeACoffeeContract,
   nameContract,
   stakeNftContract,
-  drubContract,
   drub100BadgeContract,
+  xroleRewardContract,
 } from '../utils/contracts';
+import { readContract } from 'thirdweb'; // Added readContract import
 import EarlyBirdClaimButton from './EarlyBirdClaimButton';
 import { DolphinAchievement, SharkAchievement, WhaleAchievement } from './WhaleAchievements';
 
@@ -22,6 +24,55 @@ interface ProfileModalProps {
   registeredName: string | null;
 }
 
+// Xrole Achievement Component
+function XroleAchievement({ wallet }: { wallet: Wallet }) {
+  const ownerAddress = wallet.getAccount()?.address;
+
+  const { data: hasClaimed, isLoading: isClaimLoading } = useQuery({
+    queryKey: ['xroleRewardClaimed', xroleRewardContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: xroleRewardContract,
+        method: 'claimed',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
+  });
+
+  if (!ownerAddress) {
+    return (
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Connect wallet to see achievement"
+      >
+        <span className="text-neutral-400 text-xs">?</span>
+      </div>
+    );
+  }
+
+  if (isClaimLoading) {
+    return (
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Loading Xrole achievement..."
+      >
+        <span className="text-neutral-400 text-xs">...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
+      title={hasClaimed ? 'Xrole achievement unlocked!' : 'Xrole achievement not unlocked'}
+    >
+      <img src="/assets/Xrole.webp" alt="Xrole Achievement" className={`size-10 ${!hasClaimed ? 'opacity-50' : ''}`} />
+    </div>
+  );
+}
+
 // Hashcoin Achievement Component
 function HashcoinAchievement({ wallet }: { wallet: Wallet }) {
   const { data: balance, isLoading: isBalanceLoading } = useWalletBalance({
@@ -29,6 +80,8 @@ function HashcoinAchievement({ wallet }: { wallet: Wallet }) {
     address: wallet.getAccount()?.address,
     client: hashcoinContract.client,
     tokenAddress: hashcoinContract.address,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
   const formattedBalance = balance ? `${parseInt(balance.displayValue).toString()} ${balance.symbol}` : '0 HASH';
@@ -47,49 +100,24 @@ function HashcoinAchievement({ wallet }: { wallet: Wallet }) {
   );
 }
 
-// Drub Achievement Component
-function DrubAchievement({ wallet }: { wallet: Wallet }) {
-  const { data: balance, isLoading: isBalanceLoading } = useWalletBalance({
-    chain: drubContract.chain,
-    address: wallet.getAccount()?.address,
-    client: drubContract.client,
-    tokenAddress: drubContract.address,
-  });
-
-  const formattedBalance = balance ? `${parseInt(balance.displayValue).toString()} ${balance.symbol}` : '0 DRUB';
-  const DRUB_ACHIEVEMENT_THRESHOLD = 1000;
-
-  const hasEnoughDrub =
-    balance && balance.value >= BigInt(DRUB_ACHIEVEMENT_THRESHOLD) * 10n ** BigInt(balance.decimals);
-
-  return (
-    <div
-      className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
-      title={isBalanceLoading ? 'Loading...' : `Balance: ${formattedBalance}`}
-    >
-      <img
-        src="/assets/Drub.webp"
-        alt="Drub Logo"
-        className={`size-10 ${!hasEnoughDrub ? 'opacity-50' : ''}`}
-      />
-    </div>
-  );
-}
-
 // BadgeDrub Achievement Component
 function BadgeDrubAchievement({ wallet }: { wallet: Wallet }) {
   const ownerAddress = wallet.getAccount()?.address;
 
-  const { data: balance, isLoading: isBalanceLoading } = useReadContract({
-    contract: drub100BadgeContract,
-    method: 'balanceOf',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-    },
+  const { data: balance, isLoading: isBalanceLoading } = useQuery({
+    queryKey: ['drub100BadgeBalanceOf', drub100BadgeContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: drub100BadgeContract,
+        method: 'balanceOf',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const hasNft = balance && (balance as bigint) > 0n;
+  const hasNft = balance && (Array.isArray(balance) ? (balance[0] as bigint) : (balance as bigint)) > 0n;
 
   if (!ownerAddress) {
     return (
@@ -154,16 +182,20 @@ function NftAchievement({ hasNft, isLoading }: { hasNft: boolean; isLoading: boo
 function EarlyNftAchievement({ wallet }: { wallet: Wallet }) {
   const ownerAddress = wallet.getAccount()?.address;
 
-  const { data: balance, isLoading: isBalanceLoading } = useReadContract({
-    contract: earlyBirdContract,
-    method: 'balanceOf',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-    },
+  const { data: balance, isLoading: isBalanceLoading } = useQuery({
+    queryKey: ['earlyNftBalanceOf', earlyBirdContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: earlyBirdContract,
+        method: 'balanceOf',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const hasNft = balance && (balance as bigint) > 0n;
+  const hasNft = balance && (Array.isArray(balance) ? (balance[0] as bigint) : (balance as bigint)) > 0n;
 
   if (!ownerAddress) {
     return (
@@ -201,16 +233,20 @@ function EarlyNftAchievement({ wallet }: { wallet: Wallet }) {
 function TipsAchievement({ wallet }: { wallet: Wallet }) {
   const ownerAddress = wallet.getAccount()?.address;
 
-  const { data: userTips, isLoading: isTipsLoading } = useReadContract({
-    contract: buyMeACoffeeContract,
-    method: 'tipsFromUsers',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-    },
+  const { data: userTips, isLoading: isTipsLoading } = useQuery({
+    queryKey: ['tipsFromUsers', buyMeACoffeeContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: buyMeACoffeeContract,
+        method: 'tipsFromUsers',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const hasTipped = userTips && (userTips as bigint) > 0n;
+  const hasTipped = userTips && (Array.isArray(userTips) ? (userTips[0] as bigint) : (userTips as bigint)) > 0n;
 
   if (!ownerAddress) {
     return (
@@ -248,16 +284,20 @@ function TipsAchievement({ wallet }: { wallet: Wallet }) {
 function NameAchievement({ wallet }: { wallet: Wallet }) {
   const ownerAddress = wallet.getAccount()?.address;
 
-  const { data: balance, isLoading: isBalanceLoading } = useReadContract({
-    contract: nameContract,
-    method: 'balanceOf',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-    },
+  const { data: balance, isLoading: isBalanceLoading } = useQuery({
+    queryKey: ['nameContractBalanceOf', nameContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: nameContract,
+        method: 'balanceOf',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const hasNameNft = balance && (balance as bigint) > 0n;
+  const hasNameNft = balance && (Array.isArray(balance) ? (balance[0] as bigint) : (balance as bigint)) > 0n;
 
   if (!ownerAddress) {
     return (
@@ -299,16 +339,20 @@ function NameAchievement({ wallet }: { wallet: Wallet }) {
 function StakeNftAchievement({ wallet }: { wallet: Wallet }) {
   const ownerAddress = wallet.getAccount()?.address;
 
-  const { data: balance, isLoading: isBalanceLoading } = useReadContract({
-    contract: stakeNftContract,
-    method: 'balanceOf',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-    },
+  const { data: balance, isLoading: isBalanceLoading } = useQuery({
+    queryKey: ['stakeNftBalanceOf', stakeNftContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: stakeNftContract,
+        method: 'balanceOf',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const hasNft = balance && (balance as bigint) > 0n;
+  const hasNft = balance && (Array.isArray(balance) ? (balance[0] as bigint) : (balance as bigint)) > 0n;
 
   if (!ownerAddress) {
     return (
@@ -391,11 +435,9 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
               <EarlyNftAchievement wallet={wallet} />
               <TipsAchievement wallet={wallet} />
               <NameAchievement wallet={wallet} />
-
-              {/* Empty cells */}
-              <DrubAchievement wallet={wallet} />
-              <BadgeDrubAchievement wallet={wallet} />
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
+              <BadgeDrubAchievement wallet={wallet} />
+              <XroleAchievement wallet={wallet} />
 
               <StakeNftAchievement wallet={wallet} />
 

@@ -231,5 +231,5 @@ input[type="range"]::-moz-range-thumb {
 
 .glow-effect {
   box-shadow: 0 0 5px rgba(0, 198, 255, 0.4); /* Initial subtle glow */
-  animation: pulse-glow 1.5s infinite ease-in-out;
+  animation: pulse-glow 3s infinite ease-in-out;
 }

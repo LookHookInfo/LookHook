@@ -1,87 +1,65 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useActiveAccount } from 'thirdweb/react';
 import ConnectWalletButton from '../components/ConnectWalletButton';
 import { useNameContract } from '../hooks/useNameContract';
-import { useNameBadgeContract } from '../hooks/useNameBadgeContract';
+import { useNameRewardContract } from '../hooks/useNameRewardContract';
+import { Spinner } from '../components/Spinner';
 
 interface DomainProps {
   className?: string;
 }
 
-type Status = 'idle' | 'checking' | 'available' | 'taken' | 'error';
-
 export function Domain({ className }: DomainProps) {
   const account = useActiveAccount();
-  const [name, setName] = useState('');
-  const [status, setStatus] = useState<Status>('idle');
 
   const {
+    nameInput,
+    setNameInput,
+    isTaken,
+    isNameTakenLoading,
     price,
     displayPrice,
     isConfirming,
-    isPending,
     unifiedClaim,
-    isNameTaken,
     maxNameLength,
     maxNamesPerAddress,
     registeredNamesCount,
     hasSufficientBalance,
-  } = useNameContract(setStatus);
+  } = useNameContract();
 
-  const { hasBadge, isMinting, claimBadge } = useNameBadgeContract();
-
-  useEffect(() => {
-    if (!name) {
-      setStatus('idle');
-      return;
-    }
-
-    if (maxNameLength !== null && new Blob([name]).size > maxNameLength) {
-      setStatus('error');
-      return;
-    }
-
-    if (registeredNamesCount !== null && maxNamesPerAddress !== null && registeredNamesCount >= maxNamesPerAddress) {
-      setStatus('error');
-      return;
-    }
-
-    setStatus('checking');
-    let cancelled = false;
-
-    const handler = setTimeout(async () => {
-      try {
-        const taken = await isNameTaken(name);
-        if (!cancelled) setStatus(taken ? 'taken' : 'available');
-      } catch {
-        if (!cancelled) setStatus('error');
-      }
-    }, 800);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(handler);
-    };
-  }, [name, isNameTaken, maxNameLength, maxNamesPerAddress, registeredNamesCount]);
+  const { canClaim, hasClaimed, isClaiming, claimReward, poolRewardBalance, isDataLoading } = useNameRewardContract();
 
   const handleUnifiedClaim = useCallback(() => {
-    unifiedClaim(name);
-  }, [unifiedClaim, name]);
+    unifiedClaim();
+  }, [unifiedClaim]);
 
-  const isButtonDisabled =
-    isPending ||
-    isConfirming ||
-    status !== 'available' ||
-    !price ||
-    !maxNameLength ||
-    !maxNamesPerAddress ||
-    (registeredNamesCount !== null && maxNamesPerAddress !== null && registeredNamesCount >= maxNamesPerAddress) ||
-    !hasSufficientBalance;
+  // Memoize the complex disabled logic to prevent recalculating on every render
+  const isButtonDisabled = useMemo(() => {
+    return (
+      isConfirming ||
+      isTaken !== false || // Name must be available (not taken)
+      !price ||
+      !maxNameLength ||
+      !maxNamesPerAddress ||
+      (registeredNamesCount !== null && maxNamesPerAddress !== null && registeredNamesCount >= maxNamesPerAddress) ||
+      new Blob([nameInput]).size > maxNameLength ||
+      !hasSufficientBalance
+    );
+  }, [
+    isConfirming,
+    isTaken,
+    price,
+    maxNameLength,
+    maxNamesPerAddress,
+    registeredNamesCount,
+    nameInput,
+    hasSufficientBalance,
+  ]);
 
   const formattedPrice = displayPrice ? (Number(displayPrice) / 1e18).toLocaleString() : '...';
 
   const getButtonContent = () => {
-    if (isPending || isConfirming) {
+    if (isConfirming) {
       return (
         <span className="flex items-center justify-center">
           <span className="animate-spin mr-2">⏳</span>
@@ -89,10 +67,47 @@ export function Domain({ className }: DomainProps) {
         </span>
       );
     }
-    if (status === 'available' && !hasSufficientBalance) {
+    // A specific check for insufficient balance to show a clear message
+    if (isTaken === false && !hasSufficientBalance) {
       return 'Insufficient HASH balance';
     }
     return `🎉 Register for ${formattedPrice} HASH`;
+  };
+
+  const renderStatusIcon = () => {
+    if (isNameTakenLoading) {
+      return (
+        <svg
+          className="animate-spin h-7 w-7 text-gray-400"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+      );
+    }
+    if (isTaken === false) {
+      return (
+        <svg className="h-7 w-7 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      );
+    }
+    if (isTaken === true) {
+      return (
+        <svg className="h-7 w-7 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      );
+    }
+    // Render nothing if isTaken is null (initial state or error)
+    return null;
   };
 
   return (
@@ -102,11 +117,8 @@ export function Domain({ className }: DomainProps) {
           <div className="w-full lg:w-[90px] flex flex-col items-center relative">
             <div
               className="absolute -top-2 -left-2
-
                            bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
-
                            text-white px-3 py-1 text-xs font-bold rounded-full
-
                            shadow-lg z-10"
             >
               Base
@@ -146,17 +158,34 @@ export function Domain({ className }: DomainProps) {
 
             <div className="mt-4 w-full">
               {account && (
-                <button
-                  onClick={claimBadge}
-                  disabled={!registeredNamesCount || registeredNamesCount === 0 || isMinting || hasBadge}
-                  className={`w-full py-2 rounded-lg transition text-sm font-medium border ${
-                    !registeredNamesCount || registeredNamesCount === 0 || hasBadge
-                      ? 'border-gray-500 text-gray-500 opacity-50'
-                      : 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
-                  }`}
-                >
-                  {isMinting ? 'Minting...' : hasBadge ? 'Minted' : 'Badge'}
-                </button>
+                <div className="relative group w-full">
+                  <button
+                    onClick={claimReward}
+                    disabled={!canClaim || isClaiming || isDataLoading}
+                    className={`relative flex items-center justify-center w-full px-4 py-2 rounded-lg transition text-sm font-medium border ${
+                      canClaim && !isClaiming && !isDataLoading
+                        ? 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
+                        : 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    {isClaiming ? (
+                      <>
+                        <Spinner className="w-4 h-4 mr-2" />
+                        Claiming...
+                      </>
+                    ) : hasClaimed ? (
+                      'Claimed'
+                    ) : (
+                      'Reward'
+                    )}
+                  </button>
+                  <div className="absolute z-50 bottom-full mb-2 w-max px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                    Pool: {poolRewardBalance} HASH
+                    <br />
+                    Complete the Galxe quest
+                    <div className="tooltip-arrow" data-popper-arrow></div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -178,51 +207,15 @@ export function Domain({ className }: DomainProps) {
               <div className="relative w-full mb-4 flex items-center input-style rounded-lg">
                 <input
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value.trim())}
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value.trim())}
                   placeholder="Enter a name"
                   className="flex-grow p-3 text-center bg-transparent outline-none pr-10 text-white text-lg w-full max-w-full"
                 />
 
                 <span className="pr-3 text-lg text-neutral-400">.hash</span>
 
-                <div className="absolute inset-y-0 right-0 flex items-center pr-16 w-7 h-7">
-                  {status === 'checking' && (
-                    <svg
-                      className="animate-spin h-7 w-7 text-gray-400"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                  )}
-
-                  {status === 'available' && (
-                    <svg className="h-7 w-7 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-
-                  {(status === 'taken' || status === 'error') && (
-                    <svg className="h-7 w-7 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  )}
-                </div>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-16 w-7 h-7">{renderStatusIcon()}</div>
               </div>
 
               {!account ? (

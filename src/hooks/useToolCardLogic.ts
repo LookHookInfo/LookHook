@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useActiveAccount, useReadContract } from 'thirdweb/react';
+import { useActiveAccount } from 'thirdweb/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   balanceOf as erc1155BalanceOf,
@@ -8,7 +8,7 @@ import {
   claimTo,
 } from 'thirdweb/extensions/erc1155';
 import { allowance, approve } from 'thirdweb/extensions/erc20';
-import { prepareContractCall, ThirdwebContract, NFT, sendAndConfirmTransaction } from 'thirdweb';
+import { prepareContractCall, ThirdwebContract, NFT, sendAndConfirmTransaction, readContract } from 'thirdweb';
 import { formatUnits } from 'viem';
 import { usdcContract, contractStaking } from '@/utils/contracts';
 
@@ -34,33 +34,40 @@ export function useToolCardLogic({ tool, address, contractTools }: UseToolCardLo
   const queryClient = useQueryClient();
 
   // Data fetching logic
-  const { data: claimCondition } = useReadContract(getActiveClaimCondition, {
-    contract: contractTools,
-    tokenId: tool.id,
+  const { data: claimCondition } = useQuery({
+    queryKey: ['getActiveClaimCondition', contractTools.address, tool.id.toString()],
+    queryFn: () => getActiveClaimCondition({ contract: contractTools, tokenId: tool.id }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: tokenAllowance, refetch: refetchTokenAllowance } = useReadContract(allowance, {
-    contract: usdcContract,
-    owner: address,
-    spender: contractTools.address,
-    queryOptions: { enabled: !!address && !!claimCondition },
+  const { data: tokenAllowance, refetch: refetchTokenAllowance } = useQuery({
+    queryKey: ['allowance', usdcContract.address, address, contractTools.address],
+    queryFn: () => allowance({ contract: usdcContract, owner: address, spender: contractTools.address }),
+    enabled: !!address && !!claimCondition,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: balance, isLoading: isLoadingBalance } = useQuery({
     queryKey: ['balance', tool.id.toString(), address],
     queryFn: () => erc1155BalanceOf({ contract: contractTools, owner: address, tokenId: tool.id }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: stakeInfo, isLoading: isLoadingStakeInfo } = useReadContract({
-    contract: contractStaking,
-    method: 'getStakeInfoForToken',
-    params: [tool.id, address],
-    queryOptions: { enabled: !!address },
+  const { data: stakeInfo, isLoading: isLoadingStakeInfo } = useQuery({
+    queryKey: ['getStakeInfoForToken', contractStaking.address, tool.id.toString(), address],
+    queryFn: () =>
+      readContract({
+        contract: contractStaking,
+        method: 'getStakeInfoForToken',
+        params: [tool.id, address],
+      }),
+    enabled: !!address,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
-
-
-
-
 
   const { data: isApprovedForStaking, refetch: refetchStakingApproval } = useQuery({
     queryKey: ['isApproved', address, contractStaking.address],
@@ -73,6 +80,8 @@ export function useToolCardLogic({ tool, address, contractTools }: UseToolCardLo
       });
     },
     enabled: !!account,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
   // Derived state and calculations

@@ -1,231 +1,221 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { readContract, prepareContractCall, waitForReceipt } from 'thirdweb';
-import { client } from '../lib/thirdweb/client';
-import { chain } from '../lib/thirdweb/chain';
+import { useSendTransaction, useActiveAccount } from 'thirdweb/react';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { nameContract, hashcoinContract } from '../utils/contracts';
-import { useSendTransaction, useActiveAccount, useReadContract } from 'thirdweb/react';
+import type { ThirdwebContract } from 'thirdweb';
 
-export type Status = 'idle' | 'checking' | 'available' | 'taken' | 'error';
+const MAX_NAME_LENGTH = 15;
+const MAX_NAMES_PER_ADDRESS = 20;
 
-export function useNameContract(setStatus: (status: Status) => void) {
+// Helper function from optimization plan to structure queries
+const createThirdwebQuery = ({
+  contract,
+  method,
+  params = [],
+  queryOptions = {},
+}: {
+  contract: ThirdwebContract<any>; // Use a less strict type to avoid conflicts
+  method: string;
+  params?: unknown[];
+  queryOptions?: object;
+}) => {
+  const queryKey = [contract.chain.id, contract.address, method, params];
+  return {
+    queryKey,
+    queryFn: () => readContract({ contract, method, params } as any), // Use 'as any' to bypass strict type checking here
+    ...queryOptions,
+  };
+};
+
+export function useNameContract() {
   const account = useActiveAccount();
-  const [price, setPrice] = useState<bigint | null>(null);
-  const [displayPrice, setDisplayPrice] = useState<bigint | null>(null);
-  const [confirmedHash, setConfirmedHash] = useState<string | null>(null);
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [registeredName, setRegisteredName] = useState<string | null>(null);
-  const [maxNameLength, setMaxNameLength] = useState<number | null>(null);
-  const [maxNamesPerAddress, setMaxNamesPerAddress] = useState<number | null>(null);
-  const [registeredNamesCount, setRegisteredNamesCount] = useState<number | null>(null);
-  const [hasSufficientBalance, setHasSufficientBalance] = useState(false);
-  const { mutateAsync: sendTx, isPending } = useSendTransaction();
+  const queryClient = useQueryClient();
+  const { mutateAsync: sendTx } = useSendTransaction();
+  const accountAddress = account?.address;
 
-  const { data: balance, refetch: refetchBalance } = useReadContract({
-    contract: hashcoinContract,
-    method: 'balanceOf',
-    params: account ? [account.address] : [""],
-    queryOptions: {
-      enabled: !!account,
+  // State for the user's input
+  const [nameInput, setNameInput] = useState('');
+  const [isNameTakenLoading, setIsNameTakenLoading] = useState(false);
+  const [isTaken, setIsTaken] = useState<boolean | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false); // New loading state for the transaction
+
+  const queries = useMemo(() => {
+    return [
+      createThirdwebQuery({
+        contract: nameContract,
+        method: 'PRICE',
+      }),
+      createThirdwebQuery({
+        contract: nameContract,
+        method: 'hasDiscount',
+        params: [accountAddress],
+        queryOptions: { enabled: !!accountAddress, staleTime: 300000 },
+      }),
+      createThirdwebQuery({
+        contract: nameContract,
+        method: 'balanceOf',
+        params: [accountAddress],
+        queryOptions: { enabled: !!accountAddress, staleTime: 300000 },
+      }),
+      createThirdwebQuery({
+        contract: hashcoinContract,
+        method: 'balanceOf',
+        params: [accountAddress],
+        queryOptions: { enabled: !!accountAddress, staleTime: 300000 },
+      }),
+      createThirdwebQuery({
+        contract: nameContract,
+        method: 'getPrimaryName',
+        params: [accountAddress],
+        queryOptions: { enabled: !!accountAddress, staleTime: 300000 },
+      }),
+    ];
+  }, [accountAddress]);
+
+  const queryResults = useQueries({
+    queries,
+    combine: (results) => {
+      return {
+        priceResult: results[0],
+        hasDiscountResult: results[1],
+        registeredNamesCountResult: results[2],
+        hashBalanceResult: results[3],
+        registeredNameResult: results[4],
+        isLoading: results.some((res) => res.isLoading),
+      };
     },
   });
 
-  useEffect(() => {
-    setMaxNameLength(15);
-    setMaxNamesPerAddress(20);
-  }, []);
+  const {
+    priceResult,
+    hasDiscountResult,
+    registeredNamesCountResult,
+    hashBalanceResult,
+    registeredNameResult,
+    isLoading: areInitialQueriesLoading,
+  } = queryResults;
 
+  // Debounced check for name availability
   useEffect(() => {
-    if (account?.address) {
-      (async () => {
-        try {
-          const balance = await readContract({
-            contract: nameContract,
-            method: 'balanceOf',
-            params: [account.address],
-          });
-          setRegisteredNamesCount(Number(balance));
-        } catch (e) {
-          console.error('Failed to fetch registered names count:', e);
-          setRegisteredNamesCount(null);
-        }
-      })();
-    } else {
-      setRegisteredNamesCount(null);
+    if (!nameInput) {
+      setIsTaken(null);
+      return;
     }
-  }, [account?.address, confirmedHash]);
 
-  useEffect(() => {
-    (async () => {
-      let priceBigInt: bigint;
+    setIsNameTakenLoading(true);
+    const handler = setTimeout(async () => {
       try {
-        const basePrice = await readContract({
+        const taken = await readContract({
           contract: nameContract,
-          method: 'PRICE',
-          params: [],
+          method: 'isNameTaken',
+          params: [nameInput],
         });
-        priceBigInt = BigInt(basePrice.toString());
-        setPrice(priceBigInt);
-      } catch (e) {
-        console.error('Failed to get price:', e);
-        return;
+        setIsTaken(taken);
+      } catch (error) {
+        console.error('Failed to check if name is taken:', error);
+        setIsTaken(null); // Set to null on error to indicate uncertainty
+      } finally {
+        setIsNameTakenLoading(false);
       }
+    }, 500); // 500ms debounce timer
 
-      if (account?.address) {
-        try {
-          const userHasDiscount = await readContract({
-            contract: nameContract,
-            method: 'hasDiscount',
-            params: [account.address],
-          });
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [nameInput]);
 
-          if (userHasDiscount) {
-            setDisplayPrice(priceBigInt / BigInt(2));
-          } else {
-            setDisplayPrice(priceBigInt);
-          }
-        } catch (e) {
-          console.error('Failed to get discount info:', e);
-          setDisplayPrice(priceBigInt);
-          setStatus('error');
-        }
-      }
-      else {
-        setDisplayPrice(priceBigInt);
-      }
-    })();
-  }, [account?.address, setStatus]);
+  const price = priceResult.data as bigint | undefined;
+  const hasDiscount = hasDiscountResult.data as boolean | undefined;
+  const registeredNamesCount = registeredNamesCountResult.data as bigint | undefined;
+  const balance = hashBalanceResult.data as bigint | undefined;
+  const registeredName = registeredNameResult.data as string | undefined;
 
-  useEffect(() => {
-    if (balance && displayPrice) {
-      setHasSufficientBalance(balance >= displayPrice);
-    } else {
-      setHasSufficientBalance(false);
-    }
+  const displayPrice = useMemo(() => {
+    if (!price) return undefined;
+    return hasDiscount ? price / 2n : price;
+  }, [price, hasDiscount]);
+
+  const hasSufficientBalance = useMemo(() => {
+    if (balance === undefined || displayPrice === undefined) return false;
+    return balance >= displayPrice;
   }, [balance, displayPrice]);
 
-  useEffect(() => {
-    if (account?.address) {
-      const fetchName = async () => {
-        try {
-          const name = await readContract({
-            contract: nameContract,
-            method: 'getPrimaryName',
-            params: [account.address],
-          });
-          setRegisteredName(name);
-        } catch (e) {
-          console.error('Failed to fetch registered name:', e);
-          setRegisteredName(null);
-        }
-      };
-      fetchName();
-    } else {
-      setRegisteredName(null);
+  const unifiedClaim = useCallback(async () => {
+    if (!account || !displayPrice || !nameInput) {
+      console.error('Required information is missing for claim.');
+      return;
     }
-  }, [account?.address, confirmedHash]);
 
-  const approve = useCallback(async () => {
-    if (!displayPrice) {
-      return false;
-    }
+    setIsConfirming(true);
     try {
-      const call = await prepareContractCall({
+      // 1. Approve HASH spending
+      const approveTx = await prepareContractCall({
         contract: hashcoinContract,
         method: 'approve',
         params: [nameContract.address, displayPrice],
       });
-      const tx = await sendTx(call);
-      if (!tx?.transactionHash) {
-        return false;
-      }
-      await waitForReceipt({ client, chain, transactionHash: tx.transactionHash });
-      return true;
-    } catch (err: unknown) {
-      console.error('Approve error: ', err);
-      return false;
-    }
-  }, [displayPrice, sendTx]);
-
-  const register = useCallback(
-    async (name: string) => {
-      setConfirmedHash(null);
-      if (!name) {
-        return false;
-      }
-      try {
-        const call = await prepareContractCall({
-          contract: nameContract,
-          method: 'register',
-          params: [name],
-        });
-        const tx = await sendTx(call);
-        if (!tx?.transactionHash) {
-          return false;
-        }
-        setIsConfirming(true);
-        const receipt = await waitForReceipt({ client, chain, transactionHash: tx.transactionHash });
-        setConfirmedHash(receipt.transactionHash);
-        await refetchBalance();
-        setStatus('taken');
-        return true;
-      } catch (err: unknown) {
-        console.error('Registration error: ', err);
-        return false;
-      } finally {
-        setIsConfirming(false);
-      }
-    },
-    [sendTx, setStatus, refetchBalance],
-  );
-
-  const unifiedClaim = useCallback(
-    async (name: string) => {
-      setIsConfirming(true);
-      try {
-        const approved = await approve();
-        if (!approved) {
-          setIsConfirming(false);
-          return;
-        }
-        const registered = await register(name);
-        if (!registered) {
-          setIsConfirming(false);
-          return;
-        }
-      } catch (err: unknown) {
-        console.error('Unified claim error: ', err);
-      } finally {
-        setIsConfirming(false);
-      }
-    },
-    [approve, register],
-  );
-
-  const isNameTaken = useCallback(
-    async (name: string): Promise<boolean> => {
-      const taken = await readContract({
-        contract: nameContract,
-        method: 'isNameTaken',
-        params: [name],
+      const { transactionHash: approveHash } = await sendTx(approveTx);
+      await waitForReceipt({
+        client: hashcoinContract.client,
+        chain: hashcoinContract.chain,
+        transactionHash: approveHash,
       });
-      return taken;
-    },
-    [],
-  );
+
+      // 2. Register the name
+      const registerTx = await prepareContractCall({
+        contract: nameContract,
+        method: 'register',
+        params: [nameInput],
+      });
+      const { transactionHash: registerHash } = await sendTx(registerTx);
+      await waitForReceipt({
+        client: nameContract.client,
+        chain: nameContract.chain,
+        transactionHash: registerHash,
+      });
+
+      console.log('Successfully registered name. Invalidating specific queries...');
+      // More granular invalidation
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queries[2].queryKey }), // nameContract.balanceOf
+        queryClient.invalidateQueries({ queryKey: queries[3].queryKey }), // hashcoinContract.balanceOf
+        queryClient.invalidateQueries({ queryKey: queries[4].queryKey }), // nameContract.getPrimaryName
+      ]);
+      setIsTaken(true); // Optimistically set name as taken
+    } catch (error) {
+      console.error('Unified claim error:', error);
+    } finally {
+      setIsConfirming(false);
+    }
+  }, [account, displayPrice, nameInput, sendTx, queryClient, queries]);
 
   return {
+    // Name input state and status
+    nameInput,
+    setNameInput,
+    isTaken,
+    isNameTakenLoading,
+
+    // Original values from batched queries
     price,
     displayPrice,
-    confirmedHash,
-    isConfirming,
-    isPending,
-    registeredName,
-    unifiedClaim,
-    isNameTaken,
-    maxNameLength,
-    maxNamesPerAddress,
-    registeredNamesCount,
     balance,
+    registeredName,
+    registeredNamesCount: registeredNamesCount !== undefined ? Number(registeredNamesCount) : null,
+
+    // Statuses
+    isLoading: areInitialQueriesLoading, // True when initial data is loading
+    isConfirming: isConfirming, // True when the transaction is being confirmed
+
+    // Booleans
     hasSufficientBalance,
+
+    // Functions
+    unifiedClaim: unifiedClaim,
+
+    // Constants
+    maxNameLength: MAX_NAME_LENGTH,
+    maxNamesPerAddress: MAX_NAMES_PER_ADDRESS,
   };
 }

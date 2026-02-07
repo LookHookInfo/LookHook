@@ -1,8 +1,13 @@
-import { useState } from 'react';
-import { useSendAndConfirmTransaction, TransactionButton } from 'thirdweb/react';
-import { prepareContractCall, toWei } from 'thirdweb';
-import { stakingContract, hashcoinContract } from '../utils/contracts';
-import { Status } from '../hooks/useStakeContract'; // Import Status
+import { Status } from '../hooks/useStakeContract';
+
+// Moved type definitions here from src/types/staking.ts
+export type UserStakes = readonly [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
+
+export interface UserStakeTierData {
+  amount: bigint;
+  rewards: bigint;
+  timeLeft: bigint;
+}
 
 const formatRemainingTime = (remainingSeconds: bigint) => {
   if (remainingSeconds <= 0n) return 'Finished';
@@ -15,20 +20,20 @@ const formatRemainingTime = (remainingSeconds: bigint) => {
 interface TierDisplayProps {
   tierId: number;
   tierName: string;
-  stakeData: {
-    amount: bigint;
-    rewards: bigint;
-    timeLeft: bigint;
-  };
+  stakeData: UserStakeTierData;
   amount: string;
-  refreshBalances: () => void;
-  refetchAllowance: () => void;
-  isApproved: (amount: string) => boolean;
-  apr: bigint; // Keep as bigint, convert to number for display
-  tokenSymbol: string;
+  apr: bigint | undefined;
+  tokenSymbol: string | undefined;
+  status: Status;
   setStatus: (status: Status) => void;
-  status: Status; // Added missing status prop
-  showQuestTooltip?: boolean; // New prop
+  showQuestTooltip?: boolean;
+  // Granular pending states
+  stake: (amount: string, tierId: number) => Promise<void>;
+  unstake: (tierId: number) => Promise<void>;
+  claim: (tierId: number) => Promise<void>;
+  isStakingPending: (tierId: number) => boolean;
+  isUnstakingPending: (tierId: number) => boolean;
+  isClaimingRewardsPending: (tierId: number) => boolean;
 }
 
 function TierDisplay({
@@ -36,50 +41,22 @@ function TierDisplay({
   tierName,
   stakeData,
   amount,
-  refreshBalances,
-  refetchAllowance,
-  isApproved,
   apr,
   tokenSymbol,
-  setStatus,
   showQuestTooltip,
+  stake,
+  unstake,
+  claim,
+  isStakingPending, // Now a function
+  isUnstakingPending, // Now a function
+  isClaimingRewardsPending, // Now a function
 }: TierDisplayProps) {
-  const { mutateAsync: sendAndConfirm } = useSendAndConfirmTransaction();
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const handleStaking = async () => {
-    if (!amount || Number(amount) <= 0) return;
-    setIsProcessing(true);
-    setStatus('pending');
-    try {
-      const amountWei = toWei(amount);
-      if (!isApproved(amount)) {
-        const approveTx = prepareContractCall({
-          contract: hashcoinContract,
-          method: 'approve',
-          params: [stakingContract.address, amountWei],
-        });
-        await sendAndConfirm(approveTx);
-        refetchAllowance();
-      }
-
-      const stakeTx = prepareContractCall({
-        contract: stakingContract,
-        method: 'stake',
-        params: [amountWei, tierId],
-      });
-      await sendAndConfirm(stakeTx);
-      refreshBalances();
-      setStatus('success');
-    } catch (err) {
-      console.error('Staking error:', err);
-      setStatus('error');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const isStaked = stakeData.amount > 0n;
+  const isStakeButtonDisabled = isStakingPending(tierId) || !amount || Number(amount) <= 0;
+
+  const getButtonText = (pendingFn: (tierId: number) => boolean, defaultText: string) => {
+    return pendingFn(tierId) ? 'Processing...' : defaultText;
+  };
 
   return (
     <div className="bg-neutral-900 rounded-lg p-4 flex flex-col justify-between w-full">
@@ -119,43 +96,13 @@ function TierDisplay({
         {isStaked ? (
           <div className="flex flex-col gap-2 items-center">
             {stakeData.timeLeft <= 0n && stakeData.rewards <= 0n ? (
-              <TransactionButton
-                transaction={() =>
-                  prepareContractCall({ contract: stakingContract, method: 'unstake', params: [tierId] })
-                }
-                onTransactionConfirmed={() => {
-                  refreshBalances();
-                }}
-                style={{
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  height: '40px',
-                  width: '150px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  borderRadius: '8px',
-                  fontWeight: '600',
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  padding: '10px 20px',
-                  border: 'none',
-                  boxShadow: '0 0 15px rgba(76, 175, 80, 0.6)' /* Green glow */,
-                  transition: 'box-shadow 0.3s ease-in-out',
-                }}
-              >
-                Unstake
-              </TransactionButton>
+              <button onClick={() => unstake(tierId)} disabled={isUnstakingPending(tierId)} className="btn-claim">
+                {getButtonText(isUnstakingPending, 'Unstake')}
+              </button>
             ) : (
-
-              <TransactionButton
-                transaction={() =>
-                  prepareContractCall({ contract: stakingContract, method: 'claimReward', params: [tierId] })
-                }
-                onTransactionConfirmed={() => refreshBalances()}
+              <button
+                onClick={() => claim(tierId)}
+                disabled={isClaimingRewardsPending(tierId) || stakeData.rewards <= 0n}
                 style={{
                   background: 'linear-gradient(90deg, #007bff, #00c6ff)',
                   color: 'white',
@@ -176,20 +123,18 @@ function TierDisplay({
                   boxShadow: '0 0 15px rgba(0, 198, 255, 0.6)',
                   transition: 'box-shadow 0.3s ease-in-out',
                 }}
-                disabled={stakeData.rewards <= 0n}
               >
-                {Math.floor(Number(stakeData.rewards / BigInt(10 ** 18)))} {tokenSymbol}
-              </TransactionButton>
+                {getButtonText(
+                  isClaimingRewardsPending,
+                  `${Math.floor(Number(stakeData.rewards / BigInt(10 ** 18)))} ${tokenSymbol}`,
+                )}
+              </button>
             )}
           </div>
         ) : (
           <div className="flex justify-center">
-            <button
-              onClick={handleStaking}
-              disabled={isProcessing || !amount || Number(amount) <= 0}
-              className="btn-claim"
-            >
-              {isProcessing ? 'Processing...' : tierName}
+            <button onClick={() => stake(amount, tierId)} disabled={isStakeButtonDisabled} className="btn-claim">
+              {getButtonText(isStakingPending, tierName)}
             </button>{' '}
           </div>
         )}
@@ -198,20 +143,22 @@ function TierDisplay({
   );
 }
 
-export type UserStakes = readonly [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
-
 interface UserStakesDisplayProps {
-  userStakes: UserStakes;
-  apr3M: bigint;
-  apr6M: bigint;
-  apr12M: bigint;
+  userStakes: UserStakes | undefined;
+  apr3M: bigint | undefined;
+  apr6M: bigint | undefined;
+  apr12M: bigint | undefined;
   amount: string;
-  tokenSymbol: string;
-  refreshBalances: () => void;
-  refetchAllowance: () => void;
-  isApproved: (amount: string) => boolean;
-  status: Status; // Add status
-  setStatus: (status: Status) => void; // Add setStatus
+  tokenSymbol: string | undefined;
+  status: Status;
+  setStatus: (status: Status) => void;
+  // Granular pending states and transaction functions
+  stake: (amount: string, tierId: number) => Promise<void>;
+  unstake: (tierId: number) => Promise<void>;
+  claim: (tierId: number) => Promise<void>;
+  isStakingPending: (tierId: number) => boolean;
+  isUnstakingPending: (tierId: number) => boolean;
+  isClaimingRewardsPending: (tierId: number) => boolean;
 }
 
 export default function UserStakesDisplay({
@@ -221,31 +168,34 @@ export default function UserStakesDisplay({
   apr12M,
   amount,
   tokenSymbol,
-  refreshBalances,
-  refetchAllowance,
-  isApproved,
   status,
   setStatus,
+  stake,
+  unstake,
+  claim,
+  isStakingPending, // Granular pending state lookup function
+  isUnstakingPending, // Granular pending state lookup function
+  isClaimingRewardsPending, // Granular pending state lookup function
 }: UserStakesDisplayProps) {
-  let s3 = { amount: 0n, rewards: 0n, timeLeft: 0n };
-  let s6 = { amount: 0n, rewards: 0n, timeLeft: 0n };
-  let s12 = { amount: 0n, rewards: 0n, timeLeft: 0n };
+  let s3: UserStakeTierData = { amount: 0n, rewards: 0n, timeLeft: 0n };
+  let s6: UserStakeTierData = { amount: 0n, rewards: 0n, timeLeft: 0n };
+  let s12: UserStakeTierData = { amount: 0n, rewards: 0n, timeLeft: 0n };
 
   if (userStakes) {
     s3 = {
-      amount: BigInt(userStakes[0] || 0n),
-      rewards: BigInt(userStakes[1] || 0n),
-      timeLeft: BigInt(userStakes[2] || 0n),
+      amount: userStakes[0],
+      rewards: userStakes[1],
+      timeLeft: userStakes[2],
     };
     s6 = {
-      amount: BigInt(userStakes[3] || 0n),
-      rewards: BigInt(userStakes[4] || 0n),
-      timeLeft: BigInt(userStakes[5] || 0n),
+      amount: userStakes[3],
+      rewards: userStakes[4],
+      timeLeft: userStakes[5],
     };
     s12 = {
-      amount: BigInt(userStakes[6] || 0n),
-      rewards: BigInt(userStakes[7] || 0n),
-      timeLeft: BigInt(userStakes[8] || 0n),
+      amount: userStakes[6],
+      rewards: userStakes[7],
+      timeLeft: userStakes[8],
     };
   }
 
@@ -258,11 +208,14 @@ export default function UserStakesDisplay({
         apr={apr3M}
         amount={amount}
         tokenSymbol={tokenSymbol}
-        refreshBalances={refreshBalances}
-        refetchAllowance={refetchAllowance}
-        isApproved={isApproved}
         status={status}
         setStatus={setStatus}
+        stake={stake}
+        unstake={unstake}
+        claim={claim}
+        isStakingPending={isStakingPending}
+        isUnstakingPending={isUnstakingPending}
+        isClaimingRewardsPending={isClaimingRewardsPending}
       />
       <TierDisplay
         tierId={2}
@@ -271,11 +224,14 @@ export default function UserStakesDisplay({
         apr={apr6M}
         amount={amount}
         tokenSymbol={tokenSymbol}
-        refreshBalances={refreshBalances}
-        refetchAllowance={refetchAllowance}
-        isApproved={isApproved}
         status={status}
         setStatus={setStatus}
+        stake={stake}
+        unstake={unstake}
+        claim={claim}
+        isStakingPending={isStakingPending}
+        isUnstakingPending={isUnstakingPending}
+        isClaimingRewardsPending={isClaimingRewardsPending}
       />
       <TierDisplay
         tierId={3}
@@ -284,12 +240,15 @@ export default function UserStakesDisplay({
         apr={apr12M}
         amount={amount}
         tokenSymbol={tokenSymbol}
-        refreshBalances={refreshBalances}
-        refetchAllowance={refetchAllowance}
-        isApproved={isApproved}
         status={status}
         setStatus={setStatus}
         showQuestTooltip={true}
+        stake={stake}
+        unstake={unstake}
+        claim={claim}
+        isStakingPending={isStakingPending}
+        isUnstakingPending={isUnstakingPending}
+        isClaimingRewardsPending={isClaimingRewardsPending}
       />
     </div>
   );

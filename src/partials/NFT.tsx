@@ -8,7 +8,7 @@ export default function NFTCard({ className }: NFTCardProps) {
       <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           {/* Image and Links */}
-          <div className="w-full lg:w-[140px] flex flex-col items-center relative">
+          <div className="w-full lg:w-[120px] flex flex-col items-center relative">
             <div
               className="absolute -top-2 -left-2
                          bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
@@ -25,7 +25,7 @@ export default function NFTCard({ className }: NFTCardProps) {
             />
 
             <a
-              href="https://mintapp.fun"
+              href="https://nft.lookhook.info"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
@@ -35,7 +35,7 @@ export default function NFTCard({ className }: NFTCardProps) {
 
             <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
               <a
-                href="https://t.me/ChainInside/1824"
+                href="https://t.me/ChainInside/1824/7762"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
@@ -47,7 +47,7 @@ export default function NFTCard({ className }: NFTCardProps) {
               </a>
 
               <a
-                href="https://x.com/ForumChain/status/1922984506320998468"
+                href="https://x.com/NFTcatsh"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex justify-center items-center size-8 rounded-lg border border-gray-500 text-gray-300 hover:bg-gray-700 transition-colors"
