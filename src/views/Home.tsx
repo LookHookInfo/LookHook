@@ -14,6 +14,7 @@ import Drop from '@/partials/Drop';
 import GM from '@/partials/GM';
 import Xrole from '@/partials/Xrole';
 import HeliDrop from '@/partials/HeliDrop';
+import Welcome from '@/partials/Welcome';
 
 export default function Home() {
   return (
@@ -24,6 +25,7 @@ export default function Home() {
         <CarouselCardSection
           className="w-full md:w-1/2"
           items={[
+            { key: 'Welcome', component: <Welcome /> },
             { key: 'HeliDrop', component: <HeliDrop /> },
             { key: 'drop', component: <Drop /> },
             { key: 'airdrop', component: <Airdrop /> },

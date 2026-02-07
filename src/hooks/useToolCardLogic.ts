@@ -69,10 +69,6 @@ export function useToolCardLogic({ tool, address, contractTools }: UseToolCardLo
     refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-
-
-
-
   const { data: isApprovedForStaking, refetch: refetchStakingApproval } = useQuery({
     queryKey: ['isApproved', address, contractStaking.address],
     queryFn: async () => {

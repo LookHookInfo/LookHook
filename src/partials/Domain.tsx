@@ -5,7 +5,6 @@ import { useNameContract } from '../hooks/useNameContract';
 import { useNameRewardContract } from '../hooks/useNameRewardContract';
 import { Spinner } from '../components/Spinner';
 
-
 interface DomainProps {
   className?: string;
 }
@@ -43,7 +42,7 @@ export function Domain({ className }: DomainProps) {
       !maxNameLength ||
       !maxNamesPerAddress ||
       (registeredNamesCount !== null && maxNamesPerAddress !== null && registeredNamesCount >= maxNamesPerAddress) ||
-      (new Blob([nameInput]).size > maxNameLength) ||
+      new Blob([nameInput]).size > maxNameLength ||
       !hasSufficientBalance
     );
   }, [
@@ -77,7 +76,7 @@ export function Domain({ className }: DomainProps) {
 
   const renderStatusIcon = () => {
     if (isNameTakenLoading) {
-       return (
+      return (
         <svg
           className="animate-spin h-7 w-7 text-gray-400"
           xmlns="http://www.w3.org/2000/svg"
@@ -216,9 +215,7 @@ export function Domain({ className }: DomainProps) {
 
                 <span className="pr-3 text-lg text-neutral-400">.hash</span>
 
-                <div className="absolute inset-y-0 right-0 flex items-center pr-16 w-7 h-7">
-                  {renderStatusIcon()}
-                </div>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-16 w-7 h-7">{renderStatusIcon()}</div>
               </div>
 
               {!account ? (

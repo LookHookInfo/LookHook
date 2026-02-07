@@ -37,7 +37,6 @@ export function StakingSection({
   apr3M,
   apr6M,
   apr12M,
-  isApproved,
   status,
   setStatus,
   stake,

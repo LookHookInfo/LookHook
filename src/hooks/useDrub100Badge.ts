@@ -1,18 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useQueryClient, useQueries } from '@tanstack/react-query';
-import {
-  useActiveAccount,
-  useSendTransaction,
-} from 'thirdweb/react';
+import { useActiveAccount, useSendTransaction } from 'thirdweb/react';
 import { prepareContractCall, waitForReceipt, readContract, type ThirdwebContract } from 'thirdweb';
 import { type Abi } from 'viem';
 import { client } from '../lib/thirdweb/client';
 import { chain } from '../lib/thirdweb/chain';
 import { parseEther } from 'ethers';
-import {
-  drubContract,
-  drub100BadgeContract,
-} from '@/utils/contracts';
+import { drubContract, drub100BadgeContract } from '@/utils/contracts';
 
 const BADGE_PRICE = parseEther('100');
 
@@ -46,12 +40,8 @@ export function useDrub100Badge() {
   }, [account, accountAddress]);
 
   const results = useQueries({ queries });
-  
-  const [
-    { data: hasBadge },
-    { data: drubBalance },
-    { data: drubAllowance },
-  ] = results;
+
+  const [{ data: hasBadge }, { data: drubBalance }, { data: drubAllowance }] = results;
 
   const canMint = drubBalance !== undefined && drubBalance >= BADGE_PRICE;
 
@@ -83,7 +73,9 @@ export function useDrub100Badge() {
         });
         const { transactionHash: approveTxHash } = await sendTx(approveTx);
         await waitForReceipt({ client, chain, transactionHash: approveTxHash });
-        await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'allowance', accountAddress, drub100BadgeContract.address] });
+        await queryClient.invalidateQueries({
+          queryKey: [drubContract.address, 'allowance', accountAddress, drub100BadgeContract.address],
+        });
       }
 
       const mintTx = prepareContractCall({
@@ -93,15 +85,14 @@ export function useDrub100Badge() {
       });
       const { transactionHash: mintTxHash } = await sendTx(mintTx);
       await waitForReceipt({ client, chain, transactionHash: mintTxHash });
-      
+
       await queryClient.invalidateQueries({ queryKey: [drub100BadgeContract.address, 'hasBadge', accountAddress] });
       await queryClient.invalidateQueries({ queryKey: [drubContract.address, 'balanceOf', accountAddress] });
-      
     } catch (error) {
       setStatus(`Error: ${error instanceof Error ? error.message.substring(0, 50) : 'Transaction failed'}`);
     } finally {
       setIsMinting(false);
-      setTimeout(() => setStatus(''), 5000); 
+      setTimeout(() => setStatus(''), 5000);
     }
   };
 

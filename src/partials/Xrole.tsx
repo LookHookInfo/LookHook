@@ -74,7 +74,7 @@ export default function Xrole({ className }: XroleProps) {
             <p className="text-neutral-400">
               Support Mining Hash with a unique tweet and earn an exclusive X Role + NFT + reward!
             </p>
-            
+
             {/* Reward Button with Custom Tooltip */}
             <div className="flex pt-0">
               <div className="relative group w-full">
@@ -99,14 +99,13 @@ export default function Xrole({ className }: XroleProps) {
                   )}
                 </button>
                 <div className="absolute bottom-full mb-2 w-max px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                  Pool: {poolRewardBalance} HASH 
+                  Pool: {poolRewardBalance} HASH
                   <br />
                   Complete the Galxe quest
                   <div className="tooltip-arrow" data-popper-arrow></div>
                 </div>
               </div>
             </div>
-            
           </div>
         </div>
       </div>

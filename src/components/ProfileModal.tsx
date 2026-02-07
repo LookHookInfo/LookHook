@@ -68,11 +68,7 @@ function XroleAchievement({ wallet }: { wallet: Wallet }) {
       className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
       title={hasClaimed ? 'Xrole achievement unlocked!' : 'Xrole achievement not unlocked'}
     >
-      <img
-        src="/assets/Xrole.webp"
-        alt="Xrole Achievement"
-        className={`size-10 ${!hasClaimed ? 'opacity-50' : ''}`}
-      />
+      <img src="/assets/Xrole.webp" alt="Xrole Achievement" className={`size-10 ${!hasClaimed ? 'opacity-50' : ''}`} />
     </div>
   );
 }

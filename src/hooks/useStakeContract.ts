@@ -169,11 +169,10 @@ export function useStakeContract() {
     queryClient.invalidateQueries({ queryKey: queries[8].queryKey }); // allowance
   }, [queryClient, queries]);
 
-
   const stake = useCallback(
     async (amount: string, tierId: number) => {
       if (!account) throw new Error('Not connected');
-      setStakingPending(prev => new Set(prev).add(tierId)); // Set specific pending state
+      setStakingPending((prev) => new Set(prev).add(tierId)); // Set specific pending state
       setStatus('pending');
       try {
         const amountWei = toWei(amount);
@@ -199,7 +198,11 @@ export function useStakeContract() {
         setStatus('error');
         console.error(err);
       } finally {
-        setStakingPending(prev => { const next = new Set(prev); next.delete(tierId); return next; }); // Reset specific pending state
+        setStakingPending((prev) => {
+          const next = new Set(prev);
+          next.delete(tierId);
+          return next;
+        }); // Reset specific pending state
       }
     },
     [account, sendAndConfirm, setStatus, isApproved, invalidateStakeQueries, setStakingPending],
@@ -208,7 +211,7 @@ export function useStakeContract() {
   const unstake = useCallback(
     async (tierId: number) => {
       if (!account) throw new Error('Not connected');
-      setUnstakingPending(prev => new Set(prev).add(tierId)); // Set specific pending state
+      setUnstakingPending((prev) => new Set(prev).add(tierId)); // Set specific pending state
       setStatus('pending');
       try {
         const unstakeTx = prepareContractCall({
@@ -223,7 +226,11 @@ export function useStakeContract() {
         setStatus('error');
         console.error(err);
       } finally {
-        setUnstakingPending(prev => { const next = new Set(prev); next.delete(tierId); return next; }); // Reset specific pending state
+        setUnstakingPending((prev) => {
+          const next = new Set(prev);
+          next.delete(tierId);
+          return next;
+        }); // Reset specific pending state
       }
     },
     [account, sendAndConfirm, setStatus, invalidateStakeQueries, setUnstakingPending],
@@ -232,7 +239,7 @@ export function useStakeContract() {
   const claim = useCallback(
     async (tierId: number) => {
       if (!account) throw new Error('Not connected');
-      setClaimingRewardsPending(prev => new Set(prev).add(tierId)); // Set specific pending state
+      setClaimingRewardsPending((prev) => new Set(prev).add(tierId)); // Set specific pending state
       setStatus('pending');
       try {
         const claimTx = prepareContractCall({
@@ -247,7 +254,11 @@ export function useStakeContract() {
         setStatus('error');
         console.error(err);
       } finally {
-        setClaimingRewardsPending(prev => { const next = new Set(prev); next.delete(tierId); return next; }); // Reset specific pending state
+        setClaimingRewardsPending((prev) => {
+          const next = new Set(prev);
+          next.delete(tierId);
+          return next;
+        }); // Reset specific pending state
       }
     },
     [account, sendAndConfirm, setStatus, invalidateStakeQueries, setClaimingRewardsPending],
@@ -271,7 +282,10 @@ export function useStakeContract() {
     // Return granular pending states
     isStakingPending: useCallback((tierId: number) => stakingPending.has(tierId), [stakingPending]),
     isUnstakingPending: useCallback((tierId: number) => unstakingPending.has(tierId), [unstakingPending]),
-    isClaimingRewardsPending: useCallback((tierId: number) => claimingRewardsPending.has(tierId), [claimingRewardsPending]),
+    isClaimingRewardsPending: useCallback(
+      (tierId: number) => claimingRewardsPending.has(tierId),
+      [claimingRewardsPending],
+    ),
     status,
     setStatus,
   };

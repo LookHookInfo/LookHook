@@ -99,10 +99,7 @@ const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContract
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
-  const {
-    data: hasClaimed,
-    isLoading: hasClaimedLoading,
-  } = useQuery({
+  const { data: hasClaimed, isLoading: hasClaimedLoading } = useQuery({
     queryKey: ['hasClaimed', earlyBirdContract.address, address],
     queryFn: () =>
       readContract({
@@ -210,7 +207,8 @@ const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContract
   const hours = Math.floor((timeLeft % (60 * 60 * 24)) / (60 * 60));
 
   const isLoading = isDeadlineLoading || isClaimOpenLoading || hasClaimedLoading || isStakeInfoLoading;
-  const isButtonDisabled: boolean = isLoading || isPending || !Boolean(isClaimOpen) || Boolean(hasClaimed) || !hasEnoughHash;
+  const isButtonDisabled: boolean =
+    isLoading || isPending || !Boolean(isClaimOpen) || Boolean(hasClaimed) || !hasEnoughHash;
 
   let buttonContent: React.ReactNode = 'Claim Early';
   if (isPending) {

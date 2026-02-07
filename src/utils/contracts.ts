@@ -20,6 +20,7 @@ import { stakeRewardClaimAbi } from './stakeRewardClaimAbi';
 import { drub100BadgeAbi } from './drub100BadgeAbi';
 import { xroleRewardAbi } from './xroleRewardAbi';
 import { heliRewardAbi } from './heliRewardAbi';
+import welcomeRewardAbi from './welcomeRewardAbi';
 
 // --- CORE TOKENS ---
 
@@ -36,8 +37,6 @@ export const usdcContract = getContract({
   address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
   abi: erc20Abi,
 });
-
-
 
 // --- STAKING & TOOLS ---
 
@@ -67,7 +66,6 @@ export const contractTools = getContract({
   chain: chain,
   address: '0x13CE10a3e09FA8000BA8A13fCbe8813f476584e7',
 });
-
 
 // --- AIRDROPS & QUESTS ---
 
@@ -113,6 +111,12 @@ export const nameRewardContract = getContract({
   abi: nameRewardAbi,
 });
 
+export const welcomeRewardContract = getContract({
+  client,
+  chain: chain,
+  address: '0xA2116B995A314c0F5Bcb67c32B62d5e2F17a5424',
+  abi: welcomeRewardAbi,
+});
 
 // --- NFT & IDENTITY ---
 

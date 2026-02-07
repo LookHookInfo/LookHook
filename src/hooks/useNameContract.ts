@@ -113,7 +113,7 @@ export function useNameContract() {
         });
         setIsTaken(taken);
       } catch (error) {
-        console.error("Failed to check if name is taken:", error);
+        console.error('Failed to check if name is taken:', error);
         setIsTaken(null); // Set to null on error to indicate uncertainty
       } finally {
         setIsNameTakenLoading(false);
@@ -124,7 +124,6 @@ export function useNameContract() {
       clearTimeout(handler);
     };
   }, [nameInput]);
-
 
   const price = priceResult.data as bigint | undefined;
   const hasDiscount = hasDiscountResult.data as boolean | undefined;
@@ -147,7 +146,7 @@ export function useNameContract() {
       console.error('Required information is missing for claim.');
       return;
     }
-    
+
     setIsConfirming(true);
     try {
       // 1. Approve HASH spending
@@ -181,7 +180,7 @@ export function useNameContract() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queries[2].queryKey }), // nameContract.balanceOf
         queryClient.invalidateQueries({ queryKey: queries[3].queryKey }), // hashcoinContract.balanceOf
-        queryClient.invalidateQueries({ queryKey: queries[4].queryKey })  // nameContract.getPrimaryName
+        queryClient.invalidateQueries({ queryKey: queries[4].queryKey }), // nameContract.getPrimaryName
       ]);
       setIsTaken(true); // Optimistically set name as taken
     } catch (error) {
@@ -204,17 +203,17 @@ export function useNameContract() {
     balance,
     registeredName,
     registeredNamesCount: registeredNamesCount !== undefined ? Number(registeredNamesCount) : null,
-    
+
     // Statuses
     isLoading: areInitialQueriesLoading, // True when initial data is loading
     isConfirming: isConfirming, // True when the transaction is being confirmed
-    
+
     // Booleans
     hasSufficientBalance,
-    
+
     // Functions
     unifiedClaim: unifiedClaim,
-    
+
     // Constants
     maxNameLength: MAX_NAME_LENGTH,
     maxNamesPerAddress: MAX_NAMES_PER_ADDRESS,

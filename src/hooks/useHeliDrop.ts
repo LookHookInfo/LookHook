@@ -5,10 +5,10 @@ import { balanceOf as erc20BalanceOf } from 'thirdweb/extensions/erc20';
 import { balanceOf as erc721BalanceOf } from 'thirdweb/extensions/erc721';
 import { formatUnits } from 'ethers';
 
-import { 
-  gmnftContract, 
-  badgeStakeContract, 
-  earlyBirdContract, 
+import {
+  gmnftContract,
+  badgeStakeContract,
+  earlyBirdContract,
   heliRewardContract,
   hashcoinContract,
 } from '../utils/contracts';
@@ -64,32 +64,26 @@ export function useHeliDrop() {
     ],
   });
 
-  const [
-    gmnftResult,
-    badgeResult,
-    earlyBirdResult,
-    hasClaimedResult,
-    rewardAmountResult,
-    poolRewardBalanceResult,
-  ] = queries;
+  const [gmnftResult, badgeResult, earlyBirdResult, hasClaimedResult, rewardAmountResult, poolRewardBalanceResult] =
+    queries;
 
   // --- DERIVED STATE FROM QUERIES ---
 
-  const isLoading = queries.some(q => q.isLoading);
+  const isLoading = queries.some((q) => q.isLoading);
 
   // Individual asset ownership for UI
   const hasGmnft = gmnftResult.data ? gmnftResult.data > 0n : false;
   const hasBadge = badgeResult.data ? badgeResult.data > 0n : false;
   const hasEarlyBird = earlyBirdResult.data ? earlyBirdResult.data > 0n : false;
-  
+
   // Claim status
   const hasClaimed = hasClaimedResult.data ?? false;
-  
+
   // Client-side derived claim eligibility to save an RPC call
   const canClaim = hasGmnft && hasBadge && hasEarlyBird && !hasClaimed;
 
-  const formattedRewardAmount = rewardAmountResult.data 
-    ? parseFloat(formatUnits(rewardAmountResult.data, 18)).toLocaleString() 
+  const formattedRewardAmount = rewardAmountResult.data
+    ? parseFloat(formatUnits(rewardAmountResult.data, 18)).toLocaleString()
     : '0';
 
   const formattedPoolRewardBalance = poolRewardBalanceResult.data
@@ -103,7 +97,7 @@ export function useHeliDrop() {
       if (!account) throw new Error('Please connect wallet.');
       if (!canClaim) throw new Error('You are not eligible to claim this reward.');
 
-      const tx = prepareContractCall({ 
+      const tx = prepareContractCall({
         contract: heliRewardContract,
         method: 'claim',
         params: [],
@@ -117,7 +111,7 @@ export function useHeliDrop() {
       queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress] });
     },
     onError: (error: Error) => {
-      console.error("HeliDrop Reward claim failed", error);
+      console.error('HeliDrop Reward claim failed', error);
     },
   });
 
@@ -125,20 +119,21 @@ export function useHeliDrop() {
     claimMutation.mutate();
   };
 
-      // --- RETURN UNIFIED STATE ---
-  
-    return {
-      isLoading,
-      // Individual ownership status
-      hasGmnft,
-      hasBadge,
-      hasEarlyBird,
-      // Claiming state and actions
-      canClaim,
-      hasClaimed,
-      rewardAmount: formattedRewardAmount,
-      isClaiming: claimMutation.isPending,
-      handleClaim,
-      error: claimMutation.error,
-      poolRewardBalance: formattedPoolRewardBalance,
-    };}
+  // --- RETURN UNIFIED STATE ---
+
+  return {
+    isLoading,
+    // Individual ownership status
+    hasGmnft,
+    hasBadge,
+    hasEarlyBird,
+    // Claiming state and actions
+    canClaim,
+    hasClaimed,
+    rewardAmount: formattedRewardAmount,
+    isClaiming: claimMutation.isPending,
+    handleClaim,
+    error: claimMutation.error,
+    poolRewardBalance: formattedPoolRewardBalance,
+  };
+}

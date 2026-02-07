@@ -28,10 +28,7 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
   const [isHovering, setIsHovering] = useState(false);
   const queryClient = useQueryClient(); // Initialize queryClient
 
-  const {
-    data: claimInfo,
-    isLoading: isLoadingClaimInfo,
-  } = useReadContract({
+  const { data: claimInfo, isLoading: isLoadingClaimInfo } = useReadContract({
     contract: gmContract,
     method: 'getClaimInfo',
     params: [ownerAddress || ''],
@@ -101,7 +98,6 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['getClaimInfo', gmContract.address, ownerAddress || ''] });
           },
-
         });
       } catch (error) {
         console.error('Failed to claim GM:', error);

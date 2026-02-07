@@ -7,20 +7,23 @@ interface HeliDropProps {
   className?: string;
 }
 
-const EligibilityIndicator = ({ tooltip, status, icon }: { tooltip: string, status: boolean, icon: string }) => (
-    <div className="relative group flex items-center">
-        <div className="relative">
-            <img src={icon} alt={tooltip} className="w-14 h-14 rounded-full object-cover border-2 border-neutral-600 group-hover:border-neutral-500 transition-all duration-200" />
-            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-neutral-800 ${status ? 'bg-green-500' : 'bg-neutral-500'}`}></div>
-        </div>
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-900 text-white text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-            {tooltip}
-        </div>
+const EligibilityIndicator = ({ tooltip, status, icon }: { tooltip: string; status: boolean; icon: string }) => (
+  <div className="relative group flex items-center">
+    <div className="relative">
+      <img
+        src={icon}
+        alt={tooltip}
+        className="w-14 h-14 rounded-full object-cover border-2 border-neutral-600 group-hover:border-neutral-500 transition-all duration-200"
+      />
+      <div
+        className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-neutral-800 ${status ? 'bg-green-500' : 'bg-neutral-500'}`}
+      ></div>
     </div>
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-900 text-white text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+      {tooltip}
+    </div>
+  </div>
 );
-
-
-
 
 export default function Lambos({ className }: HeliDropProps) {
   const targetDate = '2026-05-15T00:00:00';
@@ -38,26 +41,35 @@ export default function Lambos({ className }: HeliDropProps) {
   };
 
   const eligibilityCriteria = [
-      { key: 'hasGmnft', tooltip: 'GM role', status: hasGmnft, icon: '/assets/GM.webp' },
-      { key: 'hasBadge', tooltip: 'Stake role', status: hasBadge, icon: '/assets/Stake.webp' },
-      { key: 'hasEarlyBird', tooltip: 'Early role', status: hasEarlyBird, icon: '/assets/Early.webp' },
+    { key: 'hasGmnft', tooltip: 'GM role', status: hasGmnft, icon: '/assets/GM.webp' },
+    { key: 'hasBadge', tooltip: 'Stake role', status: hasBadge, icon: '/assets/Stake.webp' },
+    { key: 'hasEarlyBird', tooltip: 'Early role', status: hasEarlyBird, icon: '/assets/Early.webp' },
   ];
 
   const renderEligibility = () => {
     if (!account) {
-        return <p className="text-neutral-400 text-sm text-center">Connect your wallet to check eligibility.</p>
+      return <p className="text-neutral-400 text-sm text-center">Connect your wallet to check eligibility.</p>;
     }
     if (isLoading) {
-        return <div className="flex justify-center items-center h-full"><Spinner /></div>;
+      return (
+        <div className="flex justify-center items-center h-full">
+          <Spinner />
+        </div>
+      );
     }
     return (
-        <div className="flex flex-row gap-3">
-            {eligibilityCriteria.map(criterion => (
-                <EligibilityIndicator key={criterion.key} tooltip={criterion.tooltip} status={criterion.status} icon={criterion.icon} />
-            ))}
-        </div>
+      <div className="flex flex-row gap-3">
+        {eligibilityCriteria.map((criterion) => (
+          <EligibilityIndicator
+            key={criterion.key}
+            tooltip={criterion.tooltip}
+            status={criterion.status}
+            icon={criterion.icon}
+          />
+        ))}
+      </div>
     );
-  }
+  };
 
   return (
     <div
@@ -88,15 +100,13 @@ export default function Lambos({ className }: HeliDropProps) {
                 </span>
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <p className="text-neutral-300 text-sm">
                 A surprise reward that drops from above for those who actively participate in and support Mining Hash.
               </p>
-              
-              <div className="flex flex-wrap gap-2">
-                {renderEligibility()}
-              </div>
+
+              <div className="flex flex-wrap gap-2">{renderEligibility()}</div>
             </div>
           </div>
 

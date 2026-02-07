@@ -42,15 +42,16 @@ export function useBuyCoffeeLogic() {
   // Dependent query for topDonorName using useQuery for better readability
   const { data: topDonorName, isLoading: isLoadingTopDonorName } = useQuery({
     queryKey: [nameContract.address, 'getPrimaryName', topDonor],
-    queryFn: () => readContract({
-      contract: nameContract,
-      method: 'getPrimaryName',
-      params: [topDonor!],
-    }),
+    queryFn: () =>
+      readContract({
+        contract: nameContract,
+        method: 'getPrimaryName',
+        params: [topDonor!],
+      }),
     enabled: !!topDonor && topDonor !== '0x0000000000000000000000000000000000000000',
     staleTime: 300000, // 5 minutes
   });
-  
+
   const totalTipInWei = coffeePriceInETH ? BigInt(coffeeCount) * coffeePriceInETH : 0n;
   const totalTipInETH = toEther(totalTipInWei);
   const usdValue = COFFEE_PRICE_USD * coffeeCount;

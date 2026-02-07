@@ -169,4 +169,3 @@ export default function GM({ className }: GMProps) {
     </section>
   );
 }
-

@@ -5,7 +5,6 @@ import { useBadgeStake } from '../hooks/useBadgeStake';
 import { useStakeRewardClaim } from '../hooks/useStakeRewardClaim';
 import { Spinner } from '../components/Spinner'; // Assuming a Spinner component exists
 
-
 export default function Features() {
   const {
     tokenSymbol,
@@ -31,8 +30,14 @@ export default function Features() {
 
   const account = useActiveAccount();
   const { isEligible, isEligibilityLoading, isClaiming: isClaimingBadge, claimBadge } = useBadgeStake();
-  const { canClaim, isCanClaimLoading, isClaiming: isClaimingReward, claimReward, rewardBalance } = useStakeRewardClaim();
-  
+  const {
+    canClaim,
+    isCanClaimLoading,
+    isClaiming: isClaimingReward,
+    claimReward,
+    rewardBalance,
+  } = useStakeRewardClaim();
+
   const badgeButtonActive = account && !isEligibilityLoading && isEligible && !isClaimingBadge;
   const rewardButtonActive = account && !isCanClaimLoading && canClaim && !isClaimingReward;
 
@@ -72,7 +77,7 @@ export default function Features() {
                 >
                   Galxe
                 </a>
-                
+
                 <button
                   onClick={() => claimBadge()} // Direct call to claimBadge
                   disabled={!badgeButtonActive}
@@ -100,7 +105,9 @@ export default function Features() {
                     <span className={isClaimingReward ? 'ml-2' : ''}>Reward</span>
                   </button>
                   <div className="absolute bottom-full mb-2 w-max px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    {rewardBalance ? `${Number(rewardBalance / (10n ** 18n)).toLocaleString()} HASH available` : 'Loading rewards...'}
+                    {rewardBalance
+                      ? `${Number(rewardBalance / 10n ** 18n).toLocaleString()} HASH available`
+                      : 'Loading rewards...'}
                     <br />
                     Earn 4000 HASH on Galxe
                     <div className="tooltip-arrow" data-popper-arrow></div>

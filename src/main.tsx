@@ -10,7 +10,9 @@ const queryClient = new QueryClient(); // Создание экземпляра 
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}> {/* Оборачиваем в QueryClientProvider */}
+    <QueryClientProvider client={queryClient}>
+      {' '}
+      {/* Оборачиваем в QueryClientProvider */}
       <ThirdwebProvider>
         <App />
       </ThirdwebProvider>

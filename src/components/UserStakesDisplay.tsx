@@ -56,7 +56,7 @@ function TierDisplay({
 
   const getButtonText = (pendingFn: (tierId: number) => boolean, defaultText: string) => {
     return pendingFn(tierId) ? 'Processing...' : defaultText;
-  }
+  };
 
   return (
     <div className="bg-neutral-900 rounded-lg p-4 flex flex-col justify-between w-full">
@@ -96,11 +96,7 @@ function TierDisplay({
         {isStaked ? (
           <div className="flex flex-col gap-2 items-center">
             {stakeData.timeLeft <= 0n && stakeData.rewards <= 0n ? (
-              <button
-                onClick={() => unstake(tierId)}
-                disabled={isUnstakingPending(tierId)}
-                className="btn-claim"
-              >
+              <button onClick={() => unstake(tierId)} disabled={isUnstakingPending(tierId)} className="btn-claim">
                 {getButtonText(isUnstakingPending, 'Unstake')}
               </button>
             ) : (
@@ -128,17 +124,16 @@ function TierDisplay({
                   transition: 'box-shadow 0.3s ease-in-out',
                 }}
               >
-                {getButtonText(isClaimingRewardsPending, `${Math.floor(Number(stakeData.rewards / BigInt(10 ** 18)))} ${tokenSymbol}`)}
+                {getButtonText(
+                  isClaimingRewardsPending,
+                  `${Math.floor(Number(stakeData.rewards / BigInt(10 ** 18)))} ${tokenSymbol}`,
+                )}
               </button>
             )}
           </div>
         ) : (
           <div className="flex justify-center">
-            <button
-              onClick={() => stake(amount, tierId)}
-              disabled={isStakeButtonDisabled}
-              className="btn-claim"
-            >
+            <button onClick={() => stake(amount, tierId)} disabled={isStakeButtonDisabled} className="btn-claim">
               {getButtonText(isStakingPending, tierName)}
             </button>{' '}
           </div>

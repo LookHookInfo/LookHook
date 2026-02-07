@@ -1,4 +1,4 @@
-export const nameRewardAbi = [
+const welcomeRewardAbi = [
   {
     inputs: [],
     stateMutability: 'nonpayable',
@@ -23,19 +23,6 @@ export const nameRewardAbi = [
     outputs: [
       {
         internalType: 'contract IERC20',
-        name: '',
-        type: 'address',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'NAME_CONTRACT',
-    outputs: [
-      {
-        internalType: 'address',
         name: '',
         type: 'address',
       },
@@ -174,3 +161,5 @@ export const nameRewardAbi = [
     type: 'function',
   },
 ] as const;
+
+export default welcomeRewardAbi;

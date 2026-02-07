@@ -1,7 +1,11 @@
 import { useQueryClient, useQueries, useMutation } from '@tanstack/react-query';
 import { useActiveAccount, useSendTransaction } from 'thirdweb/react';
 import { prepareContractCall, waitForReceipt } from 'thirdweb';
-import { balanceOf as erc20BalanceOf, allowance as erc20Allowance, approve as erc20Approve } from 'thirdweb/extensions/erc20';
+import {
+  balanceOf as erc20BalanceOf,
+  allowance as erc20Allowance,
+  approve as erc20Approve,
+} from 'thirdweb/extensions/erc20';
 import { balanceOf as erc721BalanceOf } from 'thirdweb/extensions/erc721';
 import { parseEther } from 'viem';
 
@@ -10,14 +14,12 @@ import { gmContract, gmnftContract } from '../utils/contracts';
 const BURN_AMOUNT_STRING = '30';
 const BURN_AMOUNT_WEI = parseEther(BURN_AMOUNT_STRING);
 
-
-
 export function useGMNFTContract() {
   const account = useActiveAccount();
   const queryClient = useQueryClient();
   const { mutateAsync: sendTx } = useSendTransaction();
   const accountAddress = account?.address || '0x0000000000000000000000000000000000000000';
-  
+
   // 1. Batched Reads with Caching
   const gmBalanceQuery = {
     queryKey: ['gmBalance', accountAddress],
@@ -40,11 +42,7 @@ export function useGMNFTContract() {
     staleTime: 300000,
   };
 
-  const [
-    { data: gmBalance },
-    { data: gmnftBalance },
-    { data: allowance },
-  ] = useQueries({
+  const [{ data: gmBalance }, { data: gmnftBalance }, { data: allowance }] = useQueries({
     queries: [gmBalanceQuery, gmnftBalanceQuery, allowanceQuery],
   });
 
@@ -53,9 +51,9 @@ export function useGMNFTContract() {
   const isApproved = allowance ? allowance >= BURN_AMOUNT_WEI : false;
 
   // 2. Mutations (Approve with Optimistic Update, Mint with simple refetch for reliability)
-  const approveMutation = useMutation<unknown, Error, void, { previousAllowance?: bigint; }>({
+  const approveMutation = useMutation<unknown, Error, void, { previousAllowance?: bigint }>({
     mutationFn: async () => {
-      if (!account) throw new Error("Wallet not connected");
+      if (!account) throw new Error('Wallet not connected');
       const tx = erc20Approve({ contract: gmContract, spender: gmnftContract.address, amount: BURN_AMOUNT_STRING });
       const { transactionHash } = await sendTx(tx);
       return waitForReceipt({ transactionHash, chain: gmContract.chain, client: gmContract.client });
@@ -76,7 +74,12 @@ export function useGMNFTContract() {
     },
   });
 
-  const burnAndMintMutation = useMutation<unknown, Error, void, { previousGMBalance?: bigint; previousGMNFTBalance?: bigint; }>({
+  const burnAndMintMutation = useMutation<
+    unknown,
+    Error,
+    void,
+    { previousGMBalance?: bigint; previousGMNFTBalance?: bigint }
+  >({
     mutationFn: async () => {
       const transaction = prepareContractCall({
         contract: gmnftContract,
@@ -93,14 +96,8 @@ export function useGMNFTContract() {
       const previousGMBalance = queryClient.getQueryData<bigint>(gmBalanceQuery.queryKey);
       const previousGMNFTBalance = queryClient.getQueryData<bigint>(gmnftBalanceQuery.queryKey);
 
-      queryClient.setQueryData<bigint>(
-        gmBalanceQuery.queryKey,
-        (old) => (old ? old - BURN_AMOUNT_WEI : 0n)
-      );
-      queryClient.setQueryData<bigint>(
-        gmnftBalanceQuery.queryKey,
-        (old) => (old ? old + 1n : 1n)
-      );
+      queryClient.setQueryData<bigint>(gmBalanceQuery.queryKey, (old) => (old ? old - BURN_AMOUNT_WEI : 0n));
+      queryClient.setQueryData<bigint>(gmnftBalanceQuery.queryKey, (old) => (old ? old + 1n : 1n));
 
       return { previousGMBalance, previousGMNFTBalance };
     },
@@ -113,9 +110,9 @@ export function useGMNFTContract() {
       }
     },
     onSettled: () => {
-        queryClient.invalidateQueries({ queryKey: gmBalanceQuery.queryKey });
-        queryClient.invalidateQueries({ queryKey: gmnftBalanceQuery.queryKey });
-    }
+      queryClient.invalidateQueries({ queryKey: gmBalanceQuery.queryKey });
+      queryClient.invalidateQueries({ queryKey: gmnftBalanceQuery.queryKey });
+    },
   });
 
   // 3. Simplified Action Handler & Loading State
@@ -127,7 +124,7 @@ export function useGMNFTContract() {
       }
       await burnAndMintMutation.mutateAsync();
     } catch (error) {
-      console.error("Failed during the unified action:", error);
+      console.error('Failed during the unified action:', error);
     }
   };
 

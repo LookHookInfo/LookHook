@@ -15,13 +15,7 @@ interface ToolDetailModalProps {
   onClose: () => void;
 }
 
-export function ToolDetailModal({
-  tool,
-  address,
-  usdcBalance,
-  contractTools,
-  onClose,
-}: ToolDetailModalProps) {
+export function ToolDetailModal({ tool, address, usdcBalance, contractTools, onClose }: ToolDetailModalProps) {
   const {
     quantity,
     account,
