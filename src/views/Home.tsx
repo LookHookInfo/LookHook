@@ -9,8 +9,6 @@ import { Domain } from '@/partials/Domain';
 import Hashchain from '@/partials/Hashchain';
 import Mining from '@/partials/Mining';
 import CarouselCardSection from '@/components/CarouselCardSection';
-import Airdrop from '@/partials/Airdrop';
-import Drop from '@/partials/Drop';
 import GM from '@/partials/GM';
 import Xrole from '@/partials/Xrole';
 import HeliDrop from '@/partials/HeliDrop';
@@ -27,8 +25,6 @@ export default function Home() {
           items={[
             { key: 'Welcome', component: <Welcome /> },
             { key: 'HeliDrop', component: <HeliDrop /> },
-            { key: 'drop', component: <Drop /> },
-            { key: 'airdrop', component: <Airdrop /> },
           ]}
         />
         <GM className="w-full md:w-1/2" />
