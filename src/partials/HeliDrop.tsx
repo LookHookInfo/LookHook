@@ -69,6 +69,14 @@ export default function HeliDrop() {
             Base
           </div>
           <img src="/assets/HeliDrop.webp" alt="HeliDrop" className="rounded-full w-full h-auto object-cover" />
+          <a
+            href="https://guild.xyz/hashcoin"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors border-gray-500 text-gray-300 hover:bg-gray-700"
+          >
+            Guild
+          </a>
         </div>
 
         {/* Text Content Block */}
