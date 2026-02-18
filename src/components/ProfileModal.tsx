@@ -11,6 +11,7 @@ import {
   stakeNftContract,
   drub100BadgeContract,
   xroleRewardContract,
+  ogMiningBadgeContract,
 } from '../utils/contracts';
 import { readContract } from 'thirdweb'; // Added readContract import
 import EarlyBirdClaimButton from './EarlyBirdClaimButton';
@@ -22,6 +23,55 @@ interface ProfileModalProps {
   hasCatNft: boolean;
   isNftLoading: boolean;
   registeredName: string | null;
+}
+
+// OG Achievement Component
+function OgAchievement({ wallet }: { wallet: Wallet }) {
+  const ownerAddress = wallet.getAccount()?.address;
+
+  const { data: hasBadge, isLoading: isBadgeLoading } = useQuery({
+    queryKey: ['ogMiningBadgeHasBadge', ogMiningBadgeContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: ogMiningBadgeContract,
+        method: 'hasBadge',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
+  });
+
+  if (!ownerAddress) {
+    return (
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Connect wallet to see achievement"
+      >
+        <span className="text-neutral-400 text-xs">?</span>
+      </div>
+    );
+  }
+
+  if (isBadgeLoading) {
+    return (
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Loading OG achievement..."
+      >
+        <span className="text-neutral-400 text-xs">...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
+      title={hasBadge ? 'OG Team Member' : 'Join the OG Team'}
+    >
+      <img src="/assets/OG.webp" alt="OG Achievement" className={`size-10 ${!hasBadge ? 'opacity-50' : ''}`} />
+    </div>
+  );
 }
 
 // Xrole Achievement Component
@@ -459,12 +509,7 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
               {/* Empty cell */}
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
 
-              <div
-                className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
-                title="Soon"
-              >
-                <img src="/assets/OG.webp" alt="OG Achievement" className="size-10 opacity-50" />
-              </div>
+              <OgAchievement wallet={wallet} />
 
               {/* Empty cell */}
               <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
@@ -475,47 +520,20 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
 
           <div className="border-t border-neutral-700"></div>
 
-          <div className="mt-6 space-y-4">
-            <div>
-              <EarlyBirdClaimButton />
-            </div>
-            <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="mt-6 space-y-6">
+            <EarlyBirdClaimButton />
+
+            <div className="flex justify-center">
               <button
-                title="Conditions not met"
-                disabled
-                className="inline-flex items-center justify-center w-full px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50 cursor-not-allowed"
+                onClick={async () => {
+                  await disconnect(wallet);
+                  onClose();
+                }}
+                className="px-8 py-2.5 font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white transition-all border border-red-500 hover:border-red-600 shadow-lg hover:shadow-red-500/25 transform hover:-translate-y-0.5 active:scale-95"
               >
-                OG
-              </button>
-              <button
-                title="Conditions not met"
-                disabled
-                className="inline-flex items-center justify-center w-full px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50 cursor-not-allowed"
-              >
-                Beta
-              </button>
-              <button
-                title="Via WL"
-                disabled
-                className="inline-flex items-center justify-center w-full px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 text-white dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50 cursor-not-allowed"
-              >
-                Core
+                Disconnect Wallet
               </button>
             </div>
-          </div>
-
-          <div className="border-t border-neutral-700"></div>
-
-          <div className="mt-6 flex justify-center items-center gap-4">
-            <button
-              onClick={async () => {
-                await disconnect(wallet);
-                onClose();
-              }}
-              className="px-6 py-2 font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors border border-red-500 hover:border-red-600 shadow-lg hover:shadow-red-500/25 transform hover:-translate-y-0.5 transition-all duration-200"
-            >
-              Disconnect
-            </button>
           </div>
         </div>
       </div>

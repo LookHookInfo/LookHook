@@ -37,10 +37,19 @@ export default function Xrole({ className }: XroleProps) {
 
   return (
     <section className={`w-full px-4 py-4 text-white ${className ?? ''}`}>
-      <div className="bg-neutral-800 rounded-2xl p-6 sm:p-10 shadow-lg border border-neutral-700 h-full">
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
+      <div className="bg-neutral-800 rounded-2xl p-5 sm:p-7 shadow-lg border border-neutral-700 h-full flex flex-col">
+        <div className="flex-grow flex flex-col lg:flex-row gap-6 items-start">
           {/* Image and Links */}
-          <div className="w-full lg:w-[140px] flex flex-col items-center relative">
+          <div className="w-full lg:w-[120px] flex flex-col items-center relative flex-shrink-0">
+            <div
+              className="absolute -top-2 -left-2
+                         bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600
+                         text-white px-3 py-1 text-xs font-bold rounded-full
+                         shadow-lg z-10"
+            >
+              Base
+            </div>
+
             <img
               src="https://ipfs.io/ipfs/bafybeieiwzuctm3xrqhwn2gvbds3jgwvt6nvfd53xdfoj2erklcnigfozy"
               alt="Blockchain Forum"
@@ -50,7 +59,7 @@ export default function Xrole({ className }: XroleProps) {
               href="https://app.galxe.com/quest/bAFdwDecXS6NRWsbYqVAgh/GCFK7tYE1U"
               target="_blank"
               rel="noopener noreferrer"
-              className={`mt-4 inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+              className={`mt-3 inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
                 galxeButtonGlow
                   ? 'border-neutral-700 text-white bg-neutral-800 glow-effect'
                   : 'border-gray-500 text-gray-300 hover:bg-gray-700'
@@ -61,27 +70,29 @@ export default function Xrole({ className }: XroleProps) {
           </div>
 
           {/* Text content */}
-          <div className="flex-1 space-y-6">
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <h2 className="text-3xl font-bold text-white">X Role</h2>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center justify-center px-2 py-0.5 h-6 text-xs font-semibold bg-black text-white border border-white rounded">
-                  Web3
-                </span>
+          <div className="flex-1 w-full min-w-0 space-y-4 flex flex-col">
+            <div className="flex-grow">
+              <div className="flex justify-between items-center flex-wrap gap-2 relative mb-3">
+                <h2 className="text-3xl font-bold text-white">X Role</h2>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 h-6 text-xs font-semibold bg-black text-white border border-white rounded">
+                    Web3
+                  </span>
+                </div>
               </div>
+
+              <p className="text-neutral-400 text-sm md:text-base leading-normal mb-4">
+                Support Mining Hash with a unique tweet and earn an exclusive X Role + NFT + reward!
+              </p>
             </div>
 
-            <p className="text-neutral-400">
-              Support Mining Hash with a unique tweet and earn an exclusive X Role + NFT + reward!
-            </p>
-
             {/* Reward Button with Custom Tooltip */}
-            <div className="flex pt-0">
+            <div className="mt-auto pt-4 w-full">
               <div className="relative group w-full">
                 <button
                   onClick={handleClaim}
                   disabled={!rewardButtonActive}
-                  className={`relative flex items-center justify-center w-full px-4 py-2 rounded-lg transition text-sm font-medium border ${
+                  className={`relative flex items-center justify-center w-full py-3 rounded-lg text-lg font-bold border transition-colors overflow-hidden ${
                     rewardButtonActive
                       ? 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
                       : 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
@@ -89,7 +100,7 @@ export default function Xrole({ className }: XroleProps) {
                 >
                   {isClaiming ? (
                     <>
-                      <Spinner className="w-4 h-4 mr-2" />
+                      <Spinner className="w-5 h-5 mr-2" />
                       Claiming...
                     </>
                   ) : hasClaimed ? (

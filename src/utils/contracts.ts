@@ -21,6 +21,7 @@ import { drub100BadgeAbi } from './drub100BadgeAbi';
 import { xroleRewardAbi } from './xroleRewardAbi';
 import { heliRewardAbi } from './heliRewardAbi';
 import welcomeRewardAbi from './welcomeRewardAbi';
+import { ogMiningBadgeAbi } from './ogMiningBadgeAbi';
 
 // --- CORE TOKENS ---
 
@@ -173,4 +174,11 @@ export const drub100BadgeContract = getContract({
   chain: chain,
   address: '0x366f37820b98F86F7C41d2fB6DB246f85B28b18c',
   abi: drub100BadgeAbi,
+});
+
+export const ogMiningBadgeContract = getContract({
+  client,
+  chain: chain,
+  address: '0x4EeBb2822274327E84059e543f15B73f76443eb9',
+  abi: ogMiningBadgeAbi,
 });
