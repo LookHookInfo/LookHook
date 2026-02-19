@@ -16,12 +16,14 @@ export function useOgBadge() {
       // Check if user already has the badge
       {
         queryKey: ['ogBadge', 'hasBadge', accountAddress],
-        queryFn: () =>
-          readContract({
+        queryFn: async () => {
+          const balance = await readContract({
             contract: ogMiningBadgeContract,
-            method: 'hasBadge',
+            method: 'balanceOf',
             params: [accountAddress!],
-          }),
+          });
+          return balance > 0n;
+        },
         enabled: !!accountAddress,
         staleTime: 300_000,
       },
