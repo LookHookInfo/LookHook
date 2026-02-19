@@ -31,12 +31,14 @@ function OgAchievement({ wallet }: { wallet: Wallet }) {
 
   const { data: hasBadge, isLoading: isBadgeLoading } = useQuery({
     queryKey: ['ogMiningBadgeHasBadge', ogMiningBadgeContract.address, ownerAddress],
-    queryFn: () =>
-      readContract({
+    queryFn: async () => {
+      const balance = await readContract({
         contract: ogMiningBadgeContract,
-        method: 'hasBadge',
+        method: 'balanceOf',
         params: [ownerAddress || ''],
-      }),
+      });
+      return balance > 0n;
+    },
     enabled: !!ownerAddress,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 5 * 60 * 1000, // 5 minutes

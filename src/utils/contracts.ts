@@ -179,6 +179,6 @@ export const drub100BadgeContract = getContract({
 export const ogMiningBadgeContract = getContract({
   client,
   chain: chain,
-  address: '0x4EeBb2822274327E84059e543f15B73f76443eb9',
+  address: '0xb494698522ad959caa50a0e82107771711fd5a49',
   abi: ogMiningBadgeAbi,
 });
