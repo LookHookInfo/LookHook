@@ -9,12 +9,12 @@ export function Header() {
             <a
               className="flex items-center text-xl font-semibold dark:text-white focus:outline-hidden focus:opacity-80"
               href="#"
-              aria-label="Brand"
+              aria-label="Look Hook"
             >
               <AppLogo className="w-12 sm:w-16" />
-              <span className="hidden sm:inline text-white text-2xl sm:text-3xl ml-2 sm:ml-3 font-bold">
+              <h1 className="hidden sm:inline text-white text-2xl sm:text-3xl ml-2 sm:ml-3 font-bold">
                 Look&nbsp;Hook
-              </span>
+              </h1>
             </a>
           </div>
           <div className="sm:order-3 flex items-center gap-x-2">
