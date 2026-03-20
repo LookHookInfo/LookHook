@@ -1,9 +1,10 @@
-import { useReadContract, useSendAndConfirmTransaction } from 'thirdweb/react';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import type { Wallet } from 'thirdweb/wallets';
 import { gmContract } from '../utils/contracts';
-import { prepareContractCall } from 'thirdweb';
 import { useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { publicClient } from '../lib/viem/client';
+import GMAbi from '../utils/GMAbi';
+import { encodeFunctionData } from 'viem';
 
 interface GMAchievementProps {
   wallet: Wallet;
@@ -23,20 +24,26 @@ function formatTime(seconds: number) {
 }
 
 export function GMAchievement({ wallet }: GMAchievementProps) {
-  const ownerAddress = wallet.getAccount()?.address;
+  const account = wallet.getAccount();
+  const ownerAddress = account?.address as `0x${string}` | undefined;
   const [countdown, setCountdown] = useState('');
   const [isHovering, setIsHovering] = useState(false);
-  const queryClient = useQueryClient(); // Initialize queryClient
+  const queryClient = useQueryClient();
 
-  const { data: claimInfo, isLoading: isLoadingClaimInfo } = useReadContract({
-    contract: gmContract,
-    method: 'getClaimInfo',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchInterval: 5 * 60 * 1000, // 5 minutes
+  const { data: claimInfo, isLoading: isLoadingClaimInfo } = useQuery({
+    queryKey: ['getClaimInfo', gmContract.address, ownerAddress || ''],
+    queryFn: async () => {
+      if (!ownerAddress) return null;
+      return await publicClient.readContract({
+        address: gmContract.address as `0x${string}`,
+        abi: GMAbi,
+        functionName: 'getClaimInfo',
+        args: [ownerAddress],
+      });
     },
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
   });
 
   const canClaimNow = claimInfo ? claimInfo[0] : false;
@@ -50,7 +57,6 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
     let lastUpdateTime = 0;
 
     const updateCountdown = (now: number) => {
-      // Throttle to update roughly once per second
       if (now - lastUpdateTime < 1000) {
         animationFrameId = requestAnimationFrame(updateCountdown);
         return;
@@ -64,7 +70,7 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
       if (timeLeft > 0) {
         animationFrameId = requestAnimationFrame(updateCountdown);
       } else if (!canClaimNow) {
-        queryClient.invalidateQueries({ queryKey: ['getClaimInfo', gmContract.address, ownerAddress || ''] }); // Invalidate after countdown finishes
+        queryClient.invalidateQueries({ queryKey: ['getClaimInfo', gmContract.address, ownerAddress || ''] });
       }
     };
 
@@ -75,33 +81,43 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
       } else {
         setCountdown('00:00:00');
         if (!canClaimNow) {
-          queryClient.invalidateQueries({ queryKey: ['getClaimInfo', gmContract.address, ownerAddress || ''] }); // Invalidate after countdown finishes
+          queryClient.invalidateQueries({ queryKey: ['getClaimInfo', gmContract.address, ownerAddress || ''] });
         }
       }
     }
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [nextAvailableTimestamp, canClaimNow, queryClient, ownerAddress]); // Added queryClient and ownerAddress to dependencies
+  }, [nextAvailableTimestamp, canClaimNow, queryClient, ownerAddress]);
 
-  const claimTransaction = prepareContractCall({
-    contract: gmContract,
-    method: 'claim',
-    params: [],
+  const claimMutation = useMutation({
+    mutationFn: async () => {
+      if (!account || !ownerAddress) throw new Error('Wallet not connected');
+
+      const data = encodeFunctionData({
+        abi: GMAbi,
+        functionName: 'claim',
+        args: [],
+      });
+
+      const { transactionHash } = await account.sendTransaction({
+        to: gmContract.address as `0x${string}`,
+        data,
+        chainId: 8453,
+      });
+
+      return await publicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['getClaimInfo', gmContract.address, ownerAddress || ''] });
+    },
+    onError: (error) => {
+      console.error('Failed to claim GM:', error);
+    },
   });
 
-  const { mutate: sendAndConfirmClaim, isPending: isClaiming } = useSendAndConfirmTransaction();
-
   const handleClaim = async () => {
-    if (canClaimNow && ownerAddress && !isClaiming) {
-      try {
-        await sendAndConfirmClaim(claimTransaction, {
-          onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['getClaimInfo', gmContract.address, ownerAddress || ''] });
-          },
-        });
-      } catch (error) {
-        console.error('Failed to claim GM:', error);
-      }
+    if (canClaimNow && ownerAddress && !claimMutation.isPending) {
+      claimMutation.mutate();
     }
   };
 
@@ -130,7 +146,7 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
   return (
     <div
       className={`size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden
-        ${canClaimNow ? 'cursor-pointer glow-effect' : ''} ${isClaiming ? 'cursor-not-allowed' : ''}`}
+        ${canClaimNow ? 'cursor-pointer glow-effect' : ''} ${claimMutation.isPending ? 'cursor-not-allowed' : ''}`}
       title={titleText}
       onClick={handleClaim}
       onMouseEnter={() => setIsHovering(true)}
@@ -138,7 +154,7 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
     >
       <img src="/assets/GM.webp" alt="GM Achievement" className="size-10" />
 
-      {isClaiming && (
+      {claimMutation.isPending && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/70">
           <span className="text-neutral-400 text-xs">...</span>
         </div>
@@ -150,7 +166,7 @@ export function GMAchievement({ wallet }: GMAchievementProps) {
         </div>
       )}
 
-      {canClaimNow && !isClaiming && (
+      {canClaimNow && !claimMutation.isPending && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-white text-xs font-bold">
           CLAIM
         </div>

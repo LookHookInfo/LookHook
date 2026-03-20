@@ -41,13 +41,9 @@ export default function Home() {
         <Xrole className="w-full md:w-1/2" />
       </div>
       <div className="flex flex-col md:flex-row gap-4 my-2">
-        <Hashchain className="w-full md:w-1/2" />
+        <NFT className="w-full md:w-1/2" />
         <Forum className="w-full md:w-1/2" />
       </div>
-      <div className="flex flex-col md:flex-row gap-4 my-2">
-        <NFT className="w-full md:w-1/2" />
-      </div>
-
       <Services />
       <Teams />
       <OgTeam />

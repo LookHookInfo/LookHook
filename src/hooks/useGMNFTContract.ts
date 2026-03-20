@@ -1,15 +1,11 @@
 import { useQueryClient, useQueries, useMutation } from '@tanstack/react-query';
-import { useActiveAccount, useSendTransaction } from 'thirdweb/react';
-import { prepareContractCall, waitForReceipt } from 'thirdweb';
-import {
-  balanceOf as erc20BalanceOf,
-  allowance as erc20Allowance,
-  approve as erc20Approve,
-} from 'thirdweb/extensions/erc20';
-import { balanceOf as erc721BalanceOf } from 'thirdweb/extensions/erc721';
-import { parseEther } from 'viem';
+import { useActiveAccount } from 'thirdweb/react';
+import { parseEther, encodeFunctionData } from 'viem';
 
 import { gmContract, gmnftContract } from '../utils/contracts';
+import { publicClient } from '../lib/viem/client';
+import GMAbi from '../utils/GMAbi';
+import { gmnftAbi } from '../utils/gmnftAbi';
 
 const BURN_AMOUNT_STRING = '30';
 const BURN_AMOUNT_WEI = parseEther(BURN_AMOUNT_STRING);
@@ -17,27 +13,50 @@ const BURN_AMOUNT_WEI = parseEther(BURN_AMOUNT_STRING);
 export function useGMNFTContract() {
   const account = useActiveAccount();
   const queryClient = useQueryClient();
-  const { mutateAsync: sendTx } = useSendTransaction();
-  const accountAddress = account?.address || '0x0000000000000000000000000000000000000000';
+  const accountAddress = account?.address as `0x${string}` | undefined;
 
-  // 1. Batched Reads with Caching
+  // 1. Batched Reads with Caching using Viem
   const gmBalanceQuery = {
     queryKey: ['gmBalance', accountAddress],
-    queryFn: () => erc20BalanceOf({ contract: gmContract, address: accountAddress! }),
+    queryFn: async () => {
+      if (!accountAddress) return 0n;
+      return await publicClient.readContract({
+        address: gmContract.address as `0x${string}`,
+        abi: GMAbi,
+        functionName: 'balanceOf',
+        args: [accountAddress],
+      });
+    },
     enabled: !!accountAddress,
-    staleTime: 300000, // 5 minutes
+    staleTime: 300000,
   };
 
   const gmnftBalanceQuery = {
     queryKey: ['gmnftBalance', accountAddress],
-    queryFn: () => erc721BalanceOf({ contract: gmnftContract, owner: accountAddress! }),
+    queryFn: async () => {
+      if (!accountAddress) return 0n;
+      return await publicClient.readContract({
+        address: gmnftContract.address as `0x${string}`,
+        abi: gmnftAbi,
+        functionName: 'balanceOf',
+        args: [accountAddress],
+      });
+    },
     enabled: !!accountAddress,
     staleTime: 300000,
   };
 
   const allowanceQuery = {
     queryKey: ['gmAllowance', accountAddress],
-    queryFn: () => erc20Allowance({ contract: gmContract, owner: accountAddress!, spender: gmnftContract.address }),
+    queryFn: async () => {
+      if (!accountAddress) return 0n;
+      return await publicClient.readContract({
+        address: gmContract.address as `0x${string}`,
+        abi: GMAbi,
+        functionName: 'allowance',
+        args: [accountAddress, gmnftContract.address as `0x${string}`],
+      });
+    },
     enabled: !!accountAddress,
     staleTime: 300000,
   };
@@ -47,16 +66,27 @@ export function useGMNFTContract() {
   });
 
   const hasEnoughGM = gmBalance ? gmBalance >= BURN_AMOUNT_WEI : false;
-  const hasGMNFT = gmnftBalance ? BigInt(gmnftBalance.toString()) > 0n : false;
+  const hasGMNFT = gmnftBalance ? gmnftBalance > 0n : false;
   const isApproved = allowance ? allowance >= BURN_AMOUNT_WEI : false;
 
-  // 2. Mutations (Approve with Optimistic Update, Mint with simple refetch for reliability)
+  // 2. Mutations
   const approveMutation = useMutation<unknown, Error, void, { previousAllowance?: bigint }>({
     mutationFn: async () => {
       if (!account) throw new Error('Wallet not connected');
-      const tx = erc20Approve({ contract: gmContract, spender: gmnftContract.address, amount: BURN_AMOUNT_STRING });
-      const { transactionHash } = await sendTx(tx);
-      return waitForReceipt({ transactionHash, chain: gmContract.chain, client: gmContract.client });
+
+      const data = encodeFunctionData({
+        abi: GMAbi,
+        functionName: 'approve',
+        args: [gmnftContract.address as `0x${string}`, BURN_AMOUNT_WEI],
+      });
+
+      const { transactionHash } = await account.sendTransaction({
+        to: gmContract.address as `0x${string}`,
+        data,
+        chainId: 8453,
+      });
+
+      return await publicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: allowanceQuery.queryKey });
@@ -81,13 +111,21 @@ export function useGMNFTContract() {
     { previousGMBalance?: bigint; previousGMNFTBalance?: bigint }
   >({
     mutationFn: async () => {
-      const transaction = prepareContractCall({
-        contract: gmnftContract,
-        method: 'burnAndMint',
-        params: [],
+      if (!account) throw new Error('Wallet not connected');
+
+      const data = encodeFunctionData({
+        abi: gmnftAbi,
+        functionName: 'burnAndMint',
+        args: [],
       });
-      const { transactionHash } = await sendTx(transaction);
-      return waitForReceipt({ transactionHash, chain: gmnftContract.chain, client: gmnftContract.client });
+
+      const { transactionHash } = await account.sendTransaction({
+        to: gmnftContract.address as `0x${string}`,
+        data,
+        chainId: 8453,
+      });
+
+      return await publicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: gmnftBalanceQuery.queryKey });
