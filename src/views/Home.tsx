@@ -6,7 +6,6 @@ import Teams from '@/partials/Teams';
 import Forum from '@/partials/Forum';
 import Tips from '@/partials/Tips';
 import { Domain } from '@/partials/Domain';
-import Hashchain from '@/partials/Hashchain';
 import Mining from '@/partials/Mining';
 import CarouselCardSection from '@/components/CarouselCardSection';
 import GM from '@/partials/GM';

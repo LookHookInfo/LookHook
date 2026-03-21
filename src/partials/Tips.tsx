@@ -1,8 +1,8 @@
-import { TransactionButton, useActiveAccount } from 'thirdweb/react';
-import { prepareContractCall } from 'thirdweb';
+import { useActiveAccount } from 'thirdweb/react';
 import { buyMeACoffeeContract } from '../utils/contracts';
 import ConnectWalletButton from '../components/ConnectWalletButton';
 import { useBuyCoffeeLogic } from '../hooks/useBuyCoffeeLogic';
+import { Spinner } from '../components/Spinner';
 
 interface TipsProps {
   className?: string;
@@ -24,6 +24,8 @@ export default function Tips({ className }: TipsProps) {
     topDonor,
     totalCoffee,
     isLoadingTotalCoffee,
+    buyCoffee,
+    isBuyingCoffee,
   } = useBuyCoffeeLogic();
 
   return (
@@ -104,23 +106,25 @@ export default function Tips({ className }: TipsProps) {
             </div>
 
             {account ? (
-              <TransactionButton
-                transaction={() =>
-                  prepareContractCall({
-                    contract: buyMeACoffeeContract,
-                    method: 'buyMeMultipleCoffee',
-                    params: [BigInt(coffeeCount)],
-                    value: totalTipInWei,
-                  })
-                }
-                onTransactionSent={() => setCoffeeCount(1)}
-                onError={(error) => console.error('Transaction error', error)}
-                className={`!w-full !py-3 !rounded-lg !transition !mb-4 !text-white ${
-                  account ? '!bg-[#4CAF50] !hover:bg-[#45a049]' : '!bg-[#555] !text-[#aaa] !cursor-not-allowed'
+              <button
+                onClick={() => buyCoffee()}
+                disabled={isBuyingCoffee || isLoadingCoffeePrice}
+                className={`w-full py-3 rounded-lg transition mb-4 text-white font-bold flex items-center justify-center ${
+                  isBuyingCoffee || isLoadingCoffeePrice
+                    ? 'bg-neutral-600 cursor-not-allowed'
+                    : 'bg-[#4CAF50] hover:bg-[#45a049]'
                 }`}
               >
-                {isLoadingCoffeePrice ? 'Loading...' : `Send Coffee (${parseFloat(totalTipInETH).toFixed(4)} ETH)`}
-              </TransactionButton>
+                {isBuyingCoffee ? (
+                  <>
+                    <Spinner className="mr-2" /> Processing...
+                  </>
+                ) : isLoadingCoffeePrice ? (
+                  'Loading...'
+                ) : (
+                  `Send Coffee (${parseFloat(totalTipInETH).toFixed(4)} ETH)`
+                )}
+              </button>
             ) : (
               <div className="flex flex-col items-center gap-y-3">
                 <ConnectWalletButton />

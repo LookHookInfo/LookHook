@@ -1,25 +1,26 @@
 import { useToolCardLogic } from '@/hooks/useToolCardLogic';
 import { ThirdwebContract, NFT } from 'thirdweb';
 import { client } from '@/lib/thirdweb/client';
-import { MediaRenderer, TransactionButton } from 'thirdweb/react';
-import { formatUnits } from 'viem';
-import { setApprovalForAll } from 'thirdweb/extensions/erc1155';
-import { prepareContractCall } from 'thirdweb';
-import { contractStaking } from '../utils/contracts';
+import { MediaRenderer } from 'thirdweb/react';
+import { formatUnits, encodeFunctionData } from 'viem';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { contractStaking, contractTools } from '../utils/contracts';
+import { miningPublicClient } from '../lib/viem/client';
+import { contractToolsAbi } from '../utils/contractToolsAbi';
+import { contractStakingAbi } from '../utils/contractStakingAbi';
+
 
 interface ToolDetailModalProps {
   tool: NFT;
   address: string;
   usdcBalance: bigint;
-  contractTools: ThirdwebContract;
   onClose: () => void;
 }
 
-export function ToolDetailModal({ tool, address, usdcBalance, contractTools, onClose }: ToolDetailModalProps) {
+export function ToolDetailModal({ tool, address, usdcBalance, onClose }: ToolDetailModalProps) {
   const {
     quantity,
     account,
-    queryClient,
     isLoading,
     ownAmount,
     stakedAmount,
@@ -32,9 +33,49 @@ export function ToolDetailModal({ tool, address, usdcBalance, contractTools, onC
     handleBuy,
     incrementQuantity,
     decrementQuantity,
-  } = useToolCardLogic({ tool, address, contractTools });
+    isPurchaseEnabled,
+    isSoldOut,
+    hasEnoughUSDC,
+    handleWithdraw,
+    handleClaimRewards,
+    isWithdrawing,
+    isClaiming,
+  } = useToolCardLogic({ tool, address, usdcBalance });
 
-  const hasInsufficientFunds = usdcBalance < totalPrice;
+  const queryClient = useQueryClient();
+
+  const approveStakingMutation = useMutation({
+    mutationFn: async () => {
+      if (!account) throw new Error('Not connected');
+
+      const data = encodeFunctionData({
+        abi: contractToolsAbi,
+        functionName: 'setApprovalForAll',
+        args: [contractStaking.address as `0x${string}`, true],
+      });
+
+      const { transactionHash } = await account.sendTransaction({
+        to: contractTools.address as `0x${string}`,
+        data,
+        chainId: 8453,
+      });
+      return miningPublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
+    },
+    onSuccess: () => {
+      refetchStakingApproval();
+    },
+    onError: (error) => {
+      console.error('❌ Failed to approve for staking:', error);
+    },
+  });
+
+
+  const getBuyButtonText = () => {
+    if (isSoldOut) return 'Sold Out';
+    if (totalPrice > 0n) return `Buy $${parseFloat(formatUnits(totalPrice, 6)).toFixed(2)}`;
+    return 'Unavailable';
+  };
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50" onClick={onClose}>
@@ -100,71 +141,48 @@ export function ToolDetailModal({ tool, address, usdcBalance, contractTools, onC
               {/* Buy Button */}
               <button
                 onClick={handleBuy}
-                disabled={!account || isBuying || hasInsufficientFunds}
+                disabled={!isPurchaseEnabled || isBuying}
                 className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isBuying ? 'Processing...' : `Buy $${parseFloat(formatUnits(totalPrice, 6)).toFixed(2)}`}
+                {isBuying ? 'Processing...' : getBuyButtonText()}
               </button>
 
               {/* Equip/Approve Button */}
               {isApprovedForStaking ? (
-                <TransactionButton
-                  transaction={() => handleStake(BigInt(quantity))}
-                  disabled={ownAmount === 0n || quantity > ownAmount}
+                <button
+                  onClick={() => handleStake(BigInt(quantity))}
+                  disabled={ownAmount === 0n || quantity > ownAmount || isBuying}
                   className="w-full justify-center px-4 py-2 text-sm font-medium bg-neutral-700 border border-neutral-600 text-white rounded-md hover:bg-neutral-600 transition-colors disabled:opacity-50"
-                  onTransactionConfirmed={() => queryClient.invalidateQueries()}
                 >
                   Equip {ownAmount > 0n ? `(${ownAmount.toString()})` : ''}
-                </TransactionButton>
+                </button>
               ) : (
-                <TransactionButton
-                  transaction={() => {
-                    if (!account) throw new Error('Not connected');
-                    return setApprovalForAll({
-                      contract: contractTools,
-                      operator: contractStaking.address,
-                      approved: true,
-                    });
-                  }}
-                  disabled={ownAmount === 0n}
+                <button
+                  onClick={() => approveStakingMutation.mutate()}
+                  disabled={ownAmount === 0n || approveStakingMutation.isPending}
                   className="w-full justify-center px-4 py-2 text-sm font-medium bg-neutral-700 border border-neutral-600 text-white rounded-md hover:bg-neutral-600 transition-colors disabled:opacity-50"
-                  onTransactionConfirmed={() => refetchStakingApproval()}
                 >
-                  Approve
-                </TransactionButton>
+                  {approveStakingMutation.isPending ? 'Approving...' : 'Approve'}
+                </button>
               )}
 
               {/* Unequip Button */}
-              <TransactionButton
-                transaction={() =>
-                  prepareContractCall({
-                    contract: contractStaking,
-                    method: 'withdraw',
-                    params: [tool.id, BigInt(quantity)],
-                  })
-                }
-                disabled={stakedAmount === 0n || quantity > stakedAmount}
+              <button
+                onClick={() => handleWithdraw(BigInt(quantity))}
+                disabled={stakedAmount === 0n || quantity > stakedAmount || isWithdrawing}
                 className="w-full justify-center px-4 py-2 text-sm font-medium bg-neutral-700 border border-neutral-600 text-white rounded-md hover:bg-neutral-600 transition-colors disabled:opacity-50"
-                onTransactionConfirmed={() => queryClient.invalidateQueries()}
               >
-                Unequip {stakedAmount > 0n ? `(${stakedAmount.toString()})` : ''}
-              </TransactionButton>
+                {isWithdrawing ? 'Unequipping...' : `Unequip ${stakedAmount > 0n ? `(${stakedAmount.toString()})` : ''}`}
+              </button>
 
               {/* Claim Button */}
-              <TransactionButton
-                transaction={() =>
-                  prepareContractCall({
-                    contract: contractStaking,
-                    method: 'claimRewards',
-                    params: [tool.id],
-                  })
-                }
-                disabled={claimableRewards === 0n}
+              <button
+                onClick={handleClaimRewards}
+                disabled={claimableRewards === 0n || isClaiming}
                 className="w-full justify-center px-4 py-2 text-sm font-medium bg-neutral-700 border border-neutral-600 text-white rounded-md hover:bg-neutral-600 transition-colors disabled:opacity-50"
-                onTransactionConfirmed={() => queryClient.invalidateQueries()}
               >
-                Claim {claimableRewards ? `(${parseFloat(formatUnits(claimableRewards, 18)).toFixed(4)})` : ''}
-              </TransactionButton>
+                {isClaiming ? 'Claiming...' : `Claim ${claimableRewards ? `(${parseFloat(formatUnits(claimableRewards, 18)).toFixed(4)})` : ''}`}
+              </button>
             </div>
           </>
         )}

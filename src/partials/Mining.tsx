@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { MediaRenderer, useActiveAccount, useReadContract } from 'thirdweb/react';
+import { MediaRenderer, useActiveAccount } from 'thirdweb/react';
 import { useQuery } from '@tanstack/react-query';
-import { getNFTs } from 'thirdweb/extensions/erc1155';
-import { balanceOf as erc20BalanceOf } from 'thirdweb/extensions/erc20';
 import { NFT } from 'thirdweb';
 import { formatUnits } from 'viem';
 
@@ -10,39 +8,52 @@ import { client } from '../lib/thirdweb/client';
 import { contractTools, contractStaking, usdcContract, hashcoinContract } from '../utils/contracts';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import { ToolDetailModal } from '@/components/ToolDetailModal';
+import { miningPublicClient } from '../lib/viem/client';
+import { contractToolsAbi } from '../utils/contractToolsAbi';
+import { contractStakingAbi } from '../utils/contractStakingAbi';
+import erc20Abi from '../utils/erc20';
 
 // #region Main Game Component
 function Game() {
   const account = useActiveAccount();
   const [selectedTool, setSelectedTool] = useState<NFT | null>(null);
 
-  const { data: usdcBalanceData } = useReadContract(erc20BalanceOf, {
-    contract: usdcContract,
-    address: account?.address || '',
-    queryOptions: { enabled: !!account },
+  const { data: usdcBalance = 0n } = useQuery({
+    queryKey: ['usdcBalance', account?.address],
+    queryFn: async () => {
+      if (!account?.address) return 0n;
+      return miningPublicClient.readContract({
+        address: usdcContract.address as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [account.address as `0x${string}`],
+      });
+    },
+    enabled: !!account?.address,
   });
-  const usdcBalance = usdcBalanceData || 0n;
+
+  if (!account) {
+    return (
+      <div className="absolute inset-0 flex justify-center items-center rounded-xl z-20">
+        <div className="text-center p-6 bg-neutral-800/90 border border-neutral-700 rounded-lg shadow-xl">
+          <h3 className="text-xl font-bold text-white mb-2">Start Mining</h3>
+          <p className="text-neutral-300 mb-4">Connect your wallet to manage your inventory.</p>
+          <ConnectWalletButton />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
       <GameContent account={account} onSelectTool={setSelectedTool} usdcBalance={usdcBalance} />
-      {selectedTool && account && (
+      {selectedTool && (
         <ToolDetailModal
           tool={selectedTool}
           address={account.address}
-          contractTools={contractTools}
           onClose={() => setSelectedTool(null)}
           usdcBalance={usdcBalance}
         />
-      )}
-      {!account && (
-        <div className="absolute inset-0 flex justify-center items-center rounded-xl z-20">
-          <div className="text-center p-6 bg-neutral-800/90 border border-neutral-700 rounded-lg shadow-xl">
-            <h3 className="text-xl font-bold text-white mb-2">Start Mining</h3>
-            <p className="text-neutral-300 mb-4">Connect your wallet to manage your inventory.</p>
-            <ConnectWalletButton />
-          </div>
-        </div>
       )}
     </div>
   );
@@ -57,9 +68,56 @@ function GameContent({
   onSelectTool: (tool: NFT) => void;
   usdcBalance: bigint;
 }) {
+  if (!account) {
+    return null;
+  }
+
   const { data: allTools, isLoading: isLoadingTools } = useQuery({
-    queryKey: ['allTools'],
-    queryFn: () => getNFTs({ contract: contractTools }),
+    queryKey: ['allTools', contractTools.address],
+    queryFn: async () => {
+      const nextTokenIdToMint = (await miningPublicClient.readContract({
+        address: contractTools.address as `0x${string}`,
+        abi: contractToolsAbi,
+        functionName: 'nextTokenIdToMint',
+        args: [],
+      })) as bigint;
+
+      if (nextTokenIdToMint === 0n) {
+        return [];
+      }
+
+      const multicallContracts = Array.from({ length: Number(nextTokenIdToMint) }, (_, i) => ({
+        address: contractTools.address as `0x${string}`,
+        abi: contractToolsAbi,
+        functionName: 'uri',
+        args: [BigInt(i)],
+      }));
+
+      const results = await miningPublicClient.multicall({ contracts: multicallContracts as any });
+
+      const nfts = await Promise.all(
+        results.map(async (result, i) => {
+          if (result.status === 'success') {
+            const uri = result.result as string;
+            const response = await fetch(uri.replace('ipfs://', 'https://ipfs.io/ipfs/'));
+            const metadata = await response.json();
+            return {
+              id: BigInt(i),
+              type: 'ERC1155',
+              tokenURI: uri,
+              metadata,
+              owner: account.address,
+              supply: 1n,
+              tokenAddress: contractTools.address,
+              chainId: 8453,
+            } as NFT;
+          }
+          return null;
+        })
+      );
+
+      return nfts.filter((nft): nft is NFT => nft !== null);
+    },
   });
 
   if (isLoadingTools) {
@@ -72,12 +130,7 @@ function GameContent({
 
   return (
     <div className={`${!account ? 'pointer-events-none' : ''}`}>
-      <ToolGrid
-        address={account?.address || ''}
-        allTools={allTools}
-        onSelectTool={onSelectTool}
-        usdcBalance={usdcBalance}
-      />
+      <ToolGrid address={account.address} allTools={allTools} onSelectTool={onSelectTool} usdcBalance={usdcBalance} />
     </div>
   );
 }
@@ -108,12 +161,10 @@ function ToolGrid({
   const titleWithBalance = (
     <div className="flex justify-between items-center">
       <span>Inventory</span>
-      {address && (
-        <div className="flex items-center gap-2 text-sm font-normal">
-          <img src="/assets/usdc.webp" alt="USDC logo" className="w-5 h-5" />
-          <span>{parseFloat(formatUnits(usdcBalance, 6)).toFixed(2)}</span>
-        </div>
-      )}
+      <div className="flex items-center gap-2 text-sm font-normal">
+        <img src="/assets/usdc.webp" alt="USDC logo" className="w-5 h-5" />
+        <span>{parseFloat(formatUnits(usdcBalance, 6)).toFixed(2)}</span>
+      </div>
     </div>
   );
 
@@ -154,16 +205,26 @@ function ToolCard({ tool, onClick }: { tool: NFT; onClick: () => void }) {
 // #endregion
 
 export default function Mining() {
-  const { data: totalRewards, isLoading } = useReadContract({
-    contract: contractStaking,
-    method: 'getRewardTokenBalance',
-    params: [],
+  const { data: totalRewards, isLoading } = useQuery({
+    queryKey: ['totalRewards', contractStaking.address],
+    queryFn: () =>
+      miningPublicClient.readContract({
+        address: contractStaking.address as `0x${string}`,
+        abi: contractStakingAbi,
+        functionName: 'getRewardTokenBalance',
+        args: [],
+      }),
   });
 
-  const { data: tokenSymbol } = useReadContract({
-    contract: hashcoinContract,
-    method: 'symbol',
-    params: [],
+  const { data: tokenSymbol } = useQuery({
+    queryKey: ['hashcoinSymbol', hashcoinContract.address],
+    queryFn: () =>
+      miningPublicClient.readContract({
+        address: hashcoinContract.address as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'symbol',
+        args: [],
+      }),
   });
 
   return (

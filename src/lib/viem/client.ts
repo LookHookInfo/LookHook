@@ -1,14 +1,45 @@
 import { createPublicClient, http } from 'viem';
 import { base } from 'viem/chains';
 
-const ALCHEMY_RPC_URL = import.meta.env.VITE_ALCHEMY_GM_RPC_URL;
+const ALCHEMY_GM_RPC_URL = import.meta.env.VITE_ALCHEMY_GM_RPC_URL;
+const ALCHEMY_MINING_RPC_URL = import.meta.env.VITE_ALCHEMY_MINING_RPC_URL;
+const ALCHEMY_TIPS_RPC_URL = import.meta.env.VITE_ALCHEMY_TIPS_RPC_URL;
 
-if (!ALCHEMY_RPC_URL) {
+if (!ALCHEMY_GM_RPC_URL) {
   throw new Error('Missing VITE_ALCHEMY_GM_RPC_URL environment variable');
 }
 
+if (!ALCHEMY_MINING_RPC_URL) {
+  throw new Error('Missing VITE_ALCHEMY_MINING_RPC_URL environment variable');
+}
 
+if (!ALCHEMY_TIPS_RPC_URL) {
+  throw new Error('Missing VITE_ALCHEMY_TIPS_RPC_URL environment variable');
+}
+
+// Клиент для GM фич
 export const publicClient = createPublicClient({
   chain: base,
-  transport: http(ALCHEMY_RPC_URL),
+  transport: http(ALCHEMY_GM_RPC_URL),
+  batch: {
+    multicall: true,
+  },
+});
+
+// Клиент для Mining (Staking & Tools)
+export const miningPublicClient = createPublicClient({
+  chain: base,
+  transport: http(ALCHEMY_MINING_RPC_URL),
+  batch: {
+    multicall: true,
+  },
+});
+
+// Клиент для Tips (BuyMeACoffee)
+export const tipsPublicClient = createPublicClient({
+  chain: base,
+  transport: http(ALCHEMY_TIPS_RPC_URL),
+  batch: {
+    multicall: true,
+  },
 });

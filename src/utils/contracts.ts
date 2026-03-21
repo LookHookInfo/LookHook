@@ -12,6 +12,7 @@ import { gmnftAbi } from './gmnftAbi';
 import { nameRewardAbi } from './nameRewardAbi';
 
 import { contractStakingAbi } from './contractStakingAbi';
+import { contractToolsAbi } from './contractToolsAbi';
 import { earlyBirdAbi } from './earlyBirdAbi';
 import { stakeNftAbi } from './stakeNftAbi';
 import { whaleContractAbi } from './whaleContractAbi';
@@ -67,6 +68,7 @@ export const contractTools = getContract({
   client,
   chain: chain,
   address: '0x13CE10a3e09FA8000BA8A13fCbe8813f476584e7',
+  abi: contractToolsAbi,
 });
 
 // --- AIRDROPS & QUESTS ---

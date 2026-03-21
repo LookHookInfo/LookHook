@@ -2,7 +2,7 @@ import { GMAchievement } from './GMAchievement';
 import { useEffect } from 'react';
 import type { Wallet } from 'thirdweb/wallets';
 import { useDisconnect, useWalletBalance } from 'thirdweb/react';
-import { useQuery } from '@tanstack/react-query'; // Added useQuery import
+import { useQuery } from '@tanstack/react-query';
 import {
   hashcoinContract,
   earlyBirdContract,
@@ -13,9 +13,11 @@ import {
   xroleRewardContract,
   ogMiningBadgeContract,
 } from '../utils/contracts';
-import { readContract } from 'thirdweb'; // Added readContract import
+import { readContract } from 'thirdweb';
 import EarlyBirdClaimButton from './EarlyBirdClaimButton';
 import { DolphinAchievement, SharkAchievement, WhaleAchievement } from './WhaleAchievements';
+import { tipsPublicClient } from '../lib/viem/client';
+import CoffeeQuestAbi from '../utils/buyMeACoffeeAbi';
 
 interface ProfileModalProps {
   wallet: Wallet;
@@ -287,18 +289,22 @@ function TipsAchievement({ wallet }: { wallet: Wallet }) {
 
   const { data: userTips, isLoading: isTipsLoading } = useQuery({
     queryKey: ['tipsFromUsers', buyMeACoffeeContract.address, ownerAddress],
-    queryFn: () =>
-      readContract({
-        contract: buyMeACoffeeContract,
-        method: 'tipsFromUsers',
-        params: [ownerAddress || ''],
-      }),
+    queryFn: async () => {
+      if (!ownerAddress) return 0n;
+      const result = await tipsPublicClient.readContract({
+        address: buyMeACoffeeContract.address as `0x${string}`,
+        abi: CoffeeQuestAbi,
+        functionName: 'getTotalTipsFromUser',
+        args: [ownerAddress as `0x${string}`],
+      });
+      return result as bigint;
+    },
     enabled: !!ownerAddress,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const hasTipped = userTips && (Array.isArray(userTips) ? (userTips[0] as bigint) : (userTips as bigint)) > 0n;
+  const hasTipped = userTips !== undefined && userTips > 0n;
 
   if (!ownerAddress) {
     return (
