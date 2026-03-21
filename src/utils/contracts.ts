@@ -48,7 +48,7 @@ export const stakingContract = getContract({
   chain: chain,
   address: '0xFd69e0dfa9a12c43B563a1903092bEFB5E71Db0e',
   abi: stakingAbi,
-});
+}); //ok
 
 export const contractStaking = getContract({
   client,
@@ -62,7 +62,7 @@ export const stakeNftContract = getContract({
   chain: chain,
   address: '0x22d015f90111d2b3174af23b2a607e467243b763',
   abi: stakeNftAbi,
-});
+}); //ok
 
 export const contractTools = getContract({
   client,
@@ -92,7 +92,7 @@ export const stakeRewardClaimContract = getContract({
   chain: chain,
   address: '0x3e65390EdD46Ec98F792d0122eD4f1a105bab281',
   abi: stakeRewardClaimAbi,
-});
+}); //ok
 
 export const xroleRewardContract = getContract({
   client,

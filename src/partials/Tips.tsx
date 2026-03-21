@@ -107,15 +107,16 @@ export default function Tips({ className }: TipsProps) {
               <button
                 onClick={() => buyCoffee()}
                 disabled={isBuyingCoffee || isLoadingCoffeePrice}
-                className={`w-full py-3 rounded-lg transition mb-4 text-white font-bold flex items-center justify-center ${
+                className={`w-full py-3 rounded-lg transition-colors text-lg font-bold border flex items-center justify-center ${
                   isBuyingCoffee || isLoadingCoffeePrice
-                    ? 'bg-neutral-600 cursor-not-allowed'
-                    : 'bg-[#4CAF50] hover:bg-[#45a049]'
+                    ? 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
+                    : 'border-neutral-700 text-white bg-neutral-800 hover:bg-neutral-700 glow-effect cursor-pointer'
                 }`}
               >
                 {isBuyingCoffee ? (
                   <>
-                    <Spinner className="mr-2" /> Processing...
+                    <Spinner className="w-5 h-5 mr-2" />
+                    Processing...
                   </>
                 ) : isLoadingCoffeePrice ? (
                   'Loading...'

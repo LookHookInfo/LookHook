@@ -16,8 +16,9 @@ import {
 import { readContract } from 'thirdweb';
 import EarlyBirdClaimButton from './EarlyBirdClaimButton';
 import { DolphinAchievement, SharkAchievement, WhaleAchievement } from './WhaleAchievements';
-import { tipsPublicClient } from '../lib/viem/client';
+import { tipsPublicClient, earlyPublicClient } from '../lib/viem/client';
 import CoffeeQuestAbi from '../utils/buyMeACoffeeAbi';
+import { stakeNftAbi } from '../utils/stakeNftAbi';
 
 interface ProfileModalProps {
   wallet: Wallet;
@@ -134,8 +135,6 @@ function HashcoinAchievement({ wallet }: { wallet: Wallet }) {
     address: wallet.getAccount()?.address,
     client: hashcoinContract.client,
     tokenAddress: hashcoinContract.address,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
   const formattedBalance = balance ? `${parseInt(balance.displayValue).toString()} ${balance.symbol}` : '0 HASH';
@@ -400,17 +399,17 @@ function StakeNftAchievement({ wallet }: { wallet: Wallet }) {
   const { data: balance, isLoading: isBalanceLoading } = useQuery({
     queryKey: ['stakeNftBalanceOf', stakeNftContract.address, ownerAddress],
     queryFn: () =>
-      readContract({
-        contract: stakeNftContract,
-        method: 'balanceOf',
-        params: [ownerAddress || ''],
+      earlyPublicClient.readContract({
+        address: stakeNftContract.address as `0x${string}`,
+        abi: stakeNftAbi,
+        functionName: 'balanceOf',
+        args: [ownerAddress as `0x${string}`],
       }),
     enabled: !!ownerAddress,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  const hasNft = balance && (Array.isArray(balance) ? (balance[0] as bigint) : (balance as bigint)) > 0n;
+  const hasNft = balance && (balance as bigint) > 0n;
 
   if (!ownerAddress) {
     return (

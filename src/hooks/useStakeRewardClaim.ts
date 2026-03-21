@@ -1,60 +1,43 @@
-import { useState, useCallback, useMemo } from 'react';
-import { useActiveAccount, useSendTransaction } from 'thirdweb/react';
+import { useState, useCallback } from 'react';
+import { useActiveAccount } from 'thirdweb/react';
 import { stakeRewardClaimContract, hashcoinContract } from '../utils/contracts';
-import { prepareContractCall, readContract, waitForReceipt } from 'thirdweb';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
-import type { ThirdwebContract } from 'thirdweb';
-
-// Helper function from optimization plan to structure queries (copied from useStakeContract)
-const createThirdwebQuery = ({
-  contract,
-  method,
-  params = [],
-  queryOptions = {},
-}: {
-  contract: ThirdwebContract<any>;
-  method: string;
-  params?: unknown[];
-  queryOptions?: object;
-}) => {
-  const queryKey = [contract.chain.id, contract.address, method, params];
-  return {
-    queryKey,
-    queryFn: () => readContract({ contract, method, params } as any),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus: false, // Prevent refetching on window focus
-    ...queryOptions,
-  };
-};
+import { earlyPublicClient } from '../lib/viem/client';
+import { stakeRewardClaimAbi } from '../utils/stakeRewardClaimAbi';
+import erc20Abi from '../utils/erc20';
+import { encodeFunctionData } from 'viem';
 
 export const useStakeRewardClaim = () => {
   const account = useActiveAccount();
   const queryClient = useQueryClient();
-  const { mutateAsync: sendTx } = useSendTransaction();
-  const accountAddress = account?.address || '0x0000000000000000000000000000000000000000';
+  const accountAddress = account?.address;
 
   const [isClaiming, setIsClaiming] = useState(false);
 
-  const queries = useMemo(() => {
-    return [
-      // 0: canClaim (stakeRewardClaimContract.canClaim)
-      createThirdwebQuery({
-        contract: stakeRewardClaimContract,
-        method: 'canClaim',
-        params: [accountAddress],
-        queryOptions: { enabled: !!account?.address },
-      }),
-      // 1: contractBalance (hashcoinContract.balanceOf)
-      createThirdwebQuery({
-        contract: hashcoinContract,
-        method: 'balanceOf',
-        params: [stakeRewardClaimContract.address],
-      }),
-    ];
-  }, [account?.address, accountAddress]);
-
   const queryResults = useQueries({
-    queries,
+    queries: [
+      {
+        queryKey: ['stakeRewardClaim', 'canClaim', accountAddress],
+        queryFn: () => earlyPublicClient.readContract({
+          address: stakeRewardClaimContract.address as `0x${string}`,
+          abi: stakeRewardClaimAbi,
+          functionName: 'canClaim',
+          args: [accountAddress as `0x${string}`],
+        }),
+        enabled: !!accountAddress,
+        staleTime: 300000,
+      },
+      {
+        queryKey: ['hashcoin', 'balanceOf', stakeRewardClaimContract.address],
+        queryFn: () => earlyPublicClient.readContract({
+          address: hashcoinContract.address as `0x${string}`,
+          abi: erc20Abi,
+          functionName: 'balanceOf',
+          args: [stakeRewardClaimContract.address as `0x${string}`],
+        }),
+        staleTime: 300000,
+      },
+    ],
     combine: (results) => {
       return {
         canClaim: results[0],
@@ -73,15 +56,6 @@ export const useStakeRewardClaim = () => {
   const canClaim = canClaimResult.data as boolean | undefined;
   const rewardBalance = contractBalanceResult.data as bigint | undefined;
 
-  const invalidateRewardClaimQueries = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: queries[0].queryKey }); // canClaim
-    queryClient.invalidateQueries({ queryKey: queries[1].queryKey }); // contractBalance
-    // Also invalidate user's HASH balance if it changes after claiming rewards
-    queryClient.invalidateQueries({
-      queryKey: [hashcoinContract.chain.id, hashcoinContract.address, 'balanceOf', [accountAddress]],
-    });
-  }, [queryClient, queries, accountAddress]);
-
   const claimReward = useCallback(async () => {
     if (!canClaim || !account) {
       console.error('Cannot claim: missing eligibility or wallet not connected.');
@@ -90,24 +64,28 @@ export const useStakeRewardClaim = () => {
 
     setIsClaiming(true);
     try {
-      const transaction = prepareContractCall({
-        contract: stakeRewardClaimContract,
-        method: 'claim',
-        params: [],
+      const data = encodeFunctionData({
+        abi: stakeRewardClaimAbi,
+        functionName: 'claim',
+        args: [],
       });
-      const { transactionHash } = await sendTx(transaction);
-      await waitForReceipt({
-        transactionHash,
-        chain: stakeRewardClaimContract.chain,
-        client: stakeRewardClaimContract.client,
+
+      const { transactionHash } = await account.sendTransaction({
+        to: stakeRewardClaimContract.address as `0x${string}`,
+        data,
+        chainId: 8453,
       });
-      invalidateRewardClaimQueries();
+
+      await earlyPublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
+      
+      queryClient.invalidateQueries({ queryKey: ['stakeRewardClaim'] });
+      queryClient.invalidateQueries({ queryKey: ['hashcoin', 'balanceOf'] });
     } catch (error) {
       console.error('Error claiming reward:', error);
     } finally {
       setIsClaiming(false);
     }
-  }, [canClaim, account, sendTx, invalidateRewardClaimQueries]);
+  }, [canClaim, account, queryClient]);
 
   return {
     canClaim,
@@ -116,6 +94,6 @@ export const useStakeRewardClaim = () => {
     claimReward,
     rewardBalance,
     isBalanceLoading: areQueriesLoading,
-    refetchCanClaim: invalidateRewardClaimQueries, // This now invalidates instead of refetching a single query
+    refetchCanClaim: () => queryClient.invalidateQueries({ queryKey: ['stakeRewardClaim'] }),
   };
 };
