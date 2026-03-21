@@ -1,5 +1,4 @@
 import { useActiveAccount } from 'thirdweb/react';
-import { buyMeACoffeeContract } from '../utils/contracts';
 import ConnectWalletButton from '../components/ConnectWalletButton';
 import { useBuyCoffeeLogic } from '../hooks/useBuyCoffeeLogic';
 import { Spinner } from '../components/Spinner';
@@ -16,7 +15,6 @@ export default function Tips({ className }: TipsProps) {
     isLoadingTopDonor,
     isLoadingCoffeePrice,
     isLoadingTopDonorName,
-    totalTipInWei,
     totalTipInETH,
     usdValue,
     formattedTopDonorAmount,
