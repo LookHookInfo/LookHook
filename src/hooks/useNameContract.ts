@@ -1,80 +1,82 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { readContract, prepareContractCall, waitForReceipt } from 'thirdweb';
-import { useSendTransaction, useActiveAccount } from 'thirdweb/react';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { useActiveAccount } from 'thirdweb/react';
+import { encodeFunctionData } from 'viem';
+import { namePublicClient } from '../lib/viem/client';
 import { nameContract, hashcoinContract } from '../utils/contracts';
-import type { ThirdwebContract } from 'thirdweb';
+import { nameContractAbi } from '../utils/nameContractAbi';
+import erc20Abi from '../utils/erc20';
 
 const MAX_NAME_LENGTH = 15;
 const MAX_NAMES_PER_ADDRESS = 20;
 
-// Helper function from optimization plan to structure queries
-const createThirdwebQuery = ({
-  contract,
-  method,
-  params = [],
-  queryOptions = {},
-}: {
-  contract: ThirdwebContract<any>; // Use a less strict type to avoid conflicts
-  method: string;
-  params?: unknown[];
-  queryOptions?: object;
-}) => {
-  const queryKey = [contract.chain.id, contract.address, method, params];
-  return {
-    queryKey,
-    queryFn: () => readContract({ contract, method, params } as any), // Use 'as any' to bypass strict type checking here
-    ...queryOptions,
-  };
-};
-
 export function useNameContract() {
   const account = useActiveAccount();
   const queryClient = useQueryClient();
-  const { mutateAsync: sendTx } = useSendTransaction();
   const accountAddress = account?.address;
 
   // State for the user's input
   const [nameInput, setNameInput] = useState('');
   const [isNameTakenLoading, setIsNameTakenLoading] = useState(false);
   const [isTaken, setIsTaken] = useState<boolean | null>(null);
-  const [isConfirming, setIsConfirming] = useState(false); // New loading state for the transaction
-
-  const queries = useMemo(() => {
-    return [
-      createThirdwebQuery({
-        contract: nameContract,
-        method: 'PRICE',
-      }),
-      createThirdwebQuery({
-        contract: nameContract,
-        method: 'hasDiscount',
-        params: [accountAddress],
-        queryOptions: { enabled: !!accountAddress, staleTime: 300000 },
-      }),
-      createThirdwebQuery({
-        contract: nameContract,
-        method: 'balanceOf',
-        params: [accountAddress],
-        queryOptions: { enabled: !!accountAddress, staleTime: 300000 },
-      }),
-      createThirdwebQuery({
-        contract: hashcoinContract,
-        method: 'balanceOf',
-        params: [accountAddress],
-        queryOptions: { enabled: !!accountAddress, staleTime: 300000 },
-      }),
-      createThirdwebQuery({
-        contract: nameContract,
-        method: 'getPrimaryName',
-        params: [accountAddress],
-        queryOptions: { enabled: !!accountAddress, staleTime: 300000 },
-      }),
-    ];
-  }, [accountAddress]);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const queryResults = useQueries({
-    queries,
+    queries: [
+      {
+        queryKey: ['nameContract', 'PRICE'],
+        queryFn: () => namePublicClient.readContract({
+          address: nameContract.address as `0x${string}`,
+          abi: nameContractAbi,
+          functionName: 'PRICE',
+        }),
+        staleTime: Infinity,
+      },
+      {
+        queryKey: ['nameContract', 'hasDiscount', accountAddress],
+        queryFn: () => namePublicClient.readContract({
+          address: nameContract.address as `0x${string}`,
+          abi: nameContractAbi,
+          functionName: 'hasDiscount',
+          args: [accountAddress as `0x${string}`],
+        }),
+        enabled: !!accountAddress,
+        staleTime: 300000,
+      },
+      {
+        queryKey: ['nameContract', 'balanceOf', accountAddress],
+        queryFn: () => namePublicClient.readContract({
+          address: nameContract.address as `0x${string}`,
+          abi: nameContractAbi,
+          functionName: 'balanceOf',
+          args: [accountAddress as `0x${string}`],
+        }),
+        enabled: !!accountAddress,
+        staleTime: 300000,
+      },
+      {
+        queryKey: ['hashcoinContract', 'balanceOf', accountAddress],
+        queryFn: () => namePublicClient.readContract({
+          address: hashcoinContract.address as `0x${string}`,
+          abi: erc20Abi,
+          functionName: 'balanceOf',
+          args: [accountAddress as `0x${string}`],
+        }),
+        enabled: !!accountAddress,
+        staleTime: 300000,
+      },
+      {
+        queryKey: ['nameContract', 'getPrimaryName', accountAddress],
+        queryFn: () => namePublicClient.readContract({
+          address: nameContract.address as `0x${string}`,
+          abi: nameContractAbi,
+          functionName: 'getPrimaryName',
+          args: [accountAddress as `0x${string}`],
+        }),
+        enabled: !!accountAddress,
+        staleTime: 300000,
+      },
+    ],
     combine: (results) => {
       return {
         priceResult: results[0],
@@ -106,19 +108,20 @@ export function useNameContract() {
     setIsNameTakenLoading(true);
     const handler = setTimeout(async () => {
       try {
-        const taken = await readContract({
-          contract: nameContract,
-          method: 'isNameTaken',
-          params: [nameInput],
-        });
+        const taken = await namePublicClient.readContract({
+          address: nameContract.address as `0x${string}`,
+          abi: nameContractAbi,
+          functionName: 'isNameTaken',
+          args: [nameInput],
+        }) as boolean;
         setIsTaken(taken);
       } catch (error) {
         console.error('Failed to check if name is taken:', error);
-        setIsTaken(null); // Set to null on error to indicate uncertainty
+        setIsTaken(null);
       } finally {
         setIsNameTakenLoading(false);
       }
-    }, 500); // 500ms debounce timer
+    }, 500);
 
     return () => {
       clearTimeout(handler);
@@ -150,71 +153,62 @@ export function useNameContract() {
     setIsConfirming(true);
     try {
       // 1. Approve HASH spending
-      const approveTx = await prepareContractCall({
-        contract: hashcoinContract,
-        method: 'approve',
-        params: [nameContract.address, displayPrice],
+      const approveData = encodeFunctionData({
+        abi: erc20Abi,
+        functionName: 'approve',
+        args: [nameContract.address as `0x${string}`, displayPrice],
       });
-      const { transactionHash: approveHash } = await sendTx(approveTx);
-      await waitForReceipt({
-        client: hashcoinContract.client,
-        chain: hashcoinContract.chain,
-        transactionHash: approveHash,
+
+      const { transactionHash: approveHash } = await account.sendTransaction({
+        to: hashcoinContract.address as `0x${string}`,
+        data: approveData,
+        chainId: 8453,
       });
+
+      await namePublicClient.waitForTransactionReceipt({ hash: approveHash as `0x${string}` });
 
       // 2. Register the name
-      const registerTx = await prepareContractCall({
-        contract: nameContract,
-        method: 'register',
-        params: [nameInput],
-      });
-      const { transactionHash: registerHash } = await sendTx(registerTx);
-      await waitForReceipt({
-        client: nameContract.client,
-        chain: nameContract.chain,
-        transactionHash: registerHash,
+      const registerData = encodeFunctionData({
+        abi: nameContractAbi,
+        functionName: 'register',
+        args: [nameInput],
       });
 
+      const { transactionHash: registerHash } = await account.sendTransaction({
+        to: nameContract.address as `0x${string}`,
+        data: registerData,
+        chainId: 8453,
+      });
+
+      await namePublicClient.waitForTransactionReceipt({ hash: registerHash as `0x${string}` });
+
       console.log('Successfully registered name. Invalidating specific queries...');
-      // More granular invalidation
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queries[2].queryKey }), // nameContract.balanceOf
-        queryClient.invalidateQueries({ queryKey: queries[3].queryKey }), // hashcoinContract.balanceOf
-        queryClient.invalidateQueries({ queryKey: queries[4].queryKey }), // nameContract.getPrimaryName
-      ]);
-      setIsTaken(true); // Optimistically set name as taken
+      
+      await queryClient.invalidateQueries({ queryKey: ['nameContract'] });
+      await queryClient.invalidateQueries({ queryKey: ['hashcoinContract', 'balanceOf', accountAddress] });
+      
+      setIsTaken(true);
     } catch (error) {
       console.error('Unified claim error:', error);
     } finally {
       setIsConfirming(false);
     }
-  }, [account, displayPrice, nameInput, sendTx, queryClient, queries]);
+  }, [account, displayPrice, nameInput, queryClient, accountAddress]);
 
   return {
-    // Name input state and status
     nameInput,
     setNameInput,
     isTaken,
     isNameTakenLoading,
-
-    // Original values from batched queries
     price,
     displayPrice,
     balance,
     registeredName,
     registeredNamesCount: registeredNamesCount !== undefined ? Number(registeredNamesCount) : null,
-
-    // Statuses
-    isLoading: areInitialQueriesLoading, // True when initial data is loading
-    isConfirming: isConfirming, // True when the transaction is being confirmed
-
-    // Booleans
+    isLoading: areInitialQueriesLoading,
+    isConfirming: isConfirming,
     hasSufficientBalance,
-
-    // Functions
     unifiedClaim: unifiedClaim,
-
-    // Constants
     maxNameLength: MAX_NAME_LENGTH,
     maxNamesPerAddress: MAX_NAMES_PER_ADDRESS,
   };

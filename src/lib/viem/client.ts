@@ -6,6 +6,7 @@ const ALCHEMY_MINING_RPC_URL = import.meta.env.VITE_ALCHEMY_MINING_RPC_URL;
 const ALCHEMY_TIPS_RPC_URL = import.meta.env.VITE_ALCHEMY_TIPS_RPC_URL;
 const ALCHEMY_OG_RPC_URL = import.meta.env.VITE_ALCHEMY_OG_RPC_URL;
 const ALCHEMY_X_RPC_URL = import.meta.env.VITE_ALCHEMY_X_RPC_URL;
+const ALCHEMY_NAME_RPC_URL = import.meta.env.VITE_ALCHEMY_NAME_RPC_URL;
 
 if (!ALCHEMY_GM_RPC_URL) {
   throw new Error('Missing VITE_ALCHEMY_GM_RPC_URL environment variable');
@@ -25,6 +26,10 @@ if (!ALCHEMY_OG_RPC_URL) {
 
 if (!ALCHEMY_X_RPC_URL) {
   throw new Error('Missing VITE_ALCHEMY_X_RPC_URL environment variable');
+}
+
+if (!ALCHEMY_NAME_RPC_URL) {
+  throw new Error('Missing VITE_ALCHEMY_NAME_RPC_URL environment variable');
 }
 
 // Клиент для GM фич
@@ -67,6 +72,15 @@ export const ogPublicClient = createPublicClient({
 export const xPublicClient = createPublicClient({
   chain: base,
   transport: http(ALCHEMY_X_RPC_URL),
+  batch: {
+    multicall: true,
+  },
+});
+
+// Клиент для Names & Rewards (NameContract, NameReward, HeliReward)
+export const namePublicClient = createPublicClient({
+  chain: base,
+  transport: http(ALCHEMY_NAME_RPC_URL),
   batch: {
     multicall: true,
   },
