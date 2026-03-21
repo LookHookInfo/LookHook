@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { useActiveWallet, useReadContract } from 'thirdweb/react';
+import { useActiveWallet } from 'thirdweb/react';
 import { ConnectButton } from 'thirdweb/react';
+import { useQuery } from '@tanstack/react-query';
 import { client } from '../lib/thirdweb/client';
 import { chain } from '../lib/thirdweb/chain';
 import ProfileModal from './ProfileModal';
 import { nftCollectionContract, whaleContract } from '../utils/contracts';
 import { useNameContract } from '../hooks/useNameContract';
+import { publicClient, earlyPublicClient } from '../lib/viem/client';
+import { whaleContractAbi } from '../utils/whaleContractAbi';
 
 export default function UserProfile() {
   const wallet = useActiveWallet();
@@ -13,35 +16,37 @@ export default function UserProfile() {
 
   const account = wallet?.getAccount();
 
-  const { registeredName } = useNameContract(() => {});
+  const { registeredName } = useNameContract();
 
-  const balanceOfAbi = {
-    type: 'function',
-    name: 'balanceOf',
-    inputs: [{ type: 'address', name: 'owner' }],
-    outputs: [{ type: 'uint256' }],
-    stateMutability: 'view',
-  } as const;
-
-  const { data: balance, isLoading: isNftBalanceLoading } = useReadContract({
-    contract: nftCollectionContract,
-    method: balanceOfAbi,
-    params: [account?.address || ''],
-    queryOptions: {
-      enabled: !!account,
-    },
+  const { data: balance, isLoading: isNftBalanceLoading } = useQuery({
+    queryKey: ['nftCollection', 'balanceOf', account?.address],
+    queryFn: () => publicClient.readContract({
+      address: nftCollectionContract.address as `0x${string}`,
+      abi: [{
+        type: 'function',
+        name: 'balanceOf',
+        inputs: [{ type: 'address', name: 'owner' }],
+        outputs: [{ type: 'uint256' }],
+        stateMutability: 'view',
+      }] as const,
+      functionName: 'balanceOf',
+      args: [account?.address as `0x${string}`],
+    }),
+    enabled: !!account,
   });
 
-  const { data: whaleContractData } = useReadContract({
-    contract: whaleContract,
-    method: 'getUserStatus',
-    params: [account?.address || ''],
-    queryOptions: {
-      enabled: !!account,
-    },
+  const { data: whaleContractData } = useQuery({
+    queryKey: ['whaleContract', 'getUserStatus', account?.address],
+    queryFn: () => earlyPublicClient.readContract({
+      address: whaleContract.address as `0x${string}`,
+      abi: whaleContractAbi,
+      functionName: 'getUserStatus',
+      args: [account?.address as `0x${string}`],
+    }),
+    enabled: !!account,
   });
 
-  const hasCatNft = !!(balance && balance > 0n);
+  const hasCatNft = !!(balance && (balance as bigint) > 0n);
 
   const canMintDolphin = whaleContractData ? whaleContractData[1] : false;
   const hasDolphin = whaleContractData ? whaleContractData[4] : false;

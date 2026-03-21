@@ -7,6 +7,7 @@
 - ✅ **GM Token (gmContract)** — Переведен на Alchemy
 - ✅ **GM NFT (gmnftContract)** — Переведен на Alchemy
 - ✅ **Name Contract & Rewards (Name, NameReward, Heli)** — Переведены на Alchemy (namePublicClient)
+- ✅ **Early Bird & Whale (EarlyBird, WhaleContract)** — Переведены на Alchemy (earlyPublicClient)
 - ⏳ **На очереди:** Staking (Token)
 
 ---
@@ -70,7 +71,8 @@ await publicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${str
 | **День 3** | Name Reward | `src/hooks/useNameRewardContract.ts` | ✅ Готово |
 | **День 4** | Name Contract | `src/hooks/useNameContract.ts` | ✅ Готово |
 | **День 5** | XRole / Welcome | `src/hooks/useXroleReward.ts`, `useWelcomeRewardClaim.ts` | ✅ Готово |
-| **День 6** | Staking (Token) | `src/hooks/useStakeContract.ts` | ⏳ Ожидание |
+| **День 6** | Whale & Early | `src/components/WhaleAchievements.tsx`, `UserProfile.tsx` | ✅ Готово |
+| **День 7** | Staking (Token) | `src/hooks/useStakeContract.ts` | ⏳ Ожидание |
 
 ## Полезные советы
 1. **Типизация:** Всегда приводите адреса к `as 0x${string}`.

@@ -1,47 +1,13 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
-import { useActiveWallet, useSendTransaction } from 'thirdweb/react';
-import { getContract, prepareContractCall, toWei, readContract } from 'thirdweb';
+import { useEffect, useState, useCallback } from 'react';
+import { useActiveWallet } from 'thirdweb/react';
 import { earlyBirdContract } from '../utils/contracts';
-import { client } from '../lib/thirdweb/client';
-import { chain } from '../lib/thirdweb/chain';
-import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueries, useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { earlyPublicClient } from '../lib/viem/client';
+import { earlyBirdAbi } from '../utils/earlyBirdAbi';
+import { encodeFunctionData, parseUnits } from 'viem';
 
-// --- ABI Snippets ---
-const isClaimOpenAbi = {
-  type: 'function',
-  name: 'isClaimOpen',
-  inputs: [],
-  outputs: [{ type: 'bool' }],
-  stateMutability: 'view',
-} as const;
-const hasClaimedAbi = {
-  type: 'function',
-  name: 'hasClaimed',
-  inputs: [{ type: 'address' }],
-  outputs: [{ type: 'bool' }],
-  stateMutability: 'view',
-} as const;
-const claimDeadlineAbi = {
-  type: 'function',
-  name: 'CLAIM_DEADLINE',
-  inputs: [],
-  outputs: [{ type: 'uint256' }],
-  stateMutability: 'view',
-} as const;
-const claimAbi = {
-  type: 'function',
-  name: 'claim',
-  inputs: [{ internalType: 'uint256[]', name: 'tokenIds', type: 'uint256[]' }],
-  outputs: [],
-  stateMutability: 'nonpayable',
-} as const;
-const getStakingContractAddressAbi = {
-  type: 'function',
-  name: 'stakingContract',
-  inputs: [],
-  outputs: [{ type: 'address' }],
-  stateMutability: 'view',
-} as const;
+const TOKEN_IDS_TO_CHECK = [0n, 1n, 2n, 3n, 4n, 5n];
+
 const getStakeInfoForTokenAbi = {
   type: 'function',
   name: 'getStakeInfoForToken',
@@ -55,8 +21,6 @@ const getStakeInfoForTokenAbi = {
   ],
   stateMutability: 'view',
 } as const;
-
-const TOKEN_IDS_TO_CHECK = [0n, 1n, 2n, 3n, 4n, 5n];
 
 // --- Reusable OpenSea Link Button ---
 const OpenSeaLinkButton = () => (
@@ -74,106 +38,106 @@ const OpenSeaLinkButton = () => (
 // --- Inner Component (handles the main logic) ---
 const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContractAddress: string; address: string }) => {
   const [timeLeft, setTimeLeft] = useState(0);
-  const queryClient = useQueryClient(); // Initialize queryClient
-
-  const { mutateAsync: sendTx, isPending } = useSendTransaction();
+  const wallet = useActiveWallet();
+  const account = wallet?.getAccount();
+  const queryClient = useQueryClient();
 
   // --- Base contract reads ---
-  const { data: claimDeadline, isLoading: isDeadlineLoading } = useQuery({
+  const { data: claimDeadline } = useQuery({
     queryKey: ['claimDeadline', earlyBirdContract.address],
-    queryFn: () =>
-      readContract({
-        contract: earlyBirdContract,
-        method: claimDeadlineAbi,
-      }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
-  });
-  const { data: isClaimOpen, isLoading: isClaimOpenLoading } = useQuery({
-    queryKey: ['isClaimOpen', earlyBirdContract.address],
-    queryFn: () =>
-      readContract({
-        contract: earlyBirdContract,
-        method: isClaimOpenAbi,
-      }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
-  });
-  const { data: hasClaimed, isLoading: hasClaimedLoading } = useQuery({
-    queryKey: ['hasClaimed', earlyBirdContract.address, address],
-    queryFn: () =>
-      readContract({
-        contract: earlyBirdContract,
-        method: hasClaimedAbi,
-        params: [address],
-      }),
-    enabled: !!address,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
+    queryFn: () => earlyPublicClient.readContract({
+      address: earlyBirdContract.address as `0x${string}`,
+      abi: earlyBirdAbi,
+      functionName: 'CLAIM_DEADLINE',
+    }),
+    staleTime: 5 * 60 * 1000,
   });
 
-  // --- Staking contract logic ---
-  const stakingContract = useMemo(() => {
-    return getContract({
-      client,
-      chain: chain,
-      address: stakingContractAddress,
-    });
-  }, [stakingContractAddress]);
+  const { data: isClaimOpen, isLoading: isClaimOpenLoading } = useQuery({
+    queryKey: ['isClaimOpen', earlyBirdContract.address],
+    queryFn: () => earlyPublicClient.readContract({
+      address: earlyBirdContract.address as `0x${string}`,
+      abi: earlyBirdAbi,
+      functionName: 'isClaimOpen',
+    }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: hasClaimed, isLoading: hasClaimedLoading } = useQuery({
+    queryKey: ['hasClaimed', earlyBirdContract.address, address],
+    queryFn: () => earlyPublicClient.readContract({
+      address: earlyBirdContract.address as `0x${string}`,
+      abi: earlyBirdAbi,
+      functionName: 'hasClaimed',
+      args: [address as `0x${string}`],
+    }),
+    enabled: !!address,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const stakeInfoQueries = useQueries({
     queries: TOKEN_IDS_TO_CHECK.map((tokenId) => ({
       queryKey: ['getStakeInfoForToken', stakingContractAddress, tokenId.toString(), address],
-      queryFn: () =>
-        readContract({
-          contract: stakingContract,
-          method: getStakeInfoForTokenAbi,
-          params: [tokenId, address],
-        }),
+      queryFn: () => earlyPublicClient.readContract({
+        address: stakingContractAddress as `0x${string}`,
+        abi: [getStakeInfoForTokenAbi],
+        functionName: 'getStakeInfoForToken',
+        args: [tokenId, address as `0x${string}`],
+      }),
       enabled: !!address && !!stakingContractAddress,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchInterval: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
     })),
   });
 
-  const allStakeInfos = stakeInfoQueries.map((query) => query.data);
   const isStakeInfoLoading = stakeInfoQueries.some((query) => query.isLoading);
 
-  const totalRewards = allStakeInfos.reduce((acc, query) => {
-    if (query && query[1]) {
-      return acc + query[1];
+  const totalRewards = stakeInfoQueries.reduce((acc: bigint, query) => {
+    const data = query.data;
+    if (data && Array.isArray(data) && data[1]) {
+      return acc + (data[1] as bigint);
     }
     return acc;
   }, 0n);
 
-  const hasEnoughHash = totalRewards >= toWei('1');
+  const hasEnoughHash = totalRewards >= parseUnits('1', 18);
 
-  const handleClaim = useCallback(async () => {
-    try {
-      const transaction = await prepareContractCall({
-        contract: earlyBirdContract,
-        method: claimAbi,
-        params: [TOKEN_IDS_TO_CHECK],
+  const claimMutation = useMutation({
+    mutationFn: async () => {
+      if (!account) throw new Error('Wallet not connected');
+
+      const data = encodeFunctionData({
+        abi: earlyBirdAbi,
+        functionName: 'claim',
+        args: [TOKEN_IDS_TO_CHECK],
       });
-      await sendTx(transaction, {
-        onSuccess: () => {
-          // Invalidate to re-fetch actual data from blockchain
-          queryClient.invalidateQueries({ queryKey: ['hasClaimed', earlyBirdContract.address, address] });
-        },
+
+      const { transactionHash } = await account.sendTransaction({
+        to: earlyBirdContract.address as `0x${string}`,
+        data,
+        chainId: 8453,
       });
-    } catch (error) {
+
+      return earlyPublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hasClaimed', earlyBirdContract.address, address] });
+    },
+    onError: (error: Error) => {
       console.error('Claim failed', error);
-    }
-  }, [sendTx, address, queryClient]);
+    },
+  });
+
+  const handleClaim = useCallback(() => {
+    claimMutation.mutate();
+  }, [claimMutation]);
 
   useEffect(() => {
     let animationFrameId: number;
     let lastUpdateTime = 0;
 
     const updateCountdown = (now: number) => {
-      if (!claimDeadline) return; // Ensure claimDeadline is available within the loop
+      if (!claimDeadline) return;
 
-      // Throttle to update roughly once per second
       if (now - lastUpdateTime < 1000) {
         animationFrameId = requestAnimationFrame(updateCountdown);
         return;
@@ -190,7 +154,6 @@ const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContract
     };
 
     if (claimDeadline) {
-      // Initial call to set time and start loop if needed
       const nowInSeconds = Math.floor(Date.now() / 1000);
       const difference = Number(claimDeadline) - nowInSeconds;
       setTimeLeft(difference > 0 ? difference : 0);
@@ -206,12 +169,12 @@ const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContract
   const days = Math.floor(timeLeft / (60 * 60 * 24));
   const hours = Math.floor((timeLeft % (60 * 60 * 24)) / (60 * 60));
 
-  const isLoading = isDeadlineLoading || isClaimOpenLoading || hasClaimedLoading || isStakeInfoLoading;
-  const isButtonDisabled: boolean =
-    isLoading || isPending || !Boolean(isClaimOpen) || Boolean(hasClaimed) || !hasEnoughHash;
+  const isLoading = isClaimOpenLoading || hasClaimedLoading || isStakeInfoLoading;
+  const isButtonDisabled =
+    isLoading || claimMutation.isPending || !Boolean(isClaimOpen) || Boolean(hasClaimed) || !hasEnoughHash;
 
   let buttonContent: React.ReactNode = 'Claim Early';
-  if (isPending) {
+  if (claimMutation.isPending) {
     buttonContent = (
       <span className="flex items-center justify-center">
         <span className="animate-spin mr-2">⏳</span>
@@ -219,7 +182,6 @@ const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContract
       </span>
     );
   } else if (!address) {
-    // Prioritize "Connect Wallet" if address is not available
     buttonContent = 'Connect Wallet';
   } else if (isLoading) {
     buttonContent = 'Loading...';
@@ -230,7 +192,7 @@ const ClaimButtonInner = ({ stakingContractAddress, address }: { stakingContract
   let tooltip = 'Claim your Early NFT';
   if (isButtonDisabled && !hasClaimed) {
     if (isLoading) tooltip = 'Loading...';
-    else if (isPending) tooltip = 'Processing transaction...';
+    else if (claimMutation.isPending) tooltip = 'Processing transaction...';
     else if (!isClaimOpen && timeLeft <= 0) tooltip = 'Claim period is over';
     else if (!hasEnoughHash) tooltip = 'Get 1 HASH token using mining.';
   } else if (hasClaimed) {
@@ -287,13 +249,12 @@ export default function EarlyBirdClaimButton() {
 
   const { data: stakingContractAddress, isLoading: isStakingAddrLoading } = useQuery({
     queryKey: ['stakingContractAddress', earlyBirdContract.address],
-    queryFn: () =>
-      readContract({
-        contract: earlyBirdContract,
-        method: getStakingContractAddressAbi,
-      }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
+    queryFn: () => earlyPublicClient.readContract({
+      address: earlyBirdContract.address as `0x${string}`,
+      abi: earlyBirdAbi,
+      functionName: 'stakingContract',
+    }),
+    staleTime: 5 * 60 * 1000,
   });
 
   return (

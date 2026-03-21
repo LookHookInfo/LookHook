@@ -55,7 +55,7 @@ export const contractStaking = getContract({
   chain: chain,
   address: '0xBBc4f75874930EB4d8075FCB3f48af2535A8E848',
   abi: contractStakingAbi,
-});
+}); //ok
 
 export const stakeNftContract = getContract({
   client,
@@ -69,7 +69,7 @@ export const contractTools = getContract({
   chain: chain,
   address: '0x13CE10a3e09FA8000BA8A13fCbe8813f476584e7',
   abi: contractToolsAbi,
-});
+}); //ok
 
 // --- AIRDROPS & QUESTS ---
 
@@ -78,14 +78,14 @@ export const earlyBirdContract = getContract({
   chain: chain,
   address: '0xe6DC0fe06C141329050A1B2F3e9c4A7f944450B0',
   abi: earlyBirdAbi,
-});
+}); //ok
 
 export const buyMeACoffeeContract = getContract({
   client,
   chain: chain,
   address: '0x3e2623875aa6295628a40040326b70fcb2e9df15',
   abi: CoffeeQuestAbi,
-});
+}); //ok
 
 export const stakeRewardClaimContract = getContract({
   client,
@@ -99,28 +99,28 @@ export const xroleRewardContract = getContract({
   chain: chain,
   address: '0xB3A9FB099c0733281722e23004c2923d3318FD22',
   abi: xroleRewardAbi,
-});
+}); //ok
 
 export const heliRewardContract = getContract({
   client,
   chain: chain,
   address: '0x3EB421C3fC1BFcd50fE539a5f92D01bB74Aa27E2',
   abi: heliRewardAbi,
-});
+}); //ok
 
 export const nameRewardContract = getContract({
   client,
   chain: chain,
   address: '0x9951b4DB6198b04E5b4Ca6684A8e7d1C2148dD6B',
   abi: nameRewardAbi,
-});
+}); //ok
 
 export const welcomeRewardContract = getContract({
   client,
   chain: chain,
   address: '0xA2116B995A314c0F5Bcb67c32B62d5e2F17a5424',
   abi: welcomeRewardAbi,
-});
+}); //ok
 
 // --- NFT & IDENTITY ---
 
@@ -135,60 +135,60 @@ export const ourNftContract = getContract({
   chain: chain,
   address: '0x8F45ee49fC8613661DF64Da7f0ce1Eb0a4c3794B',
   abi: gmnftAbi,
-});
+}); //ok
 
 export const nameContract = getContract({
   client,
   chain: chain,
   address: '0xA8e00E2ca8b183Edb7EbB6bD7EeBB90047416F95',
   abi: nameContractAbi,
-});
+}); //ok
 
 export const whaleContract = getContract({
   client,
   chain: chain,
   address: '0x7aa5fc50D0E4A400545E34055134C89F2b310080',
   abi: whaleContractAbi,
-});
+}); //ok
 
 export const gmContract = getContract({
   client,
   chain: chain,
   address: '0x1e2390B4021B64B05Bc7AfF53E0122eb648DdC19',
   abi: GMAbi,
-});
+}); //ok
 
 export const gmnftContract = getContract({
   client,
   chain: chain,
   address: '0x3B01Ad4F0aa8663174A7cE44ed9C7223791Fa16f',
   abi: gmnftAbi,
-});
+}); //ok
 
 export const badgeStakeContract = getContract({
   client,
   chain: chain,
   address: '0x6249E34dB9858676950c05fF66eCf96Aee4b7ba5',
   abi: badgeStakeAbi,
-});
+}); //ok
 
 export const drub100BadgeContract = getContract({
   client,
   chain: chain,
   address: '0x366f37820b98F86F7C41d2fB6DB246f85B28b18c',
   abi: drub100BadgeAbi,
-});
+}); //ok
 
 export const ogMiningBadgeContract = getContract({
   client,
   chain: chain,
   address: '0xb494698522ad959caa50a0e82107771711fd5a49',
   abi: ogMiningBadgeAbi,
-});
+}); //ok
 
 export const ogRegistryContract = getContract({
   client,
   chain: chain,
   address: '0xb517B91D950ba0649bab120Cc9e2b235d78acD8C',
   abi: ogRegistryAbi,
-});
+}); //ok

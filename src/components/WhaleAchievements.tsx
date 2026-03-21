@@ -1,7 +1,9 @@
-import { useReadContract, useSendAndConfirmTransaction } from 'thirdweb/react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Wallet } from 'thirdweb/wallets';
 import { whaleContract } from '../utils/contracts';
-import { prepareContractCall } from 'thirdweb';
+import { encodeFunctionData } from 'viem';
+import { earlyPublicClient } from '../lib/viem/client';
+import { whaleContractAbi } from '../utils/whaleContractAbi';
 
 import { useEffect } from 'react';
 
@@ -14,19 +16,23 @@ const SHARK_THRESHOLD = 10000n * 10n ** 18n;
 const WHALE_THRESHOLD = 25000n * 10n ** 18n;
 
 export function DolphinAchievement({ wallet }: WhaleAchievementProps) {
-  const ownerAddress = wallet.getAccount()?.address;
+  const account = wallet.getAccount();
+  const ownerAddress = account?.address;
+  const queryClient = useQueryClient();
 
   const {
     data: whaleContractData,
     isLoading: isLoadingWhaleContract,
     refetch: refetchWhaleContract,
-  } = useReadContract({
-    contract: whaleContract,
-    method: 'getUserStatus',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-    },
+  } = useQuery({
+    queryKey: ['whaleContract', 'getUserStatus', ownerAddress],
+    queryFn: () => earlyPublicClient.readContract({
+      address: whaleContract.address as `0x${string}`,
+      abi: whaleContractAbi,
+      functionName: 'getUserStatus',
+      args: [ownerAddress as `0x${string}`],
+    }),
+    enabled: !!ownerAddress,
   });
 
   useEffect(() => {
@@ -35,18 +41,35 @@ export function DolphinAchievement({ wallet }: WhaleAchievementProps) {
     }
   }, [ownerAddress, refetchWhaleContract]);
 
-  // ABI: [earnedHASH, dolphinAvailable, sharkAvailable, whaleAvailable, hasDolphinNFT, hasSharkNFT, hasWhaleNFT]
   const currentRewards = whaleContractData ? whaleContractData[0] : 0n;
   const canMint = whaleContractData ? whaleContractData[1] : false;
   const hasNft = whaleContractData ? whaleContractData[4] : false;
 
-  const mintDolphinTransaction = prepareContractCall({
-    contract: whaleContract,
-    method: 'mintDolphin',
-    params: [],
-  });
+  const claimMutation = useMutation({
+    mutationFn: async () => {
+      if (!account || !canMint || hasNft) return;
 
-  const { mutate: sendAndConfirmDolphin, isPending: isMintingDolphin } = useSendAndConfirmTransaction();
+      const data = encodeFunctionData({
+        abi: whaleContractAbi,
+        functionName: 'mintDolphin',
+        args: [],
+      });
+
+      const { transactionHash } = await account.sendTransaction({
+        to: whaleContract.address as `0x${string}`,
+        data,
+        chainId: 8453,
+      });
+
+      return earlyPublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['whaleContract', 'getUserStatus', ownerAddress] });
+    },
+    onError: (error: Error) => {
+      console.error('Failed to mint Dolphin:', error);
+    },
+  });
 
   const progressText = `Earned: ${Number(currentRewards / 10n ** 18n)}/${Number(DOLPHIN_THRESHOLD / 10n ** 18n)} HASH`;
   const titleText = hasNft
@@ -56,21 +79,8 @@ export function DolphinAchievement({ wallet }: WhaleAchievementProps) {
       : `Dolphin – Keep mining (${progressText})`;
 
   const handleDolphinClaim = async () => {
-    console.log('🐬 Claim Attempt:', { canMint, hasNft, currentRewards: Number(currentRewards) });
-
-    if (canMint && !hasNft && ownerAddress && !isMintingDolphin) {
-      try {
-        await sendAndConfirmDolphin(mintDolphinTransaction, {
-          onSuccess: () => {
-            refetchWhaleContract();
-          },
-          onError: (error: unknown) => {
-            console.error('Failed to mint Dolphin:', error);
-          },
-        });
-      } catch (error) {
-        console.error('Failed to mint Dolphin:', error);
-      }
+    if (canMint && !hasNft && ownerAddress && !claimMutation.isPending) {
+      claimMutation.mutate();
     }
   };
 
@@ -99,7 +109,7 @@ export function DolphinAchievement({ wallet }: WhaleAchievementProps) {
   return (
     <div
       className={`size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden
-        ${canMint && !hasNft ? 'cursor-pointer glow-effect' : ''} ${isMintingDolphin ? 'cursor-not-allowed' : ''}`}
+        ${canMint && !hasNft ? 'cursor-pointer glow-effect' : ''} ${claimMutation.isPending ? 'cursor-not-allowed' : ''}`}
       title={titleText}
       onClick={handleDolphinClaim}
     >
@@ -113,7 +123,7 @@ export function DolphinAchievement({ wallet }: WhaleAchievementProps) {
           CLAIM
         </div>
       )}
-      {isMintingDolphin && (
+      {claimMutation.isPending && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/70">
           <span className="text-neutral-400 text-xs">...</span>
         </div>
@@ -123,19 +133,23 @@ export function DolphinAchievement({ wallet }: WhaleAchievementProps) {
 }
 
 export function SharkAchievement({ wallet }: WhaleAchievementProps) {
-  const ownerAddress = wallet.getAccount()?.address;
+  const account = wallet.getAccount();
+  const ownerAddress = account?.address;
+  const queryClient = useQueryClient();
 
   const {
     data: whaleContractData,
     isLoading: isLoadingWhaleContract,
     refetch: refetchWhaleContract,
-  } = useReadContract({
-    contract: whaleContract,
-    method: 'getUserStatus',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-    },
+  } = useQuery({
+    queryKey: ['whaleContract', 'getUserStatus', ownerAddress],
+    queryFn: () => earlyPublicClient.readContract({
+      address: whaleContract.address as `0x${string}`,
+      abi: whaleContractAbi,
+      functionName: 'getUserStatus',
+      args: [ownerAddress as `0x${string}`],
+    }),
+    enabled: !!ownerAddress,
   });
 
   useEffect(() => {
@@ -144,18 +158,35 @@ export function SharkAchievement({ wallet }: WhaleAchievementProps) {
     }
   }, [ownerAddress, refetchWhaleContract]);
 
-  // ABI: [earnedHASH, dolphinAvailable, sharkAvailable, whaleAvailable, hasDolphinNFT, hasSharkNFT, hasWhaleNFT]
   const currentRewards = whaleContractData ? whaleContractData[0] : 0n;
   const canMint = whaleContractData ? whaleContractData[2] : false;
   const hasNft = whaleContractData ? whaleContractData[5] : false;
 
-  const mintSharkTransaction = prepareContractCall({
-    contract: whaleContract,
-    method: 'mintShark',
-    params: [],
-  });
+  const claimMutation = useMutation({
+    mutationFn: async () => {
+      if (!account || !canMint || hasNft) return;
 
-  const { mutate: sendAndConfirmShark, isPending: isMintingShark } = useSendAndConfirmTransaction();
+      const data = encodeFunctionData({
+        abi: whaleContractAbi,
+        functionName: 'mintShark',
+        args: [],
+      });
+
+      const { transactionHash } = await account.sendTransaction({
+        to: whaleContract.address as `0x${string}`,
+        data,
+        chainId: 8453,
+      });
+
+      return earlyPublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['whaleContract', 'getUserStatus', ownerAddress] });
+    },
+    onError: (error: Error) => {
+      console.error('Failed to mint Shark:', error);
+    },
+  });
 
   const progressText = `Earned: ${Number(currentRewards / 10n ** 18n)}/${Number(SHARK_THRESHOLD / 10n ** 18n)} HASH`;
   const titleText = hasNft
@@ -165,22 +196,8 @@ export function SharkAchievement({ wallet }: WhaleAchievementProps) {
       : `Shark – Keep mining (${progressText})`;
 
   const handleSharkClaim = async () => {
-    console.log('🦈 Claim Attempt:', { canMint, hasNft, currentRewards: Number(currentRewards) });
-
-    if (canMint && !hasNft && ownerAddress && !isMintingShark) {
-      try {
-        await sendAndConfirmShark(mintSharkTransaction, {
-          onSuccess: () => {
-            refetchWhaleContract();
-          },
-          onError: (error: unknown) => {
-            console.error('Failed to mint Shark:', error);
-          },
-        });
-        setTimeout(() => refetchWhaleContract(), 3000);
-      } catch (error) {
-        console.error('Failed to mint Shark:', error);
-      }
+    if (canMint && !hasNft && ownerAddress && !claimMutation.isPending) {
+      claimMutation.mutate();
     }
   };
 
@@ -209,7 +226,7 @@ export function SharkAchievement({ wallet }: WhaleAchievementProps) {
   return (
     <div
       className={`size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden
-        ${canMint && !hasNft ? 'cursor-pointer glow-effect' : ''} ${isMintingShark ? 'cursor-not-allowed' : ''}`}
+        ${canMint && !hasNft ? 'cursor-pointer glow-effect' : ''} ${claimMutation.isPending ? 'cursor-not-allowed' : ''}`}
       title={titleText}
       onClick={handleSharkClaim}
     >
@@ -223,7 +240,7 @@ export function SharkAchievement({ wallet }: WhaleAchievementProps) {
           CLAIM
         </div>
       )}
-      {isMintingShark && (
+      {claimMutation.isPending && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/70">
           <span className="text-neutral-400 text-xs">...</span>
         </div>
@@ -233,19 +250,23 @@ export function SharkAchievement({ wallet }: WhaleAchievementProps) {
 }
 
 export function WhaleAchievement({ wallet }: WhaleAchievementProps) {
-  const ownerAddress = wallet.getAccount()?.address;
+  const account = wallet.getAccount();
+  const ownerAddress = account?.address;
+  const queryClient = useQueryClient();
 
   const {
     data: whaleContractData,
     isLoading: isLoadingWhaleContract,
     refetch: refetchWhaleContract,
-  } = useReadContract({
-    contract: whaleContract,
-    method: 'getUserStatus',
-    params: [ownerAddress || ''],
-    queryOptions: {
-      enabled: !!ownerAddress,
-    },
+  } = useQuery({
+    queryKey: ['whaleContract', 'getUserStatus', ownerAddress],
+    queryFn: () => earlyPublicClient.readContract({
+      address: whaleContract.address as `0x${string}`,
+      abi: whaleContractAbi,
+      functionName: 'getUserStatus',
+      args: [ownerAddress as `0x${string}`],
+    }),
+    enabled: !!ownerAddress,
   });
 
   useEffect(() => {
@@ -254,18 +275,35 @@ export function WhaleAchievement({ wallet }: WhaleAchievementProps) {
     }
   }, [ownerAddress, refetchWhaleContract]);
 
-  // ABI: [earnedHASH, dolphinAvailable, sharkAvailable, whaleAvailable, hasDolphinNFT, hasSharkNFT, hasWhaleNFT]
   const currentRewards = whaleContractData ? whaleContractData[0] : 0n;
   const canMint = whaleContractData ? whaleContractData[3] : false;
   const hasNft = whaleContractData ? whaleContractData[6] : false;
 
-  const mintWhaleTransaction = prepareContractCall({
-    contract: whaleContract,
-    method: 'mintWhale',
-    params: [],
-  });
+  const claimMutation = useMutation({
+    mutationFn: async () => {
+      if (!account || !canMint || hasNft) return;
 
-  const { mutate: sendAndConfirmWhale, isPending: isMintingWhale } = useSendAndConfirmTransaction();
+      const data = encodeFunctionData({
+        abi: whaleContractAbi,
+        functionName: 'mintWhale',
+        args: [],
+      });
+
+      const { transactionHash } = await account.sendTransaction({
+        to: whaleContract.address as `0x${string}`,
+        data,
+        chainId: 8453,
+      });
+
+      return earlyPublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['whaleContract', 'getUserStatus', ownerAddress] });
+    },
+    onError: (error: Error) => {
+      console.error('Failed to mint Whale:', error);
+    },
+  });
 
   const progressText = `Earned: ${Number(currentRewards / 10n ** 18n)}/${Number(WHALE_THRESHOLD / 10n ** 18n)} HASH`;
   const titleText = hasNft
@@ -275,20 +313,8 @@ export function WhaleAchievement({ wallet }: WhaleAchievementProps) {
       : `Whale – Keep mining (${progressText})`;
 
   const handleWhaleClaim = async () => {
-    if (canMint && !hasNft && ownerAddress && !isMintingWhale) {
-      try {
-        await sendAndConfirmWhale(mintWhaleTransaction, {
-          onSuccess: () => {
-            refetchWhaleContract();
-          },
-          onError: (error: unknown) => {
-            console.error('Failed to mint Whale:', error);
-          },
-        });
-        setTimeout(() => refetchWhaleContract(), 3000);
-      } catch (error) {
-        console.error('Failed to mint Whale:', error);
-      }
+    if (canMint && !hasNft && ownerAddress && !claimMutation.isPending) {
+      claimMutation.mutate();
     }
   };
 
@@ -317,7 +343,7 @@ export function WhaleAchievement({ wallet }: WhaleAchievementProps) {
   return (
     <div
       className={`size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden
-        ${canMint && !hasNft ? 'cursor-pointer glow-effect' : ''} ${isMintingWhale ? 'cursor-not-allowed' : ''}`}
+        ${canMint && !hasNft ? 'cursor-pointer glow-effect' : ''} ${claimMutation.isPending ? 'cursor-not-allowed' : ''}`}
       title={titleText}
       onClick={handleWhaleClaim}
     >
@@ -331,7 +357,7 @@ export function WhaleAchievement({ wallet }: WhaleAchievementProps) {
           CLAIM
         </div>
       )}
-      {isMintingWhale && (
+      {claimMutation.isPending && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/70">
           <span className="text-neutral-400 text-xs">...</span>
         </div>

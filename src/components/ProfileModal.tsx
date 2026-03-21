@@ -24,7 +24,7 @@ interface ProfileModalProps {
   onClose: () => void;
   hasCatNft: boolean;
   isNftLoading: boolean;
-  registeredName: string | null;
+  registeredName: string | null | undefined;
 }
 
 // OG Achievement Component

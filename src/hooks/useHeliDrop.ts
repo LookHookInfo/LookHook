@@ -9,7 +9,7 @@ import {
   heliRewardContract,
   hashcoinContract,
 } from '../utils/contracts';
-import { publicClient, namePublicClient, miningPublicClient } from '../lib/viem/client';
+import { publicClient, namePublicClient, miningPublicClient, earlyPublicClient } from '../lib/viem/client';
 import { gmnftAbi } from '../utils/gmnftAbi';
 import { heliRewardAbi } from '../utils/heliRewardAbi';
 import { earlyBirdAbi } from '../utils/earlyBirdAbi';
@@ -48,7 +48,7 @@ export function useHeliDrop() {
       },
       {
         queryKey: ['heliDrop', 'earlyBirdBalance', accountAddress],
-        queryFn: () => namePublicClient.readContract({
+        queryFn: () => earlyPublicClient.readContract({
           address: earlyBirdContract.address as `0x${string}`,
           abi: earlyBirdAbi,
           functionName: 'balanceOf',
