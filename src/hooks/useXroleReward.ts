@@ -1,46 +1,62 @@
 import { useMemo } from 'react';
-import { useActiveAccount, useSendTransaction } from 'thirdweb/react';
-import { prepareContractCall, waitForReceipt, readContract } from 'thirdweb';
-import { client } from '../lib/thirdweb/client';
-import { chain } from '../lib/thirdweb/chain';
-import { formatUnits } from 'ethers';
+import { useActiveAccount } from 'thirdweb/react';
+import { encodeFunctionData, formatUnits } from 'viem';
 import { xroleRewardContract, hashcoinContract } from '../utils/contracts';
+import { xPublicClient, publicClient } from '../lib/viem/client';
 import { useQueryClient, useQueries, useMutation } from '@tanstack/react-query';
+import { xroleRewardAbi } from '../utils/xroleRewardAbi';
+import erc20Abi from '../utils/erc20';
 
 export const useXroleReward = () => {
   const account = useActiveAccount();
   const queryClient = useQueryClient();
-  const { mutateAsync: sendTx } = useSendTransaction();
-  const accountAddress = account?.address ?? '0x0000000000000000000000000000000000000000';
+  const accountAddress = account?.address as `0x${string}` | undefined;
 
-  // Strategy for RPC optimization and user comfort:
-  // - Queries are only enabled when a wallet is connected.
-  // - `canClaim` status is cached for 15 minutes. This reduces RPC calls while ensuring the UI updates
-  //   within a reasonable timeframe if eligibility changes (e.g., user acquires the required NFT).
-  // - `rewardAmount` is hardcoded to reduce RPC load, as this value is typically static on the contract.
   const queries = useMemo(() => {
     return [
       {
         queryKey: ['xrole', 'canClaim', accountAddress],
-        queryFn: () => readContract({ contract: xroleRewardContract, method: 'canClaim', params: [accountAddress] }),
-        enabled: !!account,
-        staleTime: 900000, // Cache for 15 minutes (15 * 60 * 1000 ms)
+        queryFn: async () => {
+          if (!accountAddress) return false;
+          return await xPublicClient.readContract({
+            address: xroleRewardContract.address as `0x${string}`,
+            abi: xroleRewardAbi,
+            functionName: 'canClaim',
+            args: [accountAddress],
+          });
+        },
+        enabled: !!accountAddress,
+        staleTime: 900000,
       },
       {
         queryKey: ['xrole', 'poolBalance', xroleRewardContract.address],
-        queryFn: () =>
-          readContract({ contract: hashcoinContract, method: 'balanceOf', params: [xroleRewardContract.address] }),
-        enabled: !!account,
-        staleTime: 900000, // Cache for 15 minutes
+        queryFn: async () => {
+          return await publicClient.readContract({
+            address: hashcoinContract.address as `0x${string}`,
+            abi: erc20Abi,
+            functionName: 'balanceOf',
+            args: [xroleRewardContract.address as `0x${string}`],
+          });
+        },
+        enabled: true,
+        staleTime: 900000,
       },
       {
         queryKey: ['xrole', 'hasClaimed', accountAddress],
-        queryFn: () => readContract({ contract: xroleRewardContract, method: 'claimed', params: [accountAddress] }),
-        enabled: !!account,
-        staleTime: 900000, // Cache for 15 minutes
+        queryFn: async () => {
+          if (!accountAddress) return false;
+          return await xPublicClient.readContract({
+            address: xroleRewardContract.address as `0x${string}`,
+            abi: xroleRewardAbi,
+            functionName: 'claimed',
+            args: [accountAddress],
+          });
+        },
+        enabled: !!accountAddress,
+        staleTime: 900000,
       },
     ] as const;
-  }, [account, accountAddress]);
+  }, [accountAddress]);
 
   const results = useQueries({ queries });
 
@@ -50,7 +66,6 @@ export const useXroleReward = () => {
     { data: hasClaimed, isLoading: isCheckingHasClaimed },
   ] = results;
 
-  // Hardcode reward amount to reduce RPC load, as this value is typically static on the contract.
   const rewardAmount = '4,000';
 
   const claimMutation = useMutation({
@@ -58,16 +73,22 @@ export const useXroleReward = () => {
       if (!account) throw new Error('Please connect wallet.');
       if (!canClaim) throw new Error('You are not eligible to claim this reward.');
 
-      const tx = prepareContractCall({ contract: xroleRewardContract, method: 'claim', params: [] });
-      const { transactionHash } = await sendTx(tx);
-      return waitForReceipt({ client, chain, transactionHash });
+      const data = encodeFunctionData({
+        abi: xroleRewardAbi,
+        functionName: 'claim',
+        args: [],
+      });
+
+      const { transactionHash } = await account.sendTransaction({
+        to: xroleRewardContract.address as `0x${string}`,
+        data,
+        chainId: 8453,
+      });
+
+      return xPublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['xrole', 'canClaim', accountAddress] });
-      queryClient.invalidateQueries({ queryKey: ['xrole', 'poolBalance', xroleRewardContract.address] });
-      queryClient.invalidateQueries({ queryKey: ['xrole', 'hasClaimed', accountAddress] });
-      // TODO: Optionally invalidate user's HASH balance if you track it elsewhere
-      // queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress] });
+      queryClient.invalidateQueries({ queryKey: ['xrole'] });
     },
     onError: (error: Error) => {
       console.error('XRole Reward claim failed', error);
@@ -79,14 +100,14 @@ export const useXroleReward = () => {
   };
 
   const formattedPoolRewardBalance = poolRewardBalance
-    ? parseFloat(formatUnits(poolRewardBalance, 18)).toLocaleString()
+    ? parseFloat(formatUnits(poolRewardBalance as bigint, 18)).toLocaleString()
     : '0';
 
   return {
     handleClaim,
-    canClaim: canClaim ?? false,
-    hasClaimed: hasClaimed ?? false,
-    rewardAmount, // Using the hardcoded value
+    canClaim: (canClaim as boolean) ?? false,
+    hasClaimed: (hasClaimed as boolean) ?? false,
+    rewardAmount,
     poolRewardBalance: formattedPoolRewardBalance,
     isClaiming: claimMutation.isPending,
     isCheckingCanClaim,
