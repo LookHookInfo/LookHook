@@ -1,15 +1,14 @@
 import { useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useActiveAccount, useSendTransaction } from 'thirdweb/react';
-import { prepareContractCall, waitForReceipt, readContract } from 'thirdweb';
+import { useActiveAccount } from 'thirdweb/react';
+import { encodeFunctionData } from 'viem';
 import { ogMiningBadgeContract, contractTools } from '../utils/contracts';
-import { client } from '../lib/thirdweb/client';
-import { chain } from '../lib/thirdweb/chain';
+import { ogPublicClient, miningPublicClient } from '../lib/viem/client';
+import { ogMiningBadgeAbi } from '../utils/ogMiningBadgeAbi';
 
 export function useOgBadge() {
   const account = useActiveAccount();
   const queryClient = useQueryClient();
-  const { mutateAsync: sendTx } = useSendTransaction();
-  const accountAddress = account?.address;
+  const accountAddress = account?.address as `0x${string}` | undefined;
 
   const queries = useQueries({
     queries: [
@@ -17,12 +16,14 @@ export function useOgBadge() {
       {
         queryKey: ['ogBadge', 'hasBadge', accountAddress],
         queryFn: async () => {
-          const balance = await readContract({
-            contract: ogMiningBadgeContract,
-            method: 'balanceOf',
-            params: [accountAddress!],
+          if (!accountAddress) return false;
+          const balance = await ogPublicClient.readContract({
+            address: ogMiningBadgeContract.address as `0x${string}`,
+            abi: ogMiningBadgeAbi,
+            functionName: 'balanceOf',
+            args: [accountAddress],
           });
-          return balance > 0n;
+          return (balance as bigint) > 0n;
         },
         enabled: !!accountAddress,
         staleTime: 300_000,
@@ -31,12 +32,26 @@ export function useOgBadge() {
       {
         queryKey: ['ogBadge', 'containerClaimed', accountAddress],
         queryFn: async () => {
-          const data = await readContract({
-            contract: contractTools,
-            method: 'function getSupplyClaimedByWallet(uint256 tokenId, uint256 conditionId, address wallet) view returns (uint256)',
-            params: [5n, 0n, accountAddress!],
+          if (!accountAddress) return false;
+          const data = await miningPublicClient.readContract({
+            address: contractTools.address as `0x${string}`,
+            abi: [
+              {
+                name: 'getSupplyClaimedByWallet',
+                type: 'function',
+                stateMutability: 'view',
+                inputs: [
+                  { name: 'tokenId', type: 'uint256' },
+                  { name: 'conditionId', type: 'uint256' },
+                  { name: 'wallet', type: 'address' },
+                ],
+                outputs: [{ name: '', type: 'uint256' }],
+              },
+            ] as const,
+            functionName: 'getSupplyClaimedByWallet',
+            args: [5n, 0n, accountAddress],
           });
-          return data > 0n;
+          return (data as bigint) > 0n;
         },
         enabled: !!accountAddress,
         staleTime: 300_000,
@@ -58,13 +73,19 @@ export function useOgBadge() {
       if (!account) throw new Error('Please connect wallet.');
       if (!canClaim) throw new Error('You are not eligible or already claimed.');
 
-      const tx = prepareContractCall({
-        contract: ogMiningBadgeContract,
-        method: 'mint',
-        params: [],
+      const data = encodeFunctionData({
+        abi: ogMiningBadgeAbi,
+        functionName: 'mint',
+        args: [],
       });
-      const { transactionHash } = await sendTx(tx);
-      return waitForReceipt({ client, chain, transactionHash });
+
+      const { transactionHash } = await account.sendTransaction({
+        to: ogMiningBadgeContract.address as `0x${string}`,
+        data,
+        chainId: 8453,
+      });
+
+      return ogPublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ogBadge', accountAddress] });

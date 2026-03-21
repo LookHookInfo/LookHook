@@ -1,45 +1,52 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getContractEvents, readContract, prepareEvent } from 'thirdweb';
 import { useActiveAccount } from 'thirdweb/react';
 import { nameContract, ogMiningBadgeContract, ogRegistryContract } from '../utils/contracts';
+import { ogPublicClient, publicClient } from '../lib/viem/client';
+import { nameContractAbi } from '../utils/nameContractAbi';
+import { ogRegistryAbi } from '../utils/ogRegistryAbi';
+import { ogMiningBadgeAbi } from '../utils/ogMiningBadgeAbi';
 import { OgProfileModal } from '../components/OgProfileModal';
 import { Spinner } from '../components/Spinner';
 
 // --- Helper Component for Individual Member Card ---
 const OgMemberCard = ({ address, onClick }: { address: string; onClick: () => void }) => {
-  // Fetch primary name from contract
   const { data: primaryName, isLoading: isNameLoading } = useQuery({
     queryKey: ['primaryName', address],
     queryFn: () =>
-      readContract({
-        contract: nameContract,
-        method: 'getPrimaryName',
-        params: [address],
+      publicClient.readContract({
+        address: nameContract.address as `0x${string}`,
+        abi: nameContractAbi,
+        functionName: 'getPrimaryName',
+        args: [address as `0x${string}`],
       }),
-    staleTime: 4 * 60 * 60 * 1000,
+    staleTime: Infinity,
   });
 
-  // Fetch Profile from Registry
   const { data: profile } = useQuery({
     queryKey: ['ogProfile', address],
     queryFn: async () => {
-      const data = await readContract({
-        contract: ogRegistryContract,
-        method: 'getProfile',
-        params: [address],
-      });
-      return {
-        avatarUrl: data.avatarUrl || '',
-        twitter: data.twitter || '',
-        debank: data.debank || '',
-        linkedin: data.linkedin || '',
-      };
+      try {
+        const data = await ogPublicClient.readContract({
+          address: ogRegistryContract.address as `0x${string}`,
+          abi: ogRegistryAbi,
+          functionName: 'getProfile',
+          args: [address as `0x${string}`],
+        }) as any;
+        return {
+          avatarUrl: data.avatarUrl || '',
+          twitter: data.twitter || '',
+          debank: data.debank || '',
+          linkedin: data.linkedin || '',
+        };
+      } catch (e) {
+        return null;
+      }
     },
     staleTime: 5 * 60 * 1000,
   });
 
-  const displayName = primaryName || `${address.slice(0, 6)}...${address.slice(-4)}`;
+  const displayName = (primaryName as string) || `${address.slice(0, 6)}...${address.slice(-4)}`;
   const avatarUrl = profile?.avatarUrl || '/assets/OG.webp';
 
   return (
@@ -62,7 +69,6 @@ const OgMemberCard = ({ address, onClick }: { address: string; onClick: () => vo
         <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider">OG Team</p>
       </div>
 
-      {/* Social Links Mini-Bar */}
       <div className="flex gap-2 mt-auto">
         <SocialIcon 
           href={profile?.twitter ? `https://twitter.com/${profile.twitter.replace('@', '')}` : undefined} 
@@ -97,39 +103,51 @@ const SocialIcon = ({ href, icon }: { href?: string; icon: React.ReactNode }) =>
   </a>
 );
 
-const transferEvent = prepareEvent({
-  signature: "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
-});
-
 export default function OgTeam() {
   const account = useActiveAccount();
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
   const { data: holders, isLoading: isEventsLoading } = useQuery({
-    queryKey: ['ogHolders'],
-    queryFn: async () => {
-      const events = await getContractEvents({
-        contract: ogMiningBadgeContract,
-        events: [transferEvent],
-        fromBlock: 17000000n,
-      });
+    queryKey: ['ogHoldersV3'],
+    queryFn: async (): Promise<string[]> => {
+      try {
+        const totalSupply = (await ogPublicClient.readContract({
+          address: ogMiningBadgeContract.address as `0x${string}`,
+          abi: ogMiningBadgeAbi,
+          functionName: 'totalSupply',
+        })) as bigint;
 
-      const uniqueHolders = new Set<string>();
-      events.forEach(event => {
-        const to = event.args.to as string;
-        if (event.args.from === '0x0000000000000000000000000000000000000000') {
-          uniqueHolders.add(to);
+        if (totalSupply === 0n) return [];
+
+        const ownerPromises: Promise<string | null>[] = [];
+        for (let i = 1n; i <= totalSupply; i++) {
+          ownerPromises.push(
+            ogPublicClient.readContract({
+              address: ogMiningBadgeContract.address as `0x${string}`,
+              abi: ogMiningBadgeAbi,
+              functionName: 'ownerOf',
+              args: [i],
+            }).catch(() => null)
+          );
         }
-      });
 
-      return Array.from(uniqueHolders).reverse();
+        const owners = await Promise.all(ownerPromises);
+        const validOwners = owners.filter((owner): owner is string => owner !== null);
+        const uniqueHolders = [...new Set(validOwners)];
+        
+        return uniqueHolders.reverse();
+      } catch (err) {
+        console.error('❌ Failed to fetch OG holders:', err);
+        return [];
+      }
     },
-    staleTime: 60 * 60 * 1000,
+    staleTime: 15 * 60 * 1000,
+    retry: 1,
   });
 
-  const isOgMember = account && holders?.includes(account.address);
+  const isOgMember = account && holders && holders.some(h => h.toLowerCase() === account.address.toLowerCase());
 
-  if (isEventsLoading && !holders) return (
+  if (isEventsLoading) return (
     <div className="flex justify-center py-20">
       <Spinner className="w-10 h-10 text-neutral-800" />
     </div>
@@ -166,7 +184,6 @@ export default function OgTeam() {
           )}
         </div>
 
-        {/* Grid of Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {holders.map((address) => (
             <OgMemberCard 
@@ -178,7 +195,6 @@ export default function OgTeam() {
         </div>
       </div>
 
-      {/* Profile Modal */}
       {selectedUser && (
         <OgProfileModal 
           userAddress={selectedUser} 

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useActiveAccount } from 'thirdweb/react';
-import { readContract, prepareContractCall } from 'thirdweb';
+import { encodeFunctionData } from 'viem';
 import { ogRegistryContract } from '../utils/contracts';
-import { TransactionButton } from 'thirdweb/react';
+import { ogPublicClient } from '../lib/viem/client';
+import { ogRegistryAbi } from '../utils/ogRegistryAbi';
 import { Spinner } from './Spinner';
 
 interface OgProfile {
@@ -24,6 +25,7 @@ export function OgProfileModal({ userAddress, onClose }: OgProfileModalProps) {
   const [profile, setProfile] = useState<OgProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Edit state
   const [editAvatar, setEditAvatar] = useState('');
@@ -34,11 +36,12 @@ export function OgProfileModal({ userAddress, onClose }: OgProfileModalProps) {
   const fetchProfile = async () => {
     setIsLoading(true);
     try {
-      const data = await readContract({
-        contract: ogRegistryContract,
-        method: 'getProfile',
-        params: [userAddress],
-      });
+      const data = await ogPublicClient.readContract({
+        address: ogRegistryContract.address as `0x${string}`,
+        abi: ogRegistryAbi,
+        functionName: 'getProfile',
+        args: [userAddress as `0x${string}`],
+      }) as any;
       
       const p = {
         avatarUrl: data.avatarUrl || '',
@@ -61,6 +64,33 @@ export function OgProfileModal({ userAddress, onClose }: OgProfileModalProps) {
   useEffect(() => {
     fetchProfile();
   }, [userAddress]);
+
+  const handleSaveProfile = async () => {
+    if (!account) return;
+    setIsSaving(true);
+    try {
+      const data = encodeFunctionData({
+        abi: ogRegistryAbi,
+        functionName: 'setProfile',
+        args: [editAvatar, editTwitter, editDebank, editLinkedin],
+      });
+
+      const { transactionHash } = await account.sendTransaction({
+        to: ogRegistryContract.address as `0x${string}`,
+        data,
+        chainId: 8453,
+      });
+
+      await ogPublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
+      
+      setIsEditing(false);
+      await fetchProfile();
+    } catch (err) {
+      console.error('Failed to save OG profile:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const avatarDisplay = profile?.avatarUrl || '/assets/OG.webp';
 
@@ -145,24 +175,22 @@ export function OgProfileModal({ userAddress, onClose }: OgProfileModalProps) {
               <div className="flex gap-2 pt-2">
                 <button 
                   onClick={() => setIsEditing(false)}
-                  className="flex-1 px-4 py-2 rounded-lg bg-neutral-800 text-sm font-bold text-neutral-400 hover:bg-neutral-700 transition-colors"
+                  disabled={isSaving}
+                  className="flex-1 px-4 py-2 rounded-lg bg-neutral-800 text-sm font-bold text-neutral-400 hover:bg-neutral-700 transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
-                <TransactionButton
-                  transaction={() => prepareContractCall({
-                    contract: ogRegistryContract,
-                    method: 'setProfile',
-                    params: [editAvatar, editTwitter, editDebank, editLinkedin]
-                  })}
-                  className="flex-1 !bg-blue-600 !text-white !font-bold !text-sm !py-2 !rounded-lg hover:!bg-blue-500 transition-colors !border-none !h-auto !min-h-0"
-                  onTransactionConfirmed={() => {
-                    setIsEditing(false);
-                    fetchProfile();
-                  }}
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={isSaving}
+                  className="flex-1 bg-blue-600 text-white font-bold text-sm py-2 rounded-lg hover:bg-blue-500 transition-colors flex items-center justify-center disabled:bg-neutral-600 disabled:cursor-not-allowed"
                 >
-                  Save Profile
-                </TransactionButton>
+                  {isSaving ? (
+                    <>
+                      <Spinner className="mr-2" /> Saving...
+                    </>
+                  ) : 'Save Profile'}
+                </button>
               </div>
             </div>
           ) : (
