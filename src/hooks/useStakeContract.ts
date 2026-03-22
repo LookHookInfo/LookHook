@@ -3,7 +3,7 @@ import { useActiveAccount } from 'thirdweb/react';
 import { stakingContract, hashcoinContract } from '../utils/contracts';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { UserStakes } from '../components/UserStakesDisplay';
-import { earlyPublicClient } from '../lib/viem/client';
+import { earlyPublicClient, stakePublicClient } from '../lib/viem/client';
 import stakingAbi from '../utils/stakingAbi';
 import erc20Abi from '../utils/erc20';
 import { encodeFunctionData, parseUnits } from 'viem';
@@ -26,7 +26,7 @@ export function useStakeContract() {
     queries: [
       {
         queryKey: ['hashcoin', 'symbol'],
-        queryFn: () => earlyPublicClient.readContract({
+        queryFn: () => stakePublicClient.readContract({
           address: hashcoinContract.address as `0x${string}`,
           abi: erc20Abi,
           functionName: 'symbol',
@@ -35,7 +35,7 @@ export function useStakeContract() {
       },
       {
         queryKey: ['hashcoin', 'balanceOf', accountAddress],
-        queryFn: () => earlyPublicClient.readContract({
+        queryFn: () => stakePublicClient.readContract({
           address: hashcoinContract.address as `0x${string}`,
           abi: erc20Abi,
           functionName: 'balanceOf',
@@ -46,7 +46,7 @@ export function useStakeContract() {
       },
       {
         queryKey: ['staking', 'getUserStakes', accountAddress],
-        queryFn: () => earlyPublicClient.readContract({
+        queryFn: () => stakePublicClient.readContract({
           address: stakingContract.address as `0x${string}`,
           abi: stakingAbi,
           functionName: 'getUserStakes',
@@ -57,7 +57,7 @@ export function useStakeContract() {
       },
       {
         queryKey: ['staking', 'APR_3M'],
-        queryFn: () => earlyPublicClient.readContract({
+        queryFn: () => stakePublicClient.readContract({
           address: stakingContract.address as `0x${string}`,
           abi: stakingAbi,
           functionName: 'APR_3M',
@@ -66,7 +66,7 @@ export function useStakeContract() {
       },
       {
         queryKey: ['staking', 'APR_6M'],
-        queryFn: () => earlyPublicClient.readContract({
+        queryFn: () => stakePublicClient.readContract({
           address: stakingContract.address as `0x${string}`,
           abi: stakingAbi,
           functionName: 'APR_6M',
@@ -75,7 +75,7 @@ export function useStakeContract() {
       },
       {
         queryKey: ['staking', 'APR_12M'],
-        queryFn: () => earlyPublicClient.readContract({
+        queryFn: () => stakePublicClient.readContract({
           address: stakingContract.address as `0x${string}`,
           abi: stakingAbi,
           functionName: 'APR_12M',
@@ -84,7 +84,7 @@ export function useStakeContract() {
       },
       {
         queryKey: ['staking', 'getPoolInfo'],
-        queryFn: () => earlyPublicClient.readContract({
+        queryFn: () => stakePublicClient.readContract({
           address: stakingContract.address as `0x${string}`,
           abi: stakingAbi,
           functionName: 'getPoolInfo',
@@ -93,7 +93,7 @@ export function useStakeContract() {
       },
       {
         queryKey: ['staking', 'getUserStakeSummary', accountAddress],
-        queryFn: () => earlyPublicClient.readContract({
+        queryFn: () => stakePublicClient.readContract({
           address: stakingContract.address as `0x${string}`,
           abi: stakingAbi,
           functionName: 'getUserStakeSummary',
@@ -104,7 +104,7 @@ export function useStakeContract() {
       },
       {
         queryKey: ['hashcoin', 'allowance', accountAddress, stakingContract.address],
-        queryFn: () => earlyPublicClient.readContract({
+        queryFn: () => stakePublicClient.readContract({
           address: hashcoinContract.address as `0x${string}`,
           abi: erc20Abi,
           functionName: 'allowance',
@@ -185,7 +185,7 @@ export function useStakeContract() {
             data: approveData,
             chainId: 8453,
           });
-          await earlyPublicClient.waitForTransactionReceipt({ hash: approveHash as `0x${string}` });
+          await stakePublicClient.waitForTransactionReceipt({ hash: approveHash as `0x${string}` });
         }
 
         const stakeData = encodeFunctionData({
@@ -198,7 +198,7 @@ export function useStakeContract() {
           data: stakeData,
           chainId: 8453,
         });
-        await earlyPublicClient.waitForTransactionReceipt({ hash: stakeHash as `0x${string}` });
+        await stakePublicClient.waitForTransactionReceipt({ hash: stakeHash as `0x${string}` });
         
         setStatus('success');
         queryClient.invalidateQueries({ queryKey: ['staking'] });
@@ -233,7 +233,7 @@ export function useStakeContract() {
           data,
           chainId: 8453,
         });
-        await earlyPublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
+        await stakePublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
         
         setStatus('success');
         queryClient.invalidateQueries({ queryKey: ['staking'] });
@@ -268,7 +268,7 @@ export function useStakeContract() {
           data,
           chainId: 8453,
         });
-        await earlyPublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
+        await stakePublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
         
         setStatus('success');
         queryClient.invalidateQueries({ queryKey: ['staking'] });

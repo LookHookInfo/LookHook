@@ -9,7 +9,7 @@ import {
   heliRewardContract,
   hashcoinContract,
 } from '../utils/contracts';
-import { publicClient, namePublicClient, miningPublicClient, earlyPublicClient } from '../lib/viem/client';
+import { namePublicClient } from '../lib/viem/client';
 import { gmnftAbi } from '../utils/gmnftAbi';
 import { heliRewardAbi } from '../utils/heliRewardAbi';
 import { earlyBirdAbi } from '../utils/earlyBirdAbi';
@@ -26,7 +26,7 @@ export function useHeliDrop() {
       // Balance checks for UI indicators
       {
         queryKey: ['heliDrop', 'gmnftBalance', accountAddress],
-        queryFn: () => publicClient.readContract({
+        queryFn: () => namePublicClient.readContract({
           address: gmnftContract.address as `0x${string}`,
           abi: gmnftAbi,
           functionName: 'balanceOf',
@@ -37,7 +37,7 @@ export function useHeliDrop() {
       },
       {
         queryKey: ['heliDrop', 'badgeStakeBalance', accountAddress],
-        queryFn: () => miningPublicClient.readContract({
+        queryFn: () => namePublicClient.readContract({
           address: badgeStakeContract.address as `0x${string}`,
           abi: badgeStakeAbi,
           functionName: 'balanceOf',
@@ -48,7 +48,7 @@ export function useHeliDrop() {
       },
       {
         queryKey: ['heliDrop', 'earlyBirdBalance', accountAddress],
-        queryFn: () => earlyPublicClient.readContract({
+        queryFn: () => namePublicClient.readContract({
           address: earlyBirdContract.address as `0x${string}`,
           abi: earlyBirdAbi,
           functionName: 'balanceOf',

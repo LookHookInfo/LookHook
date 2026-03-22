@@ -1,7 +1,7 @@
 import { useActiveAccount } from 'thirdweb/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { badgeStakeContract } from '../utils/contracts';
-import { miningPublicClient } from '../lib/viem/client';
+import { stakePublicClient } from '../lib/viem/client';
 import { badgeStakeAbi } from '../utils/badgeStakeAbi';
 import { encodeFunctionData } from 'viem';
 
@@ -12,7 +12,7 @@ export const useBadgeStake = () => {
 
   const { data: isEligible, isLoading: isEligibilityLoading } = useQuery({
     queryKey: ['badgeStake', 'isEligible', address],
-    queryFn: () => miningPublicClient.readContract({
+    queryFn: () => stakePublicClient.readContract({
       address: badgeStakeContract.address as `0x${string}`,
       abi: badgeStakeAbi,
       functionName: 'isEligible',
@@ -38,7 +38,7 @@ export const useBadgeStake = () => {
         chainId: 8453,
       });
 
-      return miningPublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
+      return stakePublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['badgeStake', 'isEligible', address] });

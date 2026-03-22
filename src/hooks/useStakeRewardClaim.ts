@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useActiveAccount } from 'thirdweb/react';
 import { stakeRewardClaimContract, hashcoinContract } from '../utils/contracts';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
-import { earlyPublicClient } from '../lib/viem/client';
+import { stakePublicClient } from '../lib/viem/client';
 import { stakeRewardClaimAbi } from '../utils/stakeRewardClaimAbi';
 import erc20Abi from '../utils/erc20';
 import { encodeFunctionData } from 'viem';
@@ -18,7 +18,7 @@ export const useStakeRewardClaim = () => {
     queries: [
       {
         queryKey: ['stakeRewardClaim', 'canClaim', accountAddress],
-        queryFn: () => earlyPublicClient.readContract({
+        queryFn: () => stakePublicClient.readContract({
           address: stakeRewardClaimContract.address as `0x${string}`,
           abi: stakeRewardClaimAbi,
           functionName: 'canClaim',
@@ -29,7 +29,7 @@ export const useStakeRewardClaim = () => {
       },
       {
         queryKey: ['hashcoin', 'balanceOf', stakeRewardClaimContract.address],
-        queryFn: () => earlyPublicClient.readContract({
+        queryFn: () => stakePublicClient.readContract({
           address: hashcoinContract.address as `0x${string}`,
           abi: erc20Abi,
           functionName: 'balanceOf',
@@ -76,7 +76,7 @@ export const useStakeRewardClaim = () => {
         chainId: 8453,
       });
 
-      await earlyPublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
+      await stakePublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
       
       queryClient.invalidateQueries({ queryKey: ['stakeRewardClaim'] });
       queryClient.invalidateQueries({ queryKey: ['hashcoin', 'balanceOf'] });
