@@ -34,12 +34,12 @@ function Game() {
 
   if (!account) {
     return (
-      <div className="absolute inset-0 flex justify-center items-center rounded-xl z-20">
-        <div className="text-center p-6 bg-neutral-800/90 border border-neutral-700 rounded-lg shadow-xl">
-          <h3 className="text-xl font-bold text-white mb-2">Start Mining</h3>
-          <p className="text-neutral-300 mb-4">Connect your wallet to manage your inventory.</p>
-          <ConnectWalletButton />
-        </div>
+      <div className="flex flex-col items-center justify-center p-8 bg-neutral-800/50 border border-neutral-700 rounded-2xl shadow-xl min-h-[400px]">
+        <h3 className="text-2xl font-bold text-white mb-2">Start Mining</h3>
+        <p className="text-neutral-300 mb-6 text-center max-w-xs">
+          Connect your wallet to start mining $HASH and manage your inventory.
+        </p>
+        <ConnectWalletButton />
       </div>
     );
   }
