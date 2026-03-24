@@ -148,7 +148,6 @@ function Section({ title, children }: { title: React.ReactNode; children: React.
 }
 
 function ToolGrid({
-  address,
   allTools,
   onSelectTool,
   usdcBalance,
