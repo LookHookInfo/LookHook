@@ -12,6 +12,7 @@ import {
   drub100BadgeContract,
   xroleRewardContract,
   ogMiningBadgeContract,
+  devoteNftContract,
 } from '../utils/contracts';
 import { readContract } from 'thirdweb';
 import EarlyBirdClaimButton from './EarlyBirdClaimButton';
@@ -392,6 +393,61 @@ function NameAchievement({ wallet }: { wallet: Wallet }) {
   );
 }
 
+// DeVote NFT Achievement Component
+function DeVoteAchievement({ wallet }: { wallet: Wallet }) {
+  const ownerAddress = wallet.getAccount()?.address;
+
+  const { data: balance, isLoading: isBalanceLoading } = useQuery({
+    queryKey: ['devoteNftBalanceOf', devoteNftContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: devoteNftContract,
+        method: 'balanceOf',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
+  });
+
+  const hasNft = balance && (Array.isArray(balance) ? (balance[0] as bigint) : (balance as bigint)) > 0n;
+
+  if (!ownerAddress) {
+    return (
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Connect wallet to see achievement"
+      >
+        <span className="text-neutral-400 text-xs">?</span>
+      </div>
+    );
+  }
+
+  if (isBalanceLoading) {
+    return (
+      <div
+        className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group"
+        title="Loading DeVote NFT..."
+      >
+        <span className="text-neutral-400 text-xs">...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden"
+      title={hasNft ? 'DeVote NFT Owned' : 'DeVote NFT Not Owned'}
+    >
+      <img
+        src="/assets/DeVote.webp"
+        alt="DeVote Achievement"
+        className={`size-10 ${!hasNft ? 'opacity-50' : ''}`}
+      />
+    </div>
+  );
+}
+
 // Stake NFT Achievement Component
 function StakeNftAchievement({ wallet }: { wallet: Wallet }) {
   const ownerAddress = wallet.getAccount()?.address;
@@ -513,8 +569,7 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
               <SharkAchievement wallet={wallet} />
               <WhaleAchievement wallet={wallet} />
 
-              {/* Empty cell */}
-              <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
+              <DeVoteAchievement wallet={wallet} />
 
               <OgAchievement wallet={wallet} />
 

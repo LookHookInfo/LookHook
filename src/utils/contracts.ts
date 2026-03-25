@@ -192,3 +192,10 @@ export const ogRegistryContract = getContract({
   address: '0xb517B91D950ba0649bab120Cc9e2b235d78acD8C',
   abi: ogRegistryAbi,
 }); //ok
+
+export const devoteNftContract = getContract({
+  client,
+  chain: chain,
+  address: '0x52ab3d4ed15f71b8ec153222daa9e13353e36bb3',
+  abi: gmnftAbi,
+}); //ok
