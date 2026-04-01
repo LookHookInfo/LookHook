@@ -11,7 +11,7 @@ import CarouselCardSection from '@/components/CarouselCardSection';
 import GM from '@/partials/GM';
 import Xrole from '@/partials/Xrole';
 import HeliDrop from '@/partials/HeliDrop';
-import Lamba from '@/partials/Lamba';
+import Lambo from '@/partials/Lambo';
 import Welcome from '@/partials/Welcome';
 import OG from '@/partials/OG';
 import OgTeam from '@/partials/OgTeam';
@@ -29,7 +29,7 @@ export default function Home() {
         <CarouselCardSection
           className="w-full md:w-1/2"
           items={[
-            { key: 'Lamba', component: <Lamba /> },
+            { key: 'Lambo', component: <Lambo /> },
             { key: 'Welcome', component: <Welcome /> },
             { key: 'HeliDrop', component: <HeliDrop /> },
             { key: 'Sea', component: <Sea /> },

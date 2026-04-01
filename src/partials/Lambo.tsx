@@ -1,4 +1,4 @@
-interface LambaProps {
+interface LamboProps {
   className?: string;
 }
 
@@ -20,12 +20,12 @@ const EligibilityIndicator = ({ tooltip, icon }: { tooltip: string; icon: string
   </div>
 );
 
-export default function Lamba({ className }: LambaProps) {
+export default function Lambo({ className }: LamboProps) {
   const eligibilityCriteria = [
-    { key: 'lamba1', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
-    { key: 'lamba2', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
-    { key: 'lamba3', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
-    { key: 'lamba4', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
+    { key: 'lambo1', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
+    { key: 'lambo2', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
+    { key: 'lambo3', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
+    { key: 'lambo4', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
   ];
 
   const renderEligibility = () => {
@@ -52,7 +52,7 @@ export default function Lamba({ className }: LambaProps) {
           <div className="absolute -top-2 -left-2 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 text-white px-2 py-1 text-xs font-bold rounded-full shadow-lg z-10">
             Base
           </div>
-          <img src="/assets/Lamba.webp" alt="Lamba" className="rounded-full w-full h-auto object-cover" />
+          <img src="/assets/Lamba.webp" alt="Lambo" className="rounded-full w-full h-auto object-cover" />
           <div className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border border-gray-500 text-gray-500 cursor-not-allowed">
             Soon
           </div>
@@ -62,7 +62,7 @@ export default function Lamba({ className }: LambaProps) {
         <div className="flex-1 w-full min-w-0 space-y-4 flex flex-col">
           <div className="flex-grow">
             <div className="flex justify-between items-center flex-wrap gap-2 relative mb-4">
-              <h2 className="text-3xl font-bold text-white line-clamp-1">Lamba</h2>
+              <h2 className="text-3xl font-bold text-white line-clamp-1">Lambo</h2>
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center justify-center px-2 py-0.5 h-6 text-xs font-semibold bg-black text-white border border-white rounded">
                   fifth
