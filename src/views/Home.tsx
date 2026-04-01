@@ -17,6 +17,8 @@ import OG from '@/partials/OG';
 import OgTeam from '@/partials/OgTeam';
 import Sea from '@/partials/Sea';
 import Jet from '@/partials/Jet';
+import YouTube from '@/partials/YouTube';
+import Telegram from '@/partials/Telegram';
 
 export default function Home() {
   return (
@@ -43,7 +45,14 @@ export default function Home() {
       </div>
       <div className="flex flex-col md:flex-row gap-4 my-2">
         <OG className="w-full md:w-1/2" />
-        <Xrole className="w-full md:w-1/2" />
+        <CarouselCardSection
+          className="w-full md:w-1/2"
+          items={[
+            { key: 'Xrole', component: <Xrole /> },
+            { key: 'YouTube', component: <YouTube /> },
+            { key: 'Telegram', component: <Telegram /> },
+          ]}
+        />
       </div>
       <div className="flex flex-col md:flex-row gap-4 my-2">
         <NFT className="w-full md:w-1/2" />
