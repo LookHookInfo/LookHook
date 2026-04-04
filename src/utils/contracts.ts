@@ -101,6 +101,20 @@ export const xroleRewardContract = getContract({
   abi: xroleRewardAbi,
 }); //ok
 
+export const gramroleRewardContract = getContract({
+  client,
+  chain: chain,
+  address: '0x172C5adecC0fDbE49d45a03fFcB5433637CaeeF9',
+  abi: xroleRewardAbi,
+}); //ok
+
+export const tuberoleRewardContract = getContract({
+  client,
+  chain: chain,
+  address: '0x25A5C2Cd5BF2d0d6EfAa42620288EED0896be19B',
+  abi: xroleRewardAbi,
+}); //ok
+
 export const heliRewardContract = getContract({
   client,
   chain: chain,

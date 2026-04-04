@@ -51,7 +51,7 @@ export default function Sea({ className }: SeaProps) {
           <div className="absolute -top-2 -left-2 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 text-white px-2 py-1 text-xs font-bold rounded-full shadow-lg z-10">
             Base
           </div>
-          <img src="/assets/Sea.webp" alt="Sea" className="rounded-full w-full h-auto object-cover" />
+          <img src="/assets/Osea.webp" alt="Sea" className="rounded-full w-full h-auto object-cover" />
           <div className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border border-gray-500 text-gray-500 cursor-not-allowed">
             Soon
           </div>
