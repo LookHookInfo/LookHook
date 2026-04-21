@@ -19,6 +19,7 @@ import Sea from '@/partials/Sea';
 import Jet from '@/partials/Jet';
 import YouTube from '@/partials/YouTube';
 import Telegram from '@/partials/Telegram';
+import Amba from '@/partials/Amba';
 
 export default function Home() {
   return (
@@ -51,6 +52,7 @@ export default function Home() {
             { key: 'Xrole', component: <Xrole /> },
             { key: 'YouTube', component: <YouTube /> },
             { key: 'Telegram', component: <Telegram /> },
+            { key: 'Amba', component: <Amba /> },
           ]}
         />
       </div>

@@ -1,0 +1,517 @@
+0x1076d1C0Bb444C8bb50A6D2dbdF3bA5095910a52  AmbaNFTcontract 
+
+
+0xA193a5887FBD94982E50553FdA961EDd3e36906b  Tube
+0x4De659ef1617eF215f36A1953B3Cd7a4A10a5159  Gram
+0x1A502C6259DBFebD7f568139cC28168831DA5D30  X
+
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.34;
+
+/**
+ * @title AmbaNFT
+ * @dev Non-transferable (Soulbound) NFT for Mining Hash project ambassadors.
+ * Requirements: Must hold Tube, Gram, and X NFTs to mint.
+ */
+
+interface IERC721 {
+    function balanceOf(address owner) external view returns (uint256);
+}
+
+contract AmbaNFT {
+    // --- COLLECTION DATA ---
+    string public constant name = "Amba Mining Hash";
+    string public constant symbol = "AMBA";
+    string public constant baseTokenURI = "https://ipfs.io/ipfs/bafkreid3w3gx4bqqynlkhyjgucxem4watonxeyjfrr4fjiozgim2prpzka";
+
+    address public immutable owner;
+    uint256 public totalSupply;
+
+    // --- ELIGIBILITY CONTRACTS ---
+    address public constant TUBE = 0xA193a5887FBD94982E50553FdA961EDd3e36906b;
+    address public constant GRAM = 0x4De659ef1617eF215f36A1953B3Cd7a4A10a5159;
+    address public constant X_NFT = 0x1A502C6259DBFebD7f568139cC28168831DA5D30;
+
+    // --- STORAGE ---
+    mapping(address => uint256) private _ownedToken;
+    mapping(uint256 => address) private _owners;
+
+    // --- EVENTS ---
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    /**
+     * @dev Returns which requirements are met for a specific user.
+     * Useful for Frontend UI to highlight missing roles.
+     */
+    function checkEligibility(address user) external view returns (bool hasTube, bool hasGram, bool hasX) {
+        hasTube = IERC721(TUBE).balanceOf(user) > 0;
+        hasGram = IERC721(GRAM).balanceOf(user) > 0;
+        hasX = IERC721(X_NFT).balanceOf(user) > 0;
+    }
+
+    /**
+     * @dev Mints the Amba NFT if the user holds all three required NFTs.
+     */
+    function mint() external {
+        require(_ownedToken[msg.sender] == 0, "Amba NFT already minted");
+        
+        require(IERC721(TUBE).balanceOf(msg.sender) > 0, "Requirement failed: Tube");
+        require(IERC721(GRAM).balanceOf(msg.sender) > 0, "Requirement failed: Gram");
+        require(IERC721(X_NFT).balanceOf(msg.sender) > 0, "Requirement failed: X");
+
+        totalSupply++;
+        _ownedToken[msg.sender] = totalSupply;
+        _owners[totalSupply] = msg.sender;
+
+        emit Transfer(address(0), msg.sender, totalSupply);
+    }
+
+    // --- METADATA ---
+
+    function tokenURI(uint256 tokenId) public view returns (string memory) {
+        require(tokenId <= totalSupply && tokenId > 0, "ERC721: Nonexistent token");
+        return baseTokenURI;
+    }
+
+    // --- ERC721 COMPLIANCE ---
+
+    function ownerOf(uint256 tokenId) external view returns (address) {
+        address tokenOwner = _owners[tokenId];
+        require(tokenOwner != address(0), "ERC721: Nonexistent token");
+        return tokenOwner;
+    }
+
+    function balanceOf(address account) external view returns (uint256) {
+        require(account != address(0), "ERC721: address zero is not a valid owner");
+        return _ownedToken[account] > 0 ? 1 : 0;
+    }
+
+    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
+        return 
+            interfaceId == 0x80ac58cd || // ERC721
+            interfaceId == 0x5b5e139f || // ERC721Metadata
+            interfaceId == 0x01ffc9a7;   // ERC165
+    }
+
+    // --- SOULBOUND: DISABLE TRANSFERS & APPROVALS ---
+
+    function transferFrom(address, address, uint256) external pure { revert("Soulbound: Non-transferable"); }
+    function safeTransferFrom(address, address, uint256) external pure { revert("Soulbound: Non-transferable"); }
+    function safeTransferFrom(address, address, uint256, bytes calldata) external pure { revert("Soulbound: Non-transferable"); }
+    
+    function approve(address, uint256) external pure { revert("Soulbound: Approvals disabled"); }
+    function setApprovalForAll(address, bool) external pure { revert("Soulbound: Approvals disabled"); }
+    function getApproved(uint256) external pure returns (address) { return address(0); }
+    function isApprovedForAll(address, address) external pure returns (bool) { return false; }
+}
+
+
+
+ABI
+
+[
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "Transfer",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "GRAM",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "TUBE",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "X_NFT",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "approve",
+		"outputs": [],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "balanceOf",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "baseTokenURI",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "checkEligibility",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "hasTube",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "hasGram",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "hasX",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "getApproved",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "isApprovedForAll",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "mint",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "name",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "ownerOf",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "safeTransferFrom",
+		"outputs": [],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bytes",
+				"name": "",
+				"type": "bytes"
+			}
+		],
+		"name": "safeTransferFrom",
+		"outputs": [],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"name": "setApprovalForAll",
+		"outputs": [],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes4",
+				"name": "interfaceId",
+				"type": "bytes4"
+			}
+		],
+		"name": "supportsInterface",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "symbol",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "tokenURI",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalSupply",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "transferFrom",
+		"outputs": [],
+		"stateMutability": "pure",
+		"type": "function"
+	}
+]

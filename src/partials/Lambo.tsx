@@ -53,9 +53,17 @@ export default function Lambo({ className }: LamboProps) {
             Base
           </div>
           <img src="/assets/Lamba.webp" alt="Lambo" className="rounded-full w-full h-auto object-cover" />
-          <div className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border border-gray-500 text-gray-500 cursor-not-allowed">
-            Soon
-          </div>
+          <a
+            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent("Don't wait for alt season.\n\nClaim your reward RIGHT NOW.\n\nThe Mining Hash team @HashCoinFarm is rewarding the community with $HASH tokens.\n\n👇")}&url=${encodeURIComponent("https://x.com/HashCoinFarm/status/2046233258837389702")}&hashtags=AltSeason,CryptoRewards,MiningHash,HASH,Airdrop,ClaimNow,CryptoCommunity`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center justify-center px-6 py-2 text-sm font-bold rounded-lg border transition-all duration-300 border-sky-500 text-white bg-sky-600/20 hover:bg-sky-600/40 glow-effect"
+          >
+            <svg className="w-4 h-4 mr-2 fill-current" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+            </svg>
+            Tweet
+          </a>
         </div>
 
         {/* Text Content Block */}

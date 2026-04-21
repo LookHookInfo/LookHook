@@ -24,6 +24,7 @@ import { heliRewardAbi } from './heliRewardAbi';
 import welcomeRewardAbi from './welcomeRewardAbi';
 import { ogMiningBadgeAbi } from './ogMiningBadgeAbi';
 import { ogRegistryAbi } from './ogRegistryAbi';
+import { ambaNftAbi } from './ambaNftAbi';
 
 // --- CORE TOKENS ---
 
@@ -212,4 +213,11 @@ export const devoteNftContract = getContract({
   chain: chain,
   address: '0x52ab3d4ed15f71b8ec153222daa9e13353e36bb3',
   abi: gmnftAbi,
+}); //ok
+
+export const ambaNftContract = getContract({
+  client,
+  chain: chain,
+  address: '0x1076d1C0Bb444C8bb50A6D2dbdF3bA5095910a52',
+  abi: ambaNftAbi,
 }); //ok
