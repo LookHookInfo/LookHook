@@ -22,9 +22,10 @@ const EligibilityIndicator = ({ tooltip, icon }: { tooltip: string; icon: string
 
 export default function Jet({ className }: JetProps) {
   const eligibilityCriteria = [
-    { key: 'jet1', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
-    { key: 'jet2', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
-    { key: 'jet3', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
+    { key: 'jet1', tooltip: 'Soon Amba', icon: '/assets/Amba.webp' },
+    { key: 'jet2', tooltip: 'Soon OG', icon: '/assets/OG.webp' },
+    { key: 'jet3', tooltip: 'Soon Fun', icon: '/assets/Fun.webp' },
+    { key: 'jet4', tooltip: 'Soon Whale', icon: '/assets/Whale.webp' },
   ];
 
   const renderEligibility = () => {

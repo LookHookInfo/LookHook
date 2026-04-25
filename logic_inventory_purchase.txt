@@ -1,0 +1,60 @@
+Логика покупки и экипировки инвентаря (инструментов) на главной странице
+
+1. Покупка инвентаря (Buy)
+==========================
+
+Процесс происходит в компоненте `src/components/ToolCard.tsx` при поддержке хука `src/hooks/useShopLogic.ts` и сервиса `src/services/tokenService.ts`.
+
+А) Подготовка данных:
+- Для каждого инструмента (NFT) запрашиваются условия минта (claim conditions) через метод `getClaimConditions` (контракт Tools). Из условий извлекается цена (`pricePerToken`) и валюта (`currency`).
+- Если валюта — USDC (сверяется с `USDC_ADDRESS`), то через мультиколл в `tokenService.ts` запрашиваются:
+  - Баланс пользователя в USDC.
+  - Allowance (разрешение) пользователя для контракта Tools на использование USDC.
+
+Б) Процесс покупки:
+1. Проверка Allowance: Если выбранная валюта USDC и текущий `usdcAllowance` меньше общей стоимости (`totalPrice`), сначала вызывается транзакция одобрения.
+   - Контракт: USDC
+   - Метод: `approve(address spender, uint256 amount)`
+   - Параметры: `spender` = адрес контракта Tools, `amount` = `totalPrice`.
+2. Покупка (Claim): После апрува (или если он не нужен) вызывается метод покупки.
+   - Контракт: Tools (ERC1155 с расширением Drop/Claim)
+   - Метод: `claim(address receiver, uint256 tokenId, uint256 quantity, address currency, uint256 pricePerToken, allowlistProof, data)`
+   - В коде используется SDK Thirdweb: `claimTo({ contract: contractTools, to: address, tokenId, quantity })`.
+
+2. Экипировка инвентаря (Equip / Stake)
+=======================================
+
+После покупки инструмент появляется на балансе пользователя, но чтобы он начал приносить доход, его нужно "экипировать" (застейкать).
+
+А) Проверка одобрения:
+- Проверяется, разрешил ли пользователь контракту Staking управлять своими NFT инструментами через метод `isApprovedForAll`.
+
+Б) Процесс экипировки:
+1. Одобрение (Approval): Если `isApprovedForAll` возвращает `false`, вызывается транзакция:
+   - Контракт: Tools
+   - Метод: `setApprovalForAll(address operator, bool approved)`
+   - Параметры: `operator` = адрес контракта Staking, `approved` = `true`.
+2. Стейкинг (Stake): После одобрения вызывается метод стейкинга:
+   - Контракт: Staking
+   - Метод: `stake(uint256 _tokenId, uint64 _amount)`
+   - Параметры: `_tokenId` = ID инструмента, `_amount` = количество.
+
+3. Используемые ABI и Контракты
+===============================
+
+- Контракт Tools (ERC1155):
+  - `function claim(...)` — для покупки.
+  - `function setApprovalForAll(address operator, bool approved)` — для разрешения стейкингу.
+  - `function isApprovedForAll(address account, address operator) view returns (bool)` — проверка разрешения.
+  - `function balanceOf(address account, uint256 id) view returns (uint256)` — баланс инструментов.
+
+- Контракт USDC (ERC20):
+  - `function approve(address spender, uint256 amount)` — разрешение на трату USDC.
+  - `function allowance(address owner, address spender) view returns (uint256)` — проверка разрешения.
+  - `function balanceOf(address owner) view returns (uint256)` — баланс USDC.
+
+- Контракт Staking:
+  - `function stake(uint256 _tokenId, uint64 _amount)` — экипировка.
+  - `function withdraw(uint256 _tokenId, uint64 _amount)` — снятие экипировки.
+  - `function claimRewards(uint256 _tokenId)` — сбор добытых ресурсов.
+  - `function getStakeInfoForToken(uint256 _tokenId, address _staker) view returns (uint256, uint256)` — инфо о стейке и наградах.

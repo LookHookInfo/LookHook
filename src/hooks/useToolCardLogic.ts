@@ -170,13 +170,50 @@ export function useToolCardLogic({ tool, address, usdcBalance }: UseToolCardLogi
   const claimMutation = useMutation({
     mutationFn: async () => {
       if (!account || !claimCondition) throw new Error('Not connected or claim condition not loaded');
-      const isApproved = (tokenAllowance || 0n) >= totalPrice;
-      if (!isApproved) {
-        await approveBuyMutation.mutateAsync();
+      
+      console.log('🚀 Starting claim process for tool:', tool.id.toString());
+      console.log('📊 Quantity:', quantity);
+      console.log('💰 Price per token:', formatUnits(claimCondition.pricePerToken, 6), 'USDC');
+      console.log('💳 Total price:', formatUnits(totalPrice, 6), 'USDC');
+
+      // Check current allowance directly to avoid stale state issues
+      const currentAllowance = await miningPublicClient.readContract({
+        address: usdcContract.address as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'allowance',
+        args: [account.address as `0x${string}`, contractTools.address as `0x${string}`],
+      });
+
+      console.log('Current allowance:', formatUnits(currentAllowance, 6));
+
+      if (currentAllowance < totalPrice) {
+        console.log('Approving USDC...');
+        const approveData = encodeFunctionData({
+          abi: erc20Abi,
+          functionName: 'approve',
+          args: [contractTools.address as `0x${string}`, totalPrice],
+        });
+        const { transactionHash: approveHash } = await account.sendTransaction({
+          to: usdcContract.address as `0x${string}`,
+          data: approveData,
+          chainId: 8453,
+        });
+        await miningPublicClient.waitForTransactionReceipt({ hash: approveHash });
+        console.log('✅ USDC Approved, waiting for state sync...');
+        // Add a small delay for the RPC to catch up
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        refetchTokenAllowance();
       }
+
+      console.log('Final Claim Check:');
+      console.log('- Currency:', claimCondition.currency);
+      console.log('- Price per token (Condition):', claimCondition.pricePerToken.toString());
+      console.log('- Max claimable per wallet:', claimCondition.quantityLimitPerWallet.toString());
+      console.log('- Supply claimed:', claimCondition.supplyClaimed.toString());
+      console.log('- Max supply:', claimCondition.maxClaimableSupply.toString());
       
       const defaultAllowlistProof = {
-        proof: [],
+        proof: [] as `0x${string}`[],
         quantityLimitPerWallet: claimCondition.quantityLimitPerWallet,
         pricePerToken: claimCondition.pricePerToken,
         currency: claimCondition.currency,
@@ -192,21 +229,42 @@ export function useToolCardLogic({ tool, address, usdcBalance }: UseToolCardLogi
           claimCondition.currency,
           claimCondition.pricePerToken,
           defaultAllowlistProof,
+          '0x', // Missing 7th argument: _data
         ],
       });
 
-      const { transactionHash } = await account.sendTransaction({
-        to: contractTools.address as `0x${string}`,
-        data,
-        chainId: 8453,
-        value: claimCondition.currency === '0x0000000000000000000000000000000000000000' ? totalPrice : 0n,
-      });
-      return miningPublicClient.waitForTransactionReceipt({ hash: transactionHash });
+      console.log('Sending claim transaction...');
+      const isNative = claimCondition.currency === '0x0000000000000000000000000000000000000000';
+      
+      try {
+        const { transactionHash } = await account.sendTransaction({
+          to: contractTools.address as `0x${string}`,
+          data,
+          chainId: 8453,
+          value: isNative ? totalPrice : 0n,
+        });
+
+        console.log('Waiting for receipt:', transactionHash);
+        const receipt = await miningPublicClient.waitForTransactionReceipt({ hash: transactionHash });
+        console.log('✅ Claim successful:', receipt.transactionHash);
+        return receipt;
+      } catch (err: any) {
+        console.error('❌ Detailed transaction error:', err);
+        // If there is a reason in the error, log it
+        if (err.info?.error?.message) {
+          console.error('Reason:', err.info.error.message);
+        }
+        throw err;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nftBalance', contractTools.address, address] });
       queryClient.invalidateQueries({ queryKey: ['claimCondition', contractTools.address] });
+      queryClient.invalidateQueries({ queryKey: ['usdcBalance', address] });
     },
+    onError: (error: any) => {
+      console.error('❌ Claim failed:', error);
+    }
   });
 
   const stakeMutation = useMutation({
