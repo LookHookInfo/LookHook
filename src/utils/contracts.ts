@@ -221,3 +221,10 @@ export const ambaNftContract = getContract({
   address: '0x1076d1C0Bb444C8bb50A6D2dbdF3bA5095910a52',
   abi: ambaNftAbi,
 }); //ok
+
+export const gemContract = getContract({
+  client,
+  chain: chain,
+  address: '0xa0021fc511ad7348ba7b1a9ad564e29f2a54e928',
+  abi: gmnftAbi,
+}); //ok

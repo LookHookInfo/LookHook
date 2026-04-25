@@ -13,6 +13,8 @@ import {
   xroleRewardContract,
   ogMiningBadgeContract,
   devoteNftContract,
+  gemContract,
+  ambaNftContract,
 } from '../utils/contracts';
 import { readContract } from 'thirdweb';
 import EarlyBirdClaimButton from './EarlyBirdClaimButton';
@@ -27,6 +29,88 @@ interface ProfileModalProps {
   hasCatNft: boolean;
   isNftLoading: boolean;
   registeredName: string | null | undefined;
+}
+
+// Gem Achievement Component
+function GemAchievement({ wallet }: { wallet: Wallet }) {
+  const ownerAddress = wallet.getAccount()?.address;
+
+  const { data: balance, isLoading: isBalanceLoading } = useQuery({
+    queryKey: ['gemBalanceOf', gemContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: gemContract,
+        method: 'balanceOf',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const hasNft = balance && (Array.isArray(balance) ? (balance[0] as bigint) : (balance as bigint)) > 0n;
+
+  if (!ownerAddress) {
+    return (
+      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Connect wallet to see achievement">
+        <span className="text-neutral-400 text-xs">?</span>
+      </div>
+    );
+  }
+
+  if (isBalanceLoading) {
+    return (
+      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Loading Gem achievement...">
+        <span className="text-neutral-400 text-xs">...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden" title={hasNft ? 'Gem Owned' : 'Gem Not Owned'}>
+      <img src="/assets/Gem.webp" alt="Gem Achievement" className={`size-10 ${!hasNft ? 'opacity-50' : ''}`} />
+    </div>
+  );
+}
+
+// Amba Achievement Component
+function AmbaAchievement({ wallet }: { wallet: Wallet }) {
+  const ownerAddress = wallet.getAccount()?.address;
+
+  const { data: balance, isLoading: isBalanceLoading } = useQuery({
+    queryKey: ['ambaBalanceOf', ambaNftContract.address, ownerAddress],
+    queryFn: () =>
+      readContract({
+        contract: ambaNftContract,
+        method: 'balanceOf',
+        params: [ownerAddress || ''],
+      }),
+    enabled: !!ownerAddress,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const hasNft = balance && (Array.isArray(balance) ? (balance[0] as bigint) : (balance as bigint)) > 0n;
+
+  if (!ownerAddress) {
+    return (
+      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Connect wallet to see achievement">
+        <span className="text-neutral-400 text-xs">?</span>
+      </div>
+    );
+  }
+
+  if (isBalanceLoading) {
+    return (
+      <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group" title="Loading Amba achievement...">
+        <span className="text-neutral-400 text-xs">...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center relative group overflow-hidden" title={hasNft ? 'Amba Owned' : 'Amba Not Owned'}>
+      <img src="/assets/Amba.webp" alt="Amba Achievement" className={`size-10 ${!hasNft ? 'opacity-50' : ''}`} />
+    </div>
+  );
 }
 
 // OG Achievement Component
@@ -548,7 +632,7 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
               <EarlyNftAchievement wallet={wallet} />
               <TipsAchievement wallet={wallet} />
               <NameAchievement wallet={wallet} />
-              <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
+              <GemAchievement wallet={wallet} />
               <BadgeDrubAchievement wallet={wallet} />
               <XroleAchievement wallet={wallet} />
 
@@ -573,8 +657,7 @@ export default function ProfileModal({ wallet, onClose, hasCatNft, isNftLoading,
 
               <OgAchievement wallet={wallet} />
 
-              {/* Empty cell */}
-              <div className="size-12 rounded-full bg-neutral-700 flex items-center justify-center" title="Soon" />
+              <AmbaAchievement wallet={wallet} />
 
               <GMAchievement wallet={wallet} />
             </div>
