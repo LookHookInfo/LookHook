@@ -25,6 +25,7 @@ import welcomeRewardAbi from './welcomeRewardAbi';
 import { ogMiningBadgeAbi } from './ogMiningBadgeAbi';
 import { ogRegistryAbi } from './ogRegistryAbi';
 import { ambaNftAbi } from './ambaNftAbi';
+import { lamboRewardAbi } from './lamboRewardAbi';
 
 // --- CORE TOKENS ---
 
@@ -137,6 +138,13 @@ export const welcomeRewardContract = getContract({
   abi: welcomeRewardAbi,
 }); //ok
 
+export const lamboRewardContract = getContract({
+  client,
+  chain: chain,
+  address: '0x33De46CCB070936F64fb8Bb0Fc6C4495A29a4602',
+  abi: lamboRewardAbi,
+}); //ok
+
 // --- NFT & IDENTITY ---
 
 export const nftCollectionContract = getContract({
@@ -226,5 +234,12 @@ export const gemContract = getContract({
   client,
   chain: chain,
   address: '0xa0021fc511ad7348ba7b1a9ad564e29f2a54e928',
+  abi: gmnftAbi,
+}); //ok
+
+export const gramContract = getContract({
+  client,
+  chain: chain,
+  address: '0x4De659ef1617eF215f36A1953B3Cd7a4A10a5159',
   abi: gmnftAbi,
 }); //ok
