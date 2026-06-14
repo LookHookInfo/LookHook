@@ -61,15 +61,65 @@ export function useGMNFTContract() {
     staleTime: 300000,
   };
 
-  const [{ data: gmBalance }, { data: gmnftBalance }, { data: allowance }] = useQueries({
-    queries: [gmBalanceQuery, gmnftBalanceQuery, allowanceQuery],
+  const claimInfoQuery = {
+    queryKey: ['gmClaimInfo', accountAddress],
+    queryFn: async () => {
+      if (!accountAddress) return null;
+      return (await publicClient.readContract({
+        address: gmContract.address as `0x${string}`,
+        abi: GMAbi,
+        functionName: 'getClaimInfo',
+        args: [accountAddress],
+      })) as [boolean, bigint, boolean, boolean, bigint];
+    },
+    enabled: !!accountAddress,
+    staleTime: 60000,
+  };
+
+  const [
+    { data: gmBalance },
+    { data: gmnftBalance },
+    { data: allowance },
+    { data: claimInfo, isLoading: isLoadingClaimInfo },
+  ] = useQueries({
+    queries: [gmBalanceQuery, gmnftBalanceQuery, allowanceQuery, claimInfoQuery],
   });
 
   const hasEnoughGM = gmBalance ? gmBalance >= BURN_AMOUNT_WEI : false;
   const hasGMNFT = gmnftBalance ? gmnftBalance > 0n : false;
   const isApproved = allowance ? allowance >= BURN_AMOUNT_WEI : false;
 
+  const canClaimNow = claimInfo ? claimInfo[0] : false;
+  const nextAvailableTimestamp = claimInfo ? Number(claimInfo[1]) : 0;
+  const hasNFTCondition = claimInfo ? claimInfo[2] : false;
+  const hasStakeCondition = claimInfo ? claimInfo[3] : false;
+  const isEligible = hasNFTCondition || hasStakeCondition;
+
   // 2. Mutations
+  const claimMutation = useMutation({
+    mutationFn: async () => {
+      if (!account || !accountAddress) throw new Error('Wallet not connected');
+
+      const data = encodeFunctionData({
+        abi: GMAbi,
+        functionName: 'claim',
+        args: [],
+      });
+
+      const { transactionHash } = await account.sendTransaction({
+        to: gmContract.address as `0x${string}`,
+        data,
+        chainId: 8453,
+      });
+
+      return await publicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: gmBalanceQuery.queryKey });
+      queryClient.invalidateQueries({ queryKey: claimInfoQuery.queryKey });
+    },
+  });
+
   const approveMutation = useMutation<unknown, Error, void, { previousAllowance?: bigint }>({
     mutationFn: async () => {
       if (!account) throw new Error('Wallet not connected');
@@ -166,7 +216,7 @@ export function useGMNFTContract() {
     }
   };
 
-  const isProcessing = approveMutation.isPending || burnAndMintMutation.isPending;
+  const isProcessing = approveMutation.isPending || burnAndMintMutation.isPending || claimMutation.isPending;
 
   return {
     gmBalance,
@@ -176,5 +226,16 @@ export function useGMNFTContract() {
     isApproved,
     isProcessing,
     handleUnifiedAction,
+    // Claim additions
+    canClaimNow,
+    nextAvailableTimestamp,
+    isEligible,
+    isLoadingClaimInfo,
+    handleClaim: () => {
+      if (canClaimNow && !claimMutation.isPending) {
+        claimMutation.mutate();
+      }
+    },
+    isClaiming: claimMutation.isPending,
   };
 }

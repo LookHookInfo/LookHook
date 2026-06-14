@@ -26,6 +26,7 @@ import { ogMiningBadgeAbi } from './ogMiningBadgeAbi';
 import { ogRegistryAbi } from './ogRegistryAbi';
 import { ambaNftAbi } from './ambaNftAbi';
 import { lamboRewardAbi } from './lamboRewardAbi';
+import { achievementAggregatorAbi } from './achievementAggregatorAbi';
 
 // --- CORE TOKENS ---
 
@@ -144,6 +145,13 @@ export const lamboRewardContract = getContract({
   address: '0x33De46CCB070936F64fb8Bb0Fc6C4495A29a4602',
   abi: lamboRewardAbi,
 }); //ok
+
+export const achievementAggregatorContract = getContract({
+  client,
+  chain: chain,
+  address: '0xb4c17f2DBc13df30d5fE7672D2D6E04c436196f5',
+  abi: achievementAggregatorAbi,
+});
 
 // --- NFT & IDENTITY ---
 

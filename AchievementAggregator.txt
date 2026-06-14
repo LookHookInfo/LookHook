@@ -1,0 +1,1161 @@
+0xb4c17f2DBc13df30d5fE7672D2D6E04c436196f5
+
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.34;
+
+interface IERC721 {
+    function balanceOf(address owner) external view returns (uint256);
+}
+
+interface IERC20 {
+    function balanceOf(address owner) external view returns (uint256);
+}
+
+contract AchievementAggregator {
+    // ============================================
+    // СТРУКТУРЫ
+    // ============================================
+    
+    struct Achievement {
+        string name;
+        string description;
+        string imageUrl;
+        uint256 requiredValue;
+        uint256 checkType;      // 0 = ERC20, 1 = ERC721, 2 = custom method
+        address contractAddr;
+        bytes4 methodSignature;
+        bool isActive;
+        uint256 order;
+    }
+    
+    struct UserAchievementStatus {
+        uint256 id;
+        string name;
+        string description;
+        string imageUrl;
+        uint256 requiredValue;
+        uint256 currentValue;
+        bool isAchieved;
+        bool isActive;
+        uint256 order;
+    }
+    
+    // ============================================
+    // ХРАНЕНИЕ
+    // ============================================
+    
+    mapping(uint256 => Achievement) public achievements;
+    uint256[] public achievementIds;
+    uint256 public nextAchievementId = 1;
+    address public owner;
+    
+    // Контракты с несколькими ачивками (для кэширования)
+    address constant COLLECTION_DOLPHIN_SHARK_WHALE = 0x7aa5fc50D0E4A400545E34055134C89F2b310080;
+    
+    // ============================================
+    // СОБЫТИЯ
+    // ============================================
+    
+    event AchievementAdded(uint256 indexed id, string name);
+    event AchievementUpdated(uint256 indexed id);
+    event AchievementRemoved(uint256 indexed id);
+    event AchievementToggled(uint256 indexed id, bool isActive);
+    event OwnerTransferred(address indexed oldOwner, address indexed newOwner);
+    
+    // ============================================
+    // МОДИФИКАТОРЫ
+    // ============================================
+    
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+    
+    // ============================================
+    // КОНСТРУКТОР
+    // ============================================
+    
+    constructor() {
+        owner = msg.sender;
+        _setupInitialAchievements();
+    }
+    
+    // ============================================
+    // НАСТРОЙКА ВСЕХ 20 АЧИВОК
+    // ============================================
+    
+    function _setupInitialAchievements() internal {
+        // 1. Hashcoin холдер (10000 HASH)
+        _addAchievement(Achievement({
+            name: "Hashcoin Holder",
+            description: "Hold 10,000 HASH tokens",
+            imageUrl: "https://lookhook.info/assets/hash.webp",
+            requiredValue: 10000,
+            checkType: 0,
+            contractAddr: 0xA9B631ABcc4fd0bc766d7C0C8fCbf866e2bB0445,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 1
+        }));
+        
+        // 2. Plasma Cat NFT холдер
+        _addAchievement(Achievement({
+            name: "Plasma Cat Owner",
+            description: "Hold 1+ Plasma Cat NFT",
+            imageUrl: "https://lookhook.info/assets/Cat.webp",
+            requiredValue: 1,
+            checkType: 1,
+            contractAddr: 0x30CcB676De89aF3da144dDE2cfF647152e5C2770,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 2
+        }));
+        
+        // 3. Early NFT холдер
+        _addAchievement(Achievement({
+            name: "Early Adopter",
+            description: "Hold Early NFT",
+            imageUrl: "https://lookhook.info/assets/Early.webp",
+            requiredValue: 1,
+            checkType: 1,
+            contractAddr: 0xe6DC0fe06C141329050A1B2F3e9c4A7f944450B0,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 3
+        }));
+        
+        // 4. Name NFT холдер
+        _addAchievement(Achievement({
+            name: "Name NFT Owner",
+            description: "Web3 Name Holder",
+            imageUrl: "https://lookhook.info/assets/Name.webp",
+            requiredValue: 1,
+            checkType: 1,
+            contractAddr: 0xA8e00E2ca8b183Edb7EbB6bD7EeBB90047416F95,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 4
+        }));
+        
+        // 5. GEM Launch (запустил 1+ токенов)
+        _addAchievement(Achievement({
+            name: "GEM Launcher",
+            description: "Launched 1+ tokens on GEM",
+            imageUrl: "https://lookhook.info/assets/Gem.webp",
+            requiredValue: 1,
+            checkType: 2,
+            contractAddr: 0xea4831Df95738d6Ef0f2b47e5345fa75A2E59e86,
+            methodSignature: bytes4(keccak256("userTokensCount(address)")),
+            isActive: true,
+            order: 5
+        }));
+        
+        // 6. FUN TGE (вывел токен на TGE)
+        _addAchievement(Achievement({
+            name: "FAN Role (TGE)",
+            description: "Migrate your token to GemFun",
+            imageUrl: "https://lookhook.info/assets/Fun.webp",
+            requiredValue: 1,
+            checkType: 2,
+            contractAddr: 0xea4831Df95738d6Ef0f2b47e5345fa75A2E59e86,
+            methodSignature: bytes4(keccak256("userMigratedCount(address)")),
+            isActive: true,
+            order: 6
+        }));
+        
+        // 7. X Role NFT холдер
+        _addAchievement(Achievement({
+            name: "X Role Holder",
+            description: "Make a tweet about the project",
+            imageUrl: "https://lookhook.info/assets/Xrole.webp",
+            requiredValue: 1,
+            checkType: 1,
+            contractAddr: 0x1A502C6259DBFebD7f568139cC28168831DA5D30,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 7
+        }));
+        
+        // 8. Stake бейджик (ERC20 холдер)
+        _addAchievement(Achievement({
+            name: "Staker",
+            description: "Stake 50k HASH for 12 months",
+            imageUrl: "https://lookhook.info/assets/Stake.webp",
+            requiredValue: 1,
+            checkType: 0,
+            contractAddr: 0x6249E34dB9858676950c05fF66eCf96Aee4b7ba5,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 8
+        }));
+        
+        // 9. Купил кофе разработчику
+        _addAchievement(Achievement({
+            name: unicode"Coffee Supporter ☕",
+            description: "Bought DEV a coffee ($5+)",
+            imageUrl: "https://lookhook.info/assets/tips.webp",
+            requiredValue: 1,
+            checkType: 2,
+            contractAddr: 0x3e2623875Aa6295628A40040326B70fCb2E9Df15,
+            methodSignature: bytes4(keccak256("tipsFromUsers(address)")),
+            isActive: true,
+            order: 9
+        }));
+        
+        // 10. Dolphin (1 NFT) - кэшируемый контракт
+        _addAchievement(Achievement({
+            name: unicode"Dolphin 🐬",
+            description: "Mine 1000 HASH",
+            imageUrl: "https://lookhook.info/assets/Dolphin.webp",
+            requiredValue: 1,
+            checkType: 1,
+            contractAddr: COLLECTION_DOLPHIN_SHARK_WHALE,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 10
+        }));
+        
+        // 11. Shark (2 NFT) - использует кэш
+        _addAchievement(Achievement({
+            name: unicode"Shark 🦈",
+            description: "Mine 10000 HASH",
+            imageUrl: "https://lookhook.info/assets/Shark.webp",
+            requiredValue: 2,
+            checkType: 1,
+            contractAddr: COLLECTION_DOLPHIN_SHARK_WHALE,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 11
+        }));
+        
+        // 12. Whale (3 NFT) - использует кэш
+        _addAchievement(Achievement({
+            name: unicode"Whale 🐋",
+            description: "Mine 25000 HASH",
+            imageUrl: "https://lookhook.info/assets/Whale.webp",
+            requiredValue: 3,
+            checkType: 1,
+            contractAddr: COLLECTION_DOLPHIN_SHARK_WHALE,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 12
+        }));
+        
+        // 13. DeVote бейджик
+        _addAchievement(Achievement({
+            name: "DeVoter",
+            description: "Vote in the project (DAO)",
+            imageUrl: "https://lookhook.info/assets/DeVote.webp",
+            requiredValue: 1,
+            checkType: 1,
+            contractAddr: 0x52ab3d4ED15F71b8eC153222daa9E13353E36bb3,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 13
+        }));
+        
+        // 14. GM бейджик
+        _addAchievement(Achievement({
+            name: "GM Walker",
+            description: "Accumulate 30 GM",
+            imageUrl: "https://lookhook.info/assets/GM.webp",
+            requiredValue: 1,
+            checkType: 1,
+            contractAddr: 0x3B01Ad4F0aa8663174A7cE44ed9C7223791Fa16f,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 14
+        }));
+        
+        // 15. OG NFT Holder
+        _addAchievement(Achievement({
+            name: "OG NFT Holder",
+            description: "Become an influential team member",
+            imageUrl: "https://lookhook.info/assets/OG.webp",
+            requiredValue: 1,
+            checkType: 1,
+            contractAddr: 0xB494698522Ad959cAA50A0e82107771711fd5A49,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 15
+        }));
+        
+        // 16. Welcome NFT
+        _addAchievement(Achievement({
+            name: "Welcome NFT",
+            description: "Complete the Zely quest",
+            imageUrl: "https://lookhook.info/assets/welcome.webp",
+            requiredValue: 1,
+            checkType: 1,
+            contractAddr: 0x07D5ac32B993c8416BdA8C411615385D3b23130e,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 16
+        }));
+        
+        // 17. Tube NFT (YouTube)
+        _addAchievement(Achievement({
+            name: "Tube NFT",
+            description: "Make a video about the project",
+            imageUrl: "https://lookhook.info/assets/YouTube.webp",
+            requiredValue: 1,
+            checkType: 1,
+            contractAddr: 0xA193a5887FBD94982E50553FdA961EDd3e36906b,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 17
+        }));
+        
+        // 18. Gram NFT (Telegram)
+        _addAchievement(Achievement({
+            name: "Gram NFT",
+            description: "Make a post about the project",
+            imageUrl: "https://lookhook.info/assets/Telegram.webp",
+            requiredValue: 1,
+            checkType: 1,
+            contractAddr: 0x4De659ef1617eF215f36A1953B3Cd7a4A10a5159,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 18
+        }));
+        
+        // 19. Farm NFT
+        _addAchievement(Achievement({
+            name: "Farm NFT",
+            description: "Start Mining",
+            imageUrl: "https://lookhook.info/assets/Farm.webp",
+            requiredValue: 1,
+            checkType: 1,
+            contractAddr: 0xd1C2e5a8B214F5e97E5aEFc6E0958D7bD3809662,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 19
+        }));
+        
+        // 20. Amba Mining Hash
+        _addAchievement(Achievement({
+            name: "Amba Mining Hash",
+            description: "To contribute to a project",
+            imageUrl: "https://lookhook.info/assets/Amba.webp",
+            requiredValue: 1,
+            checkType: 1,
+            contractAddr: 0x1076d1C0Bb444C8bb50A6D2dbdF3bA5095910a52,
+            methodSignature: bytes4(0),
+            isActive: true,
+            order: 20
+        }));
+    }
+    
+    // ============================================
+    // ГЛАВНАЯ ФУНКЦИЯ - ОПТИМИЗИРОВАНА
+    // ============================================
+    
+    function getUserAchievements(address user) 
+        public 
+        view 
+        returns (UserAchievementStatus[] memory) 
+    {
+        uint256 length = achievementIds.length;
+        UserAchievementStatus[] memory results = new UserAchievementStatus[](length);
+        
+        // Кэш для Dolphin/Shark/Whale (один контракт - три ачивки)
+        uint256 dolphinCollectionBalance = 0;
+        bool dolphinCollectionLoaded = false;
+        
+        for (uint i = 0; i < length; i++) {
+            uint256 id = achievementIds[i];
+            Achievement memory ach = achievements[id];
+            
+            uint256 currentValue;
+            
+            // Оптимизация: проверяем, не относится ли ачивка к кэшируемому контракту
+            if (ach.contractAddr == COLLECTION_DOLPHIN_SHARK_WHALE && ach.checkType == 1) {
+                if (!dolphinCollectionLoaded) {
+                    dolphinCollectionBalance = IERC721(COLLECTION_DOLPHIN_SHARK_WHALE).balanceOf(user);
+                    dolphinCollectionLoaded = true;
+                }
+                currentValue = dolphinCollectionBalance;
+            } else {
+                // Обычная обработка
+                currentValue = _getUserValue(user, ach);
+            }
+            
+            bool isAchieved = (currentValue >= ach.requiredValue) && ach.isActive;
+            
+            results[i] = UserAchievementStatus({
+                id: id,
+                name: ach.name,
+                description: ach.description,
+                imageUrl: ach.imageUrl,
+                requiredValue: ach.requiredValue,
+                currentValue: currentValue,
+                isAchieved: isAchieved,
+                isActive: ach.isActive,
+                order: ach.order
+            });
+        }
+        
+        return results;
+    }
+    
+    // Получить только достигнутые ачивки
+    function getUnlockedAchievements(address user) 
+        public 
+        view 
+        returns (UserAchievementStatus[] memory) 
+    {
+        UserAchievementStatus[] memory all = getUserAchievements(user);
+        uint256 count = 0;
+        
+        for (uint i = 0; i < all.length; i++) {
+            if (all[i].isAchieved) count++;
+        }
+        
+        UserAchievementStatus[] memory unlocked = new UserAchievementStatus[](count);
+        uint256 index = 0;
+        for (uint i = 0; i < all.length; i++) {
+            if (all[i].isAchieved) {
+                unlocked[index] = all[i];
+                index++;
+            }
+        }
+        
+        return unlocked;
+    }
+    
+    // Получить прогресс по конкретной ачивке
+    function getAchievementProgress(address user, uint256 achievementId) 
+        public 
+        view 
+        returns (uint256 currentValue, uint256 requiredValue, bool isAchieved) 
+    {
+        Achievement memory ach = achievements[achievementId];
+        require(ach.contractAddr != address(0), "Achievement not found");
+        
+        currentValue = _getUserValue(user, ach);
+        requiredValue = ach.requiredValue;
+        isAchieved = (currentValue >= requiredValue) && ach.isActive;
+        
+        return (currentValue, requiredValue, isAchieved);
+    }
+    
+    // ============================================
+    // ВНУТРЕННЯЯ ФУНКЦИЯ
+    // ============================================
+    
+    function _getUserValue(address user, Achievement memory ach) 
+        internal 
+        view 
+        returns (uint256) 
+    {
+        if (ach.checkType == 0) {
+            // ERC20 баланс
+            return IERC20(ach.contractAddr).balanceOf(user);
+        } 
+        else if (ach.checkType == 1) {
+            // ERC721 баланс
+            return IERC721(ach.contractAddr).balanceOf(user);
+        } 
+        else if (ach.checkType == 2) {
+            // Кастомный метод
+            (bool success, bytes memory data) = ach.contractAddr.staticcall(
+                abi.encodeWithSelector(ach.methodSignature, user)
+            );
+            if (success && data.length == 32) {
+                return abi.decode(data, (uint256));
+            }
+            return 0;
+        }
+        return 0;
+    }
+    
+    // ============================================
+    // АДМИНИСТРИРОВАНИЕ
+    // ============================================
+    
+    function _addAchievement(Achievement memory ach) internal {
+        uint256 id = nextAchievementId++;
+        achievements[id] = ach;
+        achievementIds.push(id);
+        emit AchievementAdded(id, ach.name);
+    }
+    
+    function addAchievement(
+        string memory name,
+        string memory description,
+        string memory imageUrl,
+        uint256 requiredValue,
+        uint256 checkType,
+        address contractAddr,
+        bytes4 methodSignature,
+        uint256 order
+    ) external onlyOwner {
+        _addAchievement(Achievement({
+            name: name,
+            description: description,
+            imageUrl: imageUrl,
+            requiredValue: requiredValue,
+            checkType: checkType,
+            contractAddr: contractAddr,
+            methodSignature: methodSignature,
+            isActive: true,
+            order: order
+        }));
+    }
+    
+    function updateAchievement(
+        uint256 id,
+        string memory name,
+        string memory description,
+        string memory imageUrl,
+        uint256 requiredValue,
+        uint256 checkType,
+        address contractAddr,
+        bytes4 methodSignature,
+        uint256 order,
+        bool isActive
+    ) external onlyOwner {
+        require(achievements[id].contractAddr != address(0), "Achievement not found");
+        
+        achievements[id].name = name;
+        achievements[id].description = description;
+        achievements[id].imageUrl = imageUrl;
+        achievements[id].requiredValue = requiredValue;
+        achievements[id].checkType = checkType;
+        achievements[id].contractAddr = contractAddr;
+        achievements[id].methodSignature = methodSignature;
+        achievements[id].order = order;
+        achievements[id].isActive = isActive;
+        
+        emit AchievementUpdated(id);
+    }
+    
+    function toggleAchievement(uint256 id, bool isActive) external onlyOwner {
+        require(achievements[id].contractAddr != address(0), "Achievement not found");
+        achievements[id].isActive = isActive;
+        emit AchievementToggled(id, isActive);
+    }
+    
+    function removeAchievement(uint256 id) external onlyOwner {
+        require(achievements[id].contractAddr != address(0), "Achievement not found");
+        
+        for (uint i = 0; i < achievementIds.length; i++) {
+            if (achievementIds[i] == id) {
+                achievementIds[i] = achievementIds[achievementIds.length - 1];
+                achievementIds.pop();
+                break;
+            }
+        }
+        
+        delete achievements[id];
+        emit AchievementRemoved(id);
+    }
+    
+    function getAllAchievements() external view returns (Achievement[] memory) {
+        Achievement[] memory all = new Achievement[](achievementIds.length);
+        for (uint i = 0; i < achievementIds.length; i++) {
+            all[i] = achievements[achievementIds[i]];
+        }
+        return all;
+    }
+    
+    function getAchievementsCount() external view returns (uint256) {
+        return achievementIds.length;
+    }
+    
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "Zero address");
+        address oldOwner = owner;
+        owner = newOwner;
+        emit OwnerTransferred(oldOwner, newOwner);
+    }
+}
+
+
+Abi 
+
+
+[
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			}
+		],
+		"name": "AchievementAdded",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"name": "AchievementRemoved",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "isActive",
+				"type": "bool"
+			}
+		],
+		"name": "AchievementToggled",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"name": "AchievementUpdated",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "imageUrl",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "requiredValue",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "checkType",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "contractAddr",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes4",
+				"name": "methodSignature",
+				"type": "bytes4"
+			},
+			{
+				"internalType": "uint256",
+				"name": "order",
+				"type": "uint256"
+			}
+		],
+		"name": "addAchievement",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "oldOwner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnerTransferred",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"name": "removeAchievement",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isActive",
+				"type": "bool"
+			}
+		],
+		"name": "toggleAchievement",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "imageUrl",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "requiredValue",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "checkType",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "contractAddr",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes4",
+				"name": "methodSignature",
+				"type": "bytes4"
+			},
+			{
+				"internalType": "uint256",
+				"name": "order",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isActive",
+				"type": "bool"
+			}
+		],
+		"name": "updateAchievement",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "achievementIds",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "achievements",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "imageUrl",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "requiredValue",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "checkType",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "contractAddr",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes4",
+				"name": "methodSignature",
+				"type": "bytes4"
+			},
+			{
+				"internalType": "bool",
+				"name": "isActive",
+				"type": "bool"
+			},
+			{
+				"internalType": "uint256",
+				"name": "order",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "achievementId",
+				"type": "uint256"
+			}
+		],
+		"name": "getAchievementProgress",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "currentValue",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "requiredValue",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isAchieved",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getAchievementsCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getAllAchievements",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "imageUrl",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "requiredValue",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "checkType",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "contractAddr",
+						"type": "address"
+					},
+					{
+						"internalType": "bytes4",
+						"name": "methodSignature",
+						"type": "bytes4"
+					},
+					{
+						"internalType": "bool",
+						"name": "isActive",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "order",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct AchievementAggregator.Achievement[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "getUnlockedAchievements",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "id",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "imageUrl",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "requiredValue",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "currentValue",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "isAchieved",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "isActive",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "order",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct AchievementAggregator.UserAchievementStatus[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "getUserAchievements",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "id",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "imageUrl",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "requiredValue",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "currentValue",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "isAchieved",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "isActive",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "order",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct AchievementAggregator.UserAchievementStatus[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "nextAchievementId",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]

@@ -8,32 +8,84 @@ interface GMProps {
   className?: string;
 }
 
+function formatTime(seconds: number) {
+  const h = Math.floor(seconds / 3600)
+    .toString()
+    .padStart(2, '0');
+  const m = Math.floor((seconds % 3600) / 60)
+    .toString()
+    .padStart(2, '0');
+  const s = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
 export default function GM({ className }: GMProps) {
   const account = useActiveAccount();
   const [copied, setCopied] = useState(false);
   const [gmPriceUsd, setGmPriceUsd] = useState<string | null>(null);
   const [hashPriceUsd, setHashPriceUsd] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<string>('');
   const gmAddress = '0x1e2390B4021B64B05Bc7AfF53E0122eb648DdC19';
   const truncatedAddress = `0x..${gmAddress.slice(-3)}`;
 
-  const { gmBalance, BURN_AMOUNT, hasGMNFT, isProcessing, handleUnifiedAction } = useGMNFTContract();
+  const {
+    gmBalance,
+    BURN_AMOUNT,
+    hasGMNFT,
+    isProcessing,
+    handleUnifiedAction,
+    canClaimNow,
+    nextAvailableTimestamp,
+    handleClaim,
+    isClaiming,
+    isEligible,
+  } = useGMNFTContract();
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    if (nextAvailableTimestamp > 0 && !canClaimNow) {
+      const updateCountdown = () => {
+        const now = Math.floor(Date.now() / 1000);
+        const timeLeft = Math.max(0, nextAvailableTimestamp - now);
+        setCountdown(formatTime(timeLeft));
+
+        if (timeLeft <= 0) {
+          clearInterval(intervalId);
+        }
+      };
+
+      updateCountdown();
+      intervalId = setInterval(updateCountdown, 1000);
+    } else {
+      setCountdown('');
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [nextAvailableTimestamp, canClaimNow]);
 
   useEffect(() => {
     const fetchPrices = async () => {
       try {
         const gmResponse = await fetch(
-          'https://api.geckoterminal.com/api/v2/networks/base/pools/0x9baf8cd5787c2ff300020a6d91a5fb16a917f8df',
+          'https://api.dexscreener.com/latest/dex/pairs/base/0x9baf8cd5787c2ff300020a6d91a5fb16a917f8df',
         );
         const gmData = await gmResponse.json();
-        const gmUsd = parseFloat(gmData.data.attributes.base_token_price_usd).toFixed(2);
+        const gmPair = gmData.pairs?.[0];
+        const gmUsd = gmPair?.priceUsd ? parseFloat(gmPair.priceUsd).toFixed(2) : 'N/A';
         setGmPriceUsd(gmUsd);
 
         const hashResponse = await fetch(
-          'https://api.geckoterminal.com/api/v2/networks/base/pools/0x9ab05414f0a3872a78459693f3e3c9ea3f0d6e71',
+          'https://api.dexscreener.com/latest/dex/pairs/base/0x9ab05414f0a3872a78459693f3e3c9ea3f0d6e71',
         );
         const hashData = await hashResponse.json();
-        const hashUsd = parseFloat(hashData.data.attributes.base_token_price_usd);
-        setHashPriceUsd(hashUsd.toString());
+        const hashPair = hashData.pairs?.[0];
+        const hashUsd = hashPair?.priceUsd ? parseFloat(hashPair.priceUsd) : null;
+        setHashPriceUsd(hashUsd ? hashUsd.toString() : 'N/A');
       } catch (error) {
         console.error('Failed to fetch token prices:', error);
         setGmPriceUsd('N/A');
@@ -66,11 +118,46 @@ export default function GM({ className }: GMProps) {
             >
               Base
             </div>
-            <img
-              src="https://bafybeihjwg5c4zsl335gpxu7y4nspp5gcy26udisdbpogt7edrvac6iiwu.ipfs.w3s.link/"
-              alt="HashCoin NFT"
-              className="rounded-xl w-full h-auto"
-            />
+            
+            <div 
+              className={`relative rounded-xl overflow-hidden group ${canClaimNow ? 'cursor-pointer' : ''}`}
+              onClick={handleClaim}
+            >
+              <img
+                src="https://bafybeihjwg5c4zsl335gpxu7y4nspp5gcy26udisdbpogt7edrvac6iiwu.ipfs.w3s.link/"
+                alt="HashCoin NFT"
+                className="w-full h-auto transition-transform duration-500 group-hover:scale-110"
+              />
+              
+              {/* Claim Overlay */}
+              {account && (
+                <div 
+                  className={`absolute inset-0 flex flex-col items-center justify-center bg-black/30 backdrop-blur-[1px] transition-opacity duration-300 
+                    ${isClaiming ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                >
+                  {isClaiming ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-8 h-8 border-2 border-sky-500/20 border-t-sky-500 rounded-full animate-spin"></div>
+                      <span className="text-white font-bold text-[8px] tracking-widest">CLAIMING...</span>
+                    </div>
+                  ) : canClaimNow ? (
+                    <div className="bg-sky-600/90 border border-sky-400/50 px-4 py-1.5 rounded-lg shadow-xl backdrop-blur-sm hover:bg-sky-500 transition-colors">
+                      <span className="text-white font-bold text-[11px] tracking-widest">CLAIM</span>
+                    </div>
+                  ) : isEligible && countdown ? (
+                    <div className="bg-neutral-950/80 border border-neutral-700/50 px-3 py-1.5 rounded-xl text-center shadow-2xl backdrop-blur-md">
+                      <div className="text-[7px] text-neutral-500 uppercase tracking-widest mb-0.5 font-bold">Next Reward</div>
+                      <div className="text-white font-mono font-bold text-sm leading-none">{countdown}</div>
+                    </div>
+                  ) : !isEligible ? (
+                    <div className="bg-neutral-950/90 border border-red-900/50 px-2 py-1 rounded-lg text-center backdrop-blur-md">
+                      <span className="text-red-500/80 text-[8px] font-black uppercase tracking-widest">No Access</span>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+
             <div className="pt-6 flex flex-wrap items-center justify-center gap-2 w-full">
               {!account ? (
                 <ConnectWalletButton />
