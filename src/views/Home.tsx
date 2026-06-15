@@ -4,8 +4,8 @@ import Hero from '@/partials/Hero';
 import Services from '@/partials/Services';
 import Teams from '@/partials/Teams';
 import Forum from '@/partials/Forum';
-import Tips from '@/partials/Tips';
 import { Domain } from '@/partials/Domain';
+import Early from '@/partials/Early';
 import Mining from '@/partials/Mining';
 import CarouselCardSection from '@/components/CarouselCardSection';
 import GM from '@/partials/GM';
@@ -41,7 +41,7 @@ export default function Home() {
       </div>
       <Mining />
       <div className="flex flex-col md:flex-row gap-4 my-2">
-        <Tips className="w-full md:w-1/2" />
+        <Early className="w-full md:w-1/2" />
         <Domain className="w-full md:w-1/2" />
       </div>
       <div className="flex flex-col md:flex-row gap-4 my-2">

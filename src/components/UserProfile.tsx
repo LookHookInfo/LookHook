@@ -1,14 +1,10 @@
 import { useState } from 'react';
 import { useActiveWallet } from 'thirdweb/react';
 import { ConnectButton } from 'thirdweb/react';
-import { useQuery } from '@tanstack/react-query';
 import { client } from '../lib/thirdweb/client';
 import { chain } from '../lib/thirdweb/chain';
 import ProfileModal from './ProfileModal';
-import { nftCollectionContract, whaleContract } from '../utils/contracts';
 import { useNameContract } from '../hooks/useNameContract';
-import { publicClient, earlyPublicClient } from '../lib/viem/client';
-import { whaleContractAbi } from '../utils/whaleContractAbi';
 
 export default function UserProfile() {
   const wallet = useActiveWallet();
@@ -17,45 +13,6 @@ export default function UserProfile() {
   const account = wallet?.getAccount();
 
   const { registeredName } = useNameContract();
-
-  const { data: balance, isLoading: isNftBalanceLoading } = useQuery({
-    queryKey: ['nftCollection', 'balanceOf', account?.address],
-    queryFn: () => publicClient.readContract({
-      address: nftCollectionContract.address as `0x${string}`,
-      abi: [{
-        type: 'function',
-        name: 'balanceOf',
-        inputs: [{ type: 'address', name: 'owner' }],
-        outputs: [{ type: 'uint256' }],
-        stateMutability: 'view',
-      }] as const,
-      functionName: 'balanceOf',
-      args: [account?.address as `0x${string}`],
-    }),
-    enabled: !!account,
-  });
-
-  const { data: whaleContractData } = useQuery({
-    queryKey: ['whaleContract', 'getUserStatus', account?.address],
-    queryFn: () => earlyPublicClient.readContract({
-      address: whaleContract.address as `0x${string}`,
-      abi: whaleContractAbi,
-      functionName: 'getUserStatus',
-      args: [account?.address as `0x${string}`],
-    }),
-    enabled: !!account,
-  });
-
-  const hasCatNft = !!(balance && (balance as bigint) > 0n);
-
-  const canMintDolphin = whaleContractData ? whaleContractData[1] : false;
-  const hasDolphin = whaleContractData ? whaleContractData[4] : false;
-  const canMintShark = whaleContractData ? whaleContractData[2] : false;
-  const hasShark = whaleContractData ? whaleContractData[5] : false;
-  const canMintWhale = whaleContractData ? whaleContractData[3] : false;
-  const hasWhale = whaleContractData ? whaleContractData[6] : false;
-
-  const shouldGlow = (canMintDolphin && !hasDolphin) || (canMintShark && !hasShark) || (canMintWhale && !hasWhale);
 
   if (!wallet) {
     return (
@@ -75,24 +32,13 @@ export default function UserProfile() {
   const shortAddress = account ? `${account.address.slice(0, 6)}...${account.address.slice(-4)}` : '';
   const displayName = registeredName ? `${registeredName}.hash` : shortAddress;
 
-  let iconToDisplay;
-  if (isNftBalanceLoading) {
-    iconToDisplay = <div className="size-5 rounded-full bg-neutral-700 animate-pulse" />;
-  } else if (hasCatNft) {
-    iconToDisplay = <img src="/assets/Cat.webp" alt="User NFT" className="size-5 rounded-full" />;
-  } else {
-    iconToDisplay = (
-      <svg className="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 3c-3.86 0-7 1.69-7 3.79V20h14v-3.21C19 14.69 15.86 13 12 13z" />
-      </svg>
-    );
-  }
+  const iconToDisplay = <img src="/assets/Cat.webp" alt="User Avatar" className="size-5 rounded-full" />;
 
   return (
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className={`inline-flex items-center gap-x-2 px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 text-white hover:bg-gray-700 transition-colors dark:border-neutral-700 dark:hover:bg-neutral-700 ${shouldGlow ? 'glow-effect' : ''}`}
+        className="inline-flex items-center gap-x-2 px-4 py-2 text-sm font-semibold rounded-lg border border-neutral-700 text-white hover:bg-neutral-800 transition-colors"
       >
         {iconToDisplay}
         <span className="font-mono">{displayName}</span>
@@ -105,8 +51,6 @@ export default function UserProfile() {
         <ProfileModal
           wallet={wallet}
           onClose={() => setIsModalOpen(false)}
-          hasCatNft={hasCatNft}
-          isNftLoading={isNftBalanceLoading}
           registeredName={registeredName}
         />
       )}

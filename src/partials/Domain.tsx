@@ -125,7 +125,7 @@ export function Domain({ className }: DomainProps) {
             </div>
 
             <img
-              src="https://bafybeid4a5ecvk3pvunzk6exnazh6u2uuhlvjlcucpg3lm3sa5dskc6wbm.ipfs.w3s.link/namehash.png"
+              src="/assets/namehash.png"
               alt="HashCoin NFT"
               className="rounded-xl w-full h-auto"
             />

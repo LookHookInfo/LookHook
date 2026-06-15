@@ -1,3 +1,6 @@
+import { useBuyCoffeeLogic } from '../hooks/useBuyCoffeeLogic';
+import { useActiveAccount } from 'thirdweb/react';
+
 interface SocialLinkProps {
   href: string;
   svgPath: string;
@@ -27,11 +30,37 @@ const SocialLink = ({ href, svgPath, title }: SocialLinkProps) => {
 };
 
 export default function Teams() {
+  const account = useActiveAccount();
+  const { buyCoffee, isBuyingCoffee } = useBuyCoffeeLogic();
+
   return (
     <div className="max-w-[85rem] px-4 py-4 sm:px-6 lg:px-8 lg:py-6 mx-auto">
       {/* Section Title */}
       <div className="max-w-2xl mx-auto text-center mb-10 lg:mb-14">
-        <h2 className="text-2xl font-bold md:text-4xl md:leading-tight dark:text-white">Our Team</h2>
+        <div className="flex items-center justify-center gap-3 group relative">
+          <h2 className="text-2xl font-bold md:text-4xl md:leading-tight dark:text-white">Our Team</h2>
+
+          {account && (
+            <div className="relative">
+              <button
+                onClick={() => buyCoffee(1)}
+                disabled={isBuyingCoffee}
+                className={`flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 ${isBuyingCoffee ? 'opacity-50 animate-pulse' : 'hover:drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]'}`}
+              >
+                <img src="/assets/tips.webp" alt="Tips Coffee" className="size-8 md:size-10 object-contain" />
+              </button>
+
+              {/* Tooltip */}
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50 min-w-[120px]">
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                  <img src="/assets/tips.webp" alt="" className="size-4" />
+                  <span className="text-xs font-bold text-white">Tips Coffee (~$5)</span>
+                </div>
+                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-neutral-900"></div>
+              </div>
+            </div>
+          )}
+        </div>
         <p className="mt-1 text-gray-400 dark:text-neutral-400">Creative people</p>
       </div>
 
@@ -106,7 +135,7 @@ export default function Teams() {
           <div className="flex items-center gap-x-4">
             <img
               className="rounded-full size-20"
-              src="https://bafybeia3rbslwopxuh3trswj2igpcmv6ygycofyztpdxi2rohjnmxnzqu4.ipfs.w3s.link/Logo.png"
+              src="https://ipfs.io/ipfs/bafybeieq7wk3ry5hb5za47nni7jo2apnx4z5oou7u65ruy6gk4uwgd6oli"
               alt="Avatar"
             />
             <div className="grow">
