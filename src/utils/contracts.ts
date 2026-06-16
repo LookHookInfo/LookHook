@@ -25,6 +25,8 @@ import { ogRegistryAbi } from './ogRegistryAbi';
 import { ambaNftAbi } from './ambaNftAbi';
 import { lamboRewardAbi } from './lamboRewardAbi';
 import { achievementAggregatorAbi } from './achievementAggregatorAbi';
+import { rewardAggregatorAbi } from './rewardAggregatorAbi';
+import { faucetAbi } from './faucetAbi';
 
 // --- CORE TOKENS ---
 
@@ -144,6 +146,13 @@ export const achievementAggregatorContract = getContract({
   abi: achievementAggregatorAbi,
 });
 
+export const rewardAggregatorContract = getContract({
+  client,
+  chain: chain,
+  address: '0x3354ADD4DB4f1E2D1Ed27d29A3Fb48a3208B9bA0',
+  abi: rewardAggregatorAbi,
+});
+
 // --- NFT & IDENTITY ---
 
 export const ourNftContract = getContract({
@@ -229,3 +238,10 @@ export const gramContract = getContract({
   address: '0x4De659ef1617eF215f36A1953B3Cd7a4A10a5159',
   abi: gmnftAbi,
 }); //ok
+
+export const faucetContract = getContract({
+  client,
+  chain: chain,
+  address: '0x9C9c604c588144bB60864547d5152B309B684122',
+  abi: faucetAbi,
+});

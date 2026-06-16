@@ -1,0 +1,300 @@
+0x9C9c604c588144bB60864547d5152B309B684122
+
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.34;
+
+interface IERC20 {
+    function transfer(address to, uint256 amount) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+}
+
+contract HashFaucet {
+    IERC20 public hashToken;
+    address public owner;
+    uint256 public constant REWARD_AMOUNT = 20 * 10**18; // 20 HASH (с учетом 18 decimals)
+    uint256 public constant COOLDOWN = 24 hours;
+    
+    mapping(address => uint256) public lastClaimTime;
+    
+    event Claimed(address indexed user, uint256 amount, uint256 nextClaimTime);
+    event FaucetRefilled(address indexed from, uint256 amount);
+    
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+    
+    constructor(address _hashToken) {
+        owner = msg.sender;
+        hashToken = IERC20(_hashToken);
+    }
+    
+    function claim() external {
+        require(block.timestamp >= lastClaimTime[msg.sender] + COOLDOWN, "Already claimed in last 24h");
+        require(hashToken.balanceOf(address(this)) >= REWARD_AMOUNT, "Faucet is empty");
+        
+        lastClaimTime[msg.sender] = block.timestamp;
+        require(hashToken.transfer(msg.sender, REWARD_AMOUNT), "Transfer failed");
+        
+        emit Claimed(msg.sender, REWARD_AMOUNT, block.timestamp + COOLDOWN);
+    }
+    
+    // Время до следующего клейма (в секундах)
+    function getTimeUntilNextClaim(address user) external view returns (uint256) {
+        uint256 nextClaim = lastClaimTime[user] + COOLDOWN;
+        if (block.timestamp >= nextClaim) return 0;
+        return nextClaim - block.timestamp;
+    }
+    
+    // Можно ли клеймить?
+    function canClaim(address user) external view returns (bool) {
+        return block.timestamp >= lastClaimTime[user] + COOLDOWN;
+    }
+    
+    // Пополнение крана (owner)
+    function refill() external onlyOwner {
+        // Просто переводим токены на контракт
+        emit FaucetRefilled(msg.sender, hashToken.balanceOf(address(this)));
+    }
+    
+    // Забрать остаток (owner)
+    function withdraw(uint256 amount) external onlyOwner {
+        require(hashToken.transfer(owner, amount), "Transfer failed");
+    }
+    
+    // Сменить владельца
+    function transferOwnership(address newOwner) external onlyOwner {
+        owner = newOwner;
+    }
+    
+    // Получить баланс крана
+    function getFaucetBalance() external view returns (uint256) {
+        return hashToken.balanceOf(address(this));
+    }
+}
+
+
+
+abi
+
+
+[
+	{
+		"inputs": [],
+		"name": "claim",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_hashToken",
+				"type": "address"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "nextClaimTime",
+				"type": "uint256"
+			}
+		],
+		"name": "Claimed",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "FaucetRefilled",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "refill",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "withdraw",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "canClaim",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "COOLDOWN",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getFaucetBalance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "getTimeUntilNextClaim",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "hashToken",
+		"outputs": [
+			{
+				"internalType": "contract IERC20",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "lastClaimTime",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "REWARD_AMOUNT",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]

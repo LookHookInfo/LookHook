@@ -1,0 +1,644 @@
+0x3354ADD4DB4f1E2D1Ed27d29A3Fb48a3208B9bA0
+
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.34;
+
+contract RewardAggregator {
+    // ============ КОНСТАНТЫ ============
+    
+    address public constant HASH_TOKEN = 0xA9B631ABcc4fd0bc766d7C0C8fCbf866e2bB0445;
+    
+    address public constant NFT_X = 0x1A502C6259DBFebD7f568139cC28168831DA5D30;
+    address public constant NFT_GRAM = 0x4De659ef1617eF215f36A1953B3Cd7a4A10a5159;
+    address public constant NFT_TUBE = 0xA193a5887FBD94982E50553FdA961EDd3e36906b;
+    
+    address public constant REWARD_X = 0xB3A9FB099c0733281722e23004c2923d3318FD22;
+    address public constant REWARD_GRAM = 0x172C5adecC0fDbE49d45a03fFcB5433637CaeeF9;
+    address public constant REWARD_TUBE = 0x25A5C2Cd5BF2d0d6EfAa42620288EED0896be19B;
+    
+    address public constant AMBA_NFT = 0x1076d1C0Bb444C8bb50A6D2dbdF3bA5095910a52;
+    
+    // ============ СТРУКТУРЫ ============
+    
+    struct RoleStatus {
+        bool hasNFT;
+        bool alreadyClaimed;
+        bool canClaim;
+        uint256 rewardAmount;
+        uint256 contractBalance;
+    }
+    
+    struct AmbaStatus {
+        bool hasAmba;
+        bool hasTube;
+        bool hasGram;
+        bool hasX;
+        bool canMint;
+        uint256 totalSupply;
+    }
+    
+    struct UserStatus {
+        RoleStatus x;
+        RoleStatus gram;
+        RoleStatus tube;
+        AmbaStatus amba;
+        uint256 totalClaimable;
+    }
+    
+    // ============ ОСНОВНЫЕ ФУНКЦИИ ============
+    
+    function getUserStatus(address user) external view returns (UserStatus memory) {
+        RoleStatus memory xStatus = _getXStatus(user);
+        RoleStatus memory gramStatus = _getGramStatus(user);
+        RoleStatus memory tubeStatus = _getTubeStatus(user);
+        AmbaStatus memory ambaStatus = _getAmbaStatus(user);
+        
+        uint256 total = 0;
+        if (xStatus.canClaim) total += xStatus.rewardAmount;
+        if (gramStatus.canClaim) total += gramStatus.rewardAmount;
+        if (tubeStatus.canClaim) total += tubeStatus.rewardAmount;
+        
+        return UserStatus({
+            x: xStatus,
+            gram: gramStatus,
+            tube: tubeStatus,
+            amba: ambaStatus,
+            totalClaimable: total
+        });
+    }
+    
+    function getRolesStatus(address user) external view returns (RoleStatus[3] memory) {
+        RoleStatus[3] memory results;
+        results[0] = _getXStatus(user);
+        results[1] = _getGramStatus(user);
+        results[2] = _getTubeStatus(user);
+        return results;
+    }
+    
+    function getAmbaStatus(address user) external view returns (AmbaStatus memory) {
+        return _getAmbaStatus(user);
+    }
+    
+    function getTotalClaimableReward(address user) external view returns (uint256 total) {
+        if (_canClaimX(user)) total += _getRewardAmount(REWARD_X);
+        if (_canClaimGram(user)) total += _getRewardAmount(REWARD_GRAM);
+        if (_canClaimTube(user)) total += _getRewardAmount(REWARD_TUBE);
+    }
+    
+    function hasAnyClaimable(address user) external view returns (bool) {
+        return _canClaimX(user) || _canClaimGram(user) || _canClaimTube(user);
+    }
+    
+    function getAllContractBalances() external view returns (
+        uint256 xBalance,
+        uint256 gramBalance,
+        uint256 tubeBalance,
+        uint256 totalBalance
+    ) {
+        xBalance = _balanceOfERC20(HASH_TOKEN, REWARD_X);
+        gramBalance = _balanceOfERC20(HASH_TOKEN, REWARD_GRAM);
+        tubeBalance = _balanceOfERC20(HASH_TOKEN, REWARD_TUBE);
+        totalBalance = xBalance + gramBalance + tubeBalance;
+    }
+    
+    // ============ НИЗКОУРОВНЕВЫЕ ВЫЗОВЫ (БЕЗ ИНТЕРФЕЙСОВ) ============
+    
+    function _getRewardAmount(address rewardContract) private view returns (uint256) {
+        (bool success, bytes memory data) = rewardContract.staticcall(
+            abi.encodeWithSignature("rewardAmount()")
+        );
+        return success && data.length >= 32 ? abi.decode(data, (uint256)) : 0;
+    }
+    
+    function _isClaimed(address rewardContract, address user) private view returns (bool) {
+        (bool success, bytes memory data) = rewardContract.staticcall(
+            abi.encodeWithSignature("claimed(address)", user)
+        );
+        return success && data.length >= 32 ? abi.decode(data, (bool)) : false;
+    }
+
+    function _balanceOfERC20(address token, address account) private view returns (uint256) {
+        (bool success, bytes memory data) = token.staticcall(
+            abi.encodeWithSignature("balanceOf(address)", account)
+        );
+        return success && data.length >= 32 ? abi.decode(data, (uint256)) : 0;
+    }
+
+    function _balanceOfERC721(address nft, address owner) private view returns (uint256) {
+        (bool success, bytes memory data) = nft.staticcall(
+            abi.encodeWithSignature("balanceOf(address)", owner)
+        );
+        return success && data.length >= 32 ? abi.decode(data, (uint256)) : 0;
+    }
+
+    function _getTotalSupply(address nft) private view returns (uint256) {
+        (bool success, bytes memory data) = nft.staticcall(
+            abi.encodeWithSignature("totalSupply()")
+        );
+        return success && data.length >= 32 ? abi.decode(data, (uint256)) : 0;
+    }
+    
+    // ============ ВНУТРЕННЯЯ ЛОГИКА СТАТУСОВ ============
+    
+    function _getXStatus(address user) private view returns (RoleStatus memory) {
+        bool hasNFT = _balanceOfERC721(NFT_X, user) > 0;
+        bool claimed = _isClaimed(REWARD_X, user);
+        uint256 amount = _getRewardAmount(REWARD_X);
+        uint256 balance = _balanceOfERC20(HASH_TOKEN, REWARD_X);
+        bool canClaim = hasNFT && !claimed && balance >= amount;
+        
+        return RoleStatus(hasNFT, claimed, canClaim, amount, balance);
+    }
+    
+    function _getGramStatus(address user) private view returns (RoleStatus memory) {
+        bool hasNFT = _balanceOfERC721(NFT_GRAM, user) > 0;
+        bool claimed = _isClaimed(REWARD_GRAM, user);
+        uint256 amount = _getRewardAmount(REWARD_GRAM);
+        uint256 balance = _balanceOfERC20(HASH_TOKEN, REWARD_GRAM);
+        bool canClaim = hasNFT && !claimed && balance >= amount;
+        
+        return RoleStatus(hasNFT, claimed, canClaim, amount, balance);
+    }
+    
+    function _getTubeStatus(address user) private view returns (RoleStatus memory) {
+        bool hasNFT = _balanceOfERC721(NFT_TUBE, user) > 0;
+        bool claimed = _isClaimed(REWARD_TUBE, user);
+        uint256 amount = _getRewardAmount(REWARD_TUBE);
+        uint256 balance = _balanceOfERC20(HASH_TOKEN, REWARD_TUBE);
+        bool canClaim = hasNFT && !claimed && balance >= amount;
+        
+        return RoleStatus(hasNFT, claimed, canClaim, amount, balance);
+    }
+    
+    function _getAmbaStatus(address user) private view returns (AmbaStatus memory) {
+        bool hasTube = _balanceOfERC721(NFT_TUBE, user) > 0;
+        bool hasGram = _balanceOfERC721(NFT_GRAM, user) > 0;
+        bool hasX = _balanceOfERC721(NFT_X, user) > 0;
+        bool hasAmba = _balanceOfERC721(AMBA_NFT, user) > 0;
+        uint256 totalSupply = _getTotalSupply(AMBA_NFT);
+        
+        return AmbaStatus({
+            hasAmba: hasAmba,
+            hasTube: hasTube,
+            hasGram: hasGram,
+            hasX: hasX,
+            canMint: !hasAmba && hasTube && hasGram && hasX,
+            totalSupply: totalSupply
+        });
+    }
+    
+    function _canClaimX(address user) private view returns (bool) {
+        if (_balanceOfERC721(NFT_X, user) == 0) return false;
+        if (_isClaimed(REWARD_X, user)) return false;
+        return _balanceOfERC20(HASH_TOKEN, REWARD_X) >= _getRewardAmount(REWARD_X);
+    }
+    
+    function _canClaimGram(address user) private view returns (bool) {
+        if (_balanceOfERC721(NFT_GRAM, user) == 0) return false;
+        if (_isClaimed(REWARD_GRAM, user)) return false;
+        return _balanceOfERC20(HASH_TOKEN, REWARD_GRAM) >= _getRewardAmount(REWARD_GRAM);
+    }
+    
+    // Поправлено: теперь функция использует правильный контракт REWARD_TUBE вместо дублирования REWARD_GRAM
+    function _canClaimTube(address user) private view returns (bool) {
+        if (_balanceOfERC721(NFT_TUBE, user) == 0) return false;
+        if (_isClaimed(REWARD_TUBE, user)) return false;
+        return _balanceOfERC20(HASH_TOKEN, REWARD_TUBE) >= _getRewardAmount(REWARD_TUBE);
+    }
+}
+
+
+
+
+ABI
+
+
+[
+	{
+		"inputs": [],
+		"name": "AMBA_NFT",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getAllContractBalances",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "xBalance",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "gramBalance",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tubeBalance",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "totalBalance",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "getAmbaStatus",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "bool",
+						"name": "hasAmba",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "hasTube",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "hasGram",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "hasX",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "canMint",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "totalSupply",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct RewardAggregator.AmbaStatus",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "getRolesStatus",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "bool",
+						"name": "hasNFT",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "alreadyClaimed",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "canClaim",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "rewardAmount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "contractBalance",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct RewardAggregator.RoleStatus[3]",
+				"name": "",
+				"type": "tuple[3]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "getTotalClaimableReward",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "total",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "getUserStatus",
+		"outputs": [
+			{
+				"components": [
+					{
+						"components": [
+							{
+								"internalType": "bool",
+								"name": "hasNFT",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "alreadyClaimed",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "canClaim",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256",
+								"name": "rewardAmount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "contractBalance",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct RewardAggregator.RoleStatus",
+						"name": "x",
+						"type": "tuple"
+					},
+					{
+						"components": [
+							{
+								"internalType": "bool",
+								"name": "hasNFT",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "alreadyClaimed",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "canClaim",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256",
+								"name": "rewardAmount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "contractBalance",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct RewardAggregator.RoleStatus",
+						"name": "gram",
+						"type": "tuple"
+					},
+					{
+						"components": [
+							{
+								"internalType": "bool",
+								"name": "hasNFT",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "alreadyClaimed",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "canClaim",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256",
+								"name": "rewardAmount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "contractBalance",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct RewardAggregator.RoleStatus",
+						"name": "tube",
+						"type": "tuple"
+					},
+					{
+						"components": [
+							{
+								"internalType": "bool",
+								"name": "hasAmba",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "hasTube",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "hasGram",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "hasX",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "canMint",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256",
+								"name": "totalSupply",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct RewardAggregator.AmbaStatus",
+						"name": "amba",
+						"type": "tuple"
+					},
+					{
+						"internalType": "uint256",
+						"name": "totalClaimable",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct RewardAggregator.UserStatus",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "hasAnyClaimable",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "HASH_TOKEN",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "NFT_GRAM",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "NFT_TUBE",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "NFT_X",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "REWARD_GRAM",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "REWARD_TUBE",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "REWARD_X",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]

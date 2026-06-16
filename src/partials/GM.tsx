@@ -120,7 +120,9 @@ export default function GM({ className }: GMProps) {
             </div>
             
             <div 
-              className={`relative rounded-xl overflow-hidden group ${canClaimNow ? 'cursor-pointer' : ''}`}
+              className={`relative rounded-xl overflow-hidden group transition-all duration-300 ${
+                canClaimNow ? 'cursor-pointer glow-effect ring-2 ring-sky-500/20' : ''
+              }`}
               onClick={handleClaim}
             >
               <img
@@ -184,7 +186,7 @@ export default function GM({ className }: GMProps) {
 
           <div className="flex-1 space-y-6">
             <div className="flex justify-between items-center flex-wrap gap-2">
-              <h2 className="text-3xl font-bold text-white">Morning!</h2>
+              <h2 className="text-3xl font-bold text-white">Morning!😎</h2>
               <div className="flex items-center gap-2">
                 <div className="px-2 py-1 border border-neutral-700 rounded-md flex items-center justify-center">
                   <span className="text-white font-semibold text-sm mr-2">{truncatedAddress}</span>

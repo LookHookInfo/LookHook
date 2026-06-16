@@ -8,7 +8,7 @@ import { client } from '../lib/thirdweb/client';
 import { contractTools, contractStaking, usdcContract, hashcoinContract } from '../utils/contracts';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import { ToolDetailModal } from '@/components/ToolDetailModal';
-import { miningPublicClient } from '../lib/viem/client';
+import { miningPublicClient, tipsPublicClient, stakePublicClient } from '../lib/viem/client';
 import { contractToolsAbi } from '../utils/contractToolsAbi';
 import { contractStakingAbi } from '../utils/contractStakingAbi';
 import erc20Abi from '../utils/erc20';
@@ -22,7 +22,7 @@ function Game() {
     queryKey: ['usdcBalance', account?.address],
     queryFn: async () => {
       if (!account?.address) return 0n;
-      return miningPublicClient.readContract({
+      return tipsPublicClient.readContract({
         address: usdcContract.address as `0x${string}`,
         abi: erc20Abi,
         functionName: 'balanceOf',

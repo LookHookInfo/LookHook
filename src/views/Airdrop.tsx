@@ -2,8 +2,9 @@ import { useActiveAccount } from 'thirdweb/react';
 import { useQuery } from '@tanstack/react-query';
 import { achievementAggregatorContract } from '@/utils/contracts';
 import { achievementAggregatorAbi } from '@/utils/achievementAggregatorAbi';
-import { xPublicClient } from '@/lib/viem/client';
+import { tipsPublicClient } from '@/lib/viem/client';
 import { Spinner } from '@/components/Spinner';
+import Faucet from '@/partials/Faucet';
 
 interface UserAchievementStatus {
   id: bigint;
@@ -25,7 +26,7 @@ export default function Airdrop() {
     queryKey: ['userAchievements', address],
     queryFn: async () => {
       if (!address) return [];
-      const result = await xPublicClient.readContract({
+      const result = await tipsPublicClient.readContract({
         address: achievementAggregatorContract.address as `0x${string}`,
         abi: achievementAggregatorAbi,
         functionName: 'getUserAchievements',
@@ -63,6 +64,7 @@ export default function Airdrop() {
         <p className="text-gray-400 max-w-md">
           Connect your wallet to check your eligibility for community rewards, achievements, and upcoming airdrops.
         </p>
+        <Faucet />
       </div>
     );
   }
@@ -156,18 +158,7 @@ export default function Airdrop() {
         ))}
       </div>
 
-      <div className="mt-12 p-8 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/20 text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">Ready to claim?</h2>
-        <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-          Some achievements allow you to claim $HASH tokens or special NFTs. Visit the Home page to find individual claim sections for Lambo, HeliDrop, and Social rewards.
-        </p>
-        <button 
-          onClick={() => window.location.href = '/'}
-          className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-colors shadow-lg shadow-blue-600/20"
-        >
-          Go to Claims
-        </button>
-      </div>
+      <Faucet />
     </div>
   );
 }
