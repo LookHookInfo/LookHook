@@ -9,6 +9,7 @@ const ALCHEMY_X_RPC_URL = import.meta.env.VITE_ALCHEMY_X_RPC_URL;
 const ALCHEMY_NAME_RPC_URL = import.meta.env.VITE_ALCHEMY_NAME_RPC_URL;
 const ALCHEMY_EARLY_RPC_URL = import.meta.env.VITE_ALCHEMY_EARLY_RPC_URL;
 const ALCHEMY_STAKE_RPC_URL = import.meta.env.VITE_ALCHEMY_STAKE_RPC_URL;
+const ALCHEMY_DROP_RPC_URL = import.meta.env.VITE_ALCHEMY_DROP_RPC_URL;
 
 if (!ALCHEMY_GM_RPC_URL) {
   throw new Error('Missing VITE_ALCHEMY_GM_RPC_URL environment variable');
@@ -40,6 +41,10 @@ if (!ALCHEMY_EARLY_RPC_URL) {
 
 if (!ALCHEMY_STAKE_RPC_URL) {
   throw new Error('Missing VITE_ALCHEMY_STAKE_RPC_URL environment variable');
+}
+
+if (!ALCHEMY_DROP_RPC_URL) {
+  throw new Error('Missing VITE_ALCHEMY_DROP_RPC_URL environment variable');
 }
 
 // Клиент для GM фич
@@ -109,6 +114,15 @@ export const earlyPublicClient = createPublicClient({
 export const stakePublicClient = createPublicClient({
   chain: base,
   transport: http(ALCHEMY_STAKE_RPC_URL),
+  batch: {
+    multicall: true,
+  },
+});
+
+// Клиент для Airdrop (HashAirdropFinal)
+export const dropPublicClient = createPublicClient({
+  chain: base,
+  transport: http(ALCHEMY_DROP_RPC_URL),
   batch: {
     multicall: true,
   },

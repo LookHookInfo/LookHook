@@ -27,6 +27,7 @@ import { lamboRewardAbi } from './lamboRewardAbi';
 import { achievementAggregatorAbi } from './achievementAggregatorAbi';
 import { rewardAggregatorAbi } from './rewardAggregatorAbi';
 import { faucetAbi } from './faucetAbi';
+import { airdropAbi } from './airdropAbi';
 
 // --- CORE TOKENS ---
 
@@ -244,4 +245,11 @@ export const faucetContract = getContract({
   chain: chain,
   address: '0x9C9c604c588144bB60864547d5152B309B684122',
   abi: faucetAbi,
+});
+
+export const airdropContract = getContract({
+  client,
+  chain: chain,
+  address: '0xB2e9f6956E8B696ef6680AC1B4E828803dED218b',
+  abi: airdropAbi,
 });

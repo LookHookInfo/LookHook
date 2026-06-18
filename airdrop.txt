@@ -1,0 +1,1213 @@
+0xB2e9f6956E8B696ef6680AC1B4E828803dED218b
+
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.34;
+
+interface IERC20 {
+    function transfer(address to, uint256 amount) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+}
+
+interface IERC721 {
+    function balanceOf(address owner) external view returns (uint256);
+}
+
+contract HashAirdropFinal {
+    IERC20 public constant hashToken = IERC20(0xA9B631ABcc4fd0bc766d7C0C8fCbf866e2bB0445);
+    
+    // NFT контракты
+    IERC721 public constant DRUB_BADGE_NFT = IERC721(0x10B0885B68B7890A3F8678120ABa7bCAfF6B168B);
+    IERC721 public constant DOLPHIN_NFT = IERC721(0x7aa5fc50D0E4A400545E34055134C89F2b310080);
+    
+    // Константы для сумм с 18 decimals
+    uint256 public constant GEMFUN_AMOUNT = 30000 * 10**18;   // 30,000 HASH
+    uint256 public constant ZEALY_AMOUNT = 15000 * 10**18;    // 15,000 HASH
+    uint256 public constant BETA_AMOUNT = 30000 * 10**18;     // 30,000 HASH
+    uint256 public constant DRUB_AMOUNT = 15000 * 10**18;     // 15,000 HASH
+    uint256 public constant DOLPHIN_AMOUNT = 30000 * 10**18;  // 30,000 HASH
+    
+    address public owner;
+    uint256 public totalClaimed;
+    uint256 public totalEligible;
+    
+    struct UserAirdrop {
+        uint256 amount;
+        bool claimed;
+        string reason;
+    }
+    
+    mapping(address => UserAirdrop[]) public userAirdrops;
+    mapping(address => bool) public isEligible;
+    
+    event AirdropClaimed(address indexed user, uint256 amount, string reason);
+    event AirdropAdded(address indexed user, uint256 amount, string reason);
+    
+    constructor() {
+        owner = msg.sender;
+        _initializeAllParticipants();
+    }
+    
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+    
+    // ============ ИНИЦИАЛИЗАЦИЯ ============
+    function _initializeAllParticipants() internal {
+        // 1. GEMFUN V1 - 30,000 HASH (23 участника)
+        address[] memory gemFun = new address[](23);
+        gemFun[0] = 0xd30286180E142628cc437624Ea4160d5450F73D6;
+        gemFun[1] = 0xCC6261C7F9C29A1F69e4021c83AA20a02a225a84;
+        gemFun[2] = 0x443baEF78686Fc6b9e5e6DaEA24fe26a170c5ac8;
+        gemFun[3] = 0x0f6Fa914430c584b8A12E78EF0129628D9b3BdD7;
+        gemFun[4] = 0x6FCa742E65572dC885D05A673f993169Fe469269;
+        gemFun[5] = 0xB32aE0646960e857eE81A44142e0E238f854032e;
+        gemFun[6] = 0x4a2763570eDEeEB78e0174aEae6bEdDE6F143398;
+        gemFun[7] = 0xEe20153c622aE87F7b55Cd9A981e2c08DE8C2CC8;
+        gemFun[8] = 0x433749A9B501641104EC03B4A7Da9B922ccB29b0;
+        gemFun[9] = 0x02706Eb1679E11Bf2e2aA498f4c87AD182832Eb2;
+        gemFun[10] = 0x9e8AF3d65Ca373A7C374659EcEbf303c4aDd39D6;
+        gemFun[11] = 0x2c54BE7F6098F91e71304A7CbBbFe210A3de0e5F;
+        gemFun[12] = 0x3ce58F492a73ace66E81551CCfb9aff48984B9E1;
+        gemFun[13] = 0x42B539609B62c8558378BB7CddBCDdc7321b1c58;
+        gemFun[14] = 0x10a06aff00967f9dEa148d64302F799d9d239173;
+        gemFun[15] = 0x15C6288F54E32ace74a14D4C9eE444a022276622;
+        gemFun[16] = 0x35dadD61984E71A8a7104A77EAbA8C00d89909af;
+        gemFun[17] = 0xBDA49E5D3EBda7158071687161411193DB325eD3;
+        gemFun[18] = 0x84274807c03F10c7c24968C98Fc592B955Ae3fe2;
+        gemFun[19] = 0xd6Ca1759DA1f8AE61c810F963C91493Ae1C31848;
+        gemFun[20] = 0x058a0062740F81695Ed0099Cc943F80Ca1028951;
+        gemFun[21] = 0x027bCA8B01b6a46ac77aD564835Bd5dBcC63F14A;
+        gemFun[22] = 0x9406806530B08Ec89A50aF986b5482664966b83a;
+        _addMultiple(gemFun, GEMFUN_AMOUNT, "GemFun v1");
+        
+        // 2. ZEALY SPIN - 15,000 HASH (16 участников)
+        address[] memory zealy = new address[](16);
+        zealy[0] = 0x309bE549467b9fA39a20c94DEA2e2296902beb61;
+        zealy[1] = 0x01B26e97f2a38ab1e5f4b9f8d4C8aBa048fcE026;
+        zealy[2] = 0xe74fBC7eDDA3BA81a402BF49B444218534812Fb1;
+        zealy[3] = 0x7Dc898Db51E4a72C1F9d12e395ebA8d2F765D9dD;
+        zealy[4] = 0xCe665434A56861Bbf1ED7c33dB50f1BA9f29a956;
+        zealy[5] = 0x2a864b819a56366541bd03B99b5C62A418c603Ca;
+        zealy[6] = 0xEa31Ec990edBCfD65444DbdF75aB514f05366E24;
+        zealy[7] = 0x433749A9B501641104EC03B4A7Da9B922ccB29b0;
+        zealy[8] = 0xDF1F0D8566400d6F06A8E7FEc1cE17b0Fb423e19;
+        zealy[9] = 0x23E6bdCD2505F6C2EA9Cb0eF10e8071e4EE99FFe;
+        zealy[10] = 0xbBab7BE8C36d2d818a298fc34a398616329b1D06;
+        zealy[11] = 0x37CFf2E533930AFCFC5F1E4e7B8075D8A902dFB7;
+        zealy[12] = 0x282Db278EA216b4b0Dd2dC4c3813249dB9D5c161;
+        zealy[13] = 0x058a0062740F81695Ed0099Cc943F80Ca1028951;
+        zealy[14] = 0xDb3CcE2529dB8e311520199C0aFeB54AC089Ade3;
+        zealy[15] = 0x3ea74761E830692e402d6c7507e9FA91edAe2f98;
+        _addMultiple(zealy, ZEALY_AMOUNT, "Zealy Spin");
+        
+        // 3. BETA TESTERS - 30,000 HASH
+        address[] memory betaTesters = new address[](2);
+        betaTesters[0] = 0x3637dE287C27D412fF01BfdB291923066C65c244;
+        betaTesters[1] = 0x35dadD61984E71A8a7104A77EAbA8C00d89909af;
+        _addMultiple(betaTesters, BETA_AMOUNT, "Beta Tester");
+    }
+    
+    function _addMultiple(address[] memory users, uint256 amount, string memory reason) internal {
+        for (uint i = 0; i < users.length; i++) {
+            userAirdrops[users[i]].push(UserAirdrop({
+                amount: amount,
+                claimed: false,
+                reason: reason
+            }));
+            isEligible[users[i]] = true;
+            totalEligible += amount;
+            emit AirdropAdded(users[i], amount, reason);
+        }
+    }
+    
+    // ============ ОСНОВНЫЕ ФУНКЦИИ ============
+    
+    function getAirdrops(address user) external view returns (UserAirdrop[] memory) {
+        return userAirdrops[user];
+    }
+    
+    function getTotalAirdropAmount(address user) external view returns (
+        uint256 total, 
+        uint256 claimed, 
+        uint256 pending
+    ) {
+        UserAirdrop[] storage drops = userAirdrops[user];
+        for (uint i = 0; i < drops.length; i++) {
+            total += drops[i].amount;
+            if (drops[i].claimed) {
+                claimed += drops[i].amount;
+            } else {
+                pending += drops[i].amount;
+            }
+        }
+        
+        (uint256 nftPending, uint256 nftClaimed) = _getNFTStats(user);
+        pending += nftPending;
+        claimed += nftClaimed;
+        total += nftPending + nftClaimed;
+    }
+    
+    function _getNFTStats(address user) internal view returns (uint256 pending, uint256 claimed) {
+        // DRUB Badge NFT - 15,000 HASH
+        if (DRUB_BADGE_NFT.balanceOf(user) > 0) {
+            bool alreadyAdded = false;
+            for (uint i = 0; i < userAirdrops[user].length; i++) {
+                if (keccak256(bytes(userAirdrops[user][i].reason)) == keccak256(bytes("DRUB Badge NFT"))) {
+                    alreadyAdded = true;
+                    if (!userAirdrops[user][i].claimed) {
+                        pending += DRUB_AMOUNT;
+                    } else {
+                        claimed += DRUB_AMOUNT;
+                    }
+                    break;
+                }
+            }
+            if (!alreadyAdded) {
+                pending += DRUB_AMOUNT;
+            }
+        }
+        
+        // Dolphin NFT - 30,000 HASH
+        if (DOLPHIN_NFT.balanceOf(user) > 0) {
+            bool alreadyAdded = false;
+            for (uint i = 0; i < userAirdrops[user].length; i++) {
+                if (keccak256(bytes(userAirdrops[user][i].reason)) == keccak256(bytes("Dolphin NFT"))) {
+                    alreadyAdded = true;
+                    if (!userAirdrops[user][i].claimed) {
+                        pending += DOLPHIN_AMOUNT;
+                    } else {
+                        claimed += DOLPHIN_AMOUNT;
+                    }
+                    break;
+                }
+            }
+            if (!alreadyAdded) {
+                pending += DOLPHIN_AMOUNT;
+            }
+        }
+        
+        return (pending, claimed);
+    }
+    
+    function claimAllAirdrops() external {
+        uint256 totalAmount = 0;
+        
+        // Клейм базовых наград
+        for (uint i = 0; i < userAirdrops[msg.sender].length; i++) {
+            if (!userAirdrops[msg.sender][i].claimed && userAirdrops[msg.sender][i].amount > 0) {
+                userAirdrops[msg.sender][i].claimed = true;
+                totalAmount += userAirdrops[msg.sender][i].amount;
+                emit AirdropClaimed(msg.sender, userAirdrops[msg.sender][i].amount, userAirdrops[msg.sender][i].reason);
+            }
+        }
+        
+        // Клейм NFT наград
+        totalAmount += _claimAdditionalRewards(msg.sender);
+        
+        require(totalAmount > 0, "No pending airdrops");
+        totalClaimed += totalAmount;
+        require(hashToken.transfer(msg.sender, totalAmount), "Transfer failed");
+    }
+    
+    function _claimAdditionalRewards(address user) internal returns (uint256) {
+        uint256 amount = 0;
+        
+        // DRUB Badge NFT - 15,000 HASH
+        if (DRUB_BADGE_NFT.balanceOf(user) > 0) {
+            bool alreadyAdded = false;
+            for (uint i = 0; i < userAirdrops[user].length; i++) {
+                if (keccak256(bytes(userAirdrops[user][i].reason)) == keccak256(bytes("DRUB Badge NFT"))) {
+                    if (!userAirdrops[user][i].claimed) {
+                        userAirdrops[user][i].claimed = true;
+                        amount += DRUB_AMOUNT;
+                        emit AirdropClaimed(user, DRUB_AMOUNT, "DRUB Badge NFT");
+                    }
+                    alreadyAdded = true;
+                    break;
+                }
+            }
+            if (!alreadyAdded) {
+                userAirdrops[user].push(UserAirdrop({
+                    amount: DRUB_AMOUNT,
+                    claimed: true,
+                    reason: "DRUB Badge NFT"
+                }));
+                amount += DRUB_AMOUNT;
+                isEligible[user] = true;
+                totalEligible += DRUB_AMOUNT;
+                emit AirdropClaimed(user, DRUB_AMOUNT, "DRUB Badge NFT");
+            }
+        }
+        
+        // Dolphin NFT - 30,000 HASH
+        if (DOLPHIN_NFT.balanceOf(user) > 0) {
+            bool alreadyAdded = false;
+            for (uint i = 0; i < userAirdrops[user].length; i++) {
+                if (keccak256(bytes(userAirdrops[user][i].reason)) == keccak256(bytes("Dolphin NFT"))) {
+                    if (!userAirdrops[user][i].claimed) {
+                        userAirdrops[user][i].claimed = true;
+                        amount += DOLPHIN_AMOUNT;
+                        emit AirdropClaimed(user, DOLPHIN_AMOUNT, "Dolphin NFT");
+                    }
+                    alreadyAdded = true;
+                    break;
+                }
+            }
+            if (!alreadyAdded) {
+                userAirdrops[user].push(UserAirdrop({
+                    amount: DOLPHIN_AMOUNT,
+                    claimed: true,
+                    reason: "Dolphin NFT"
+                }));
+                amount += DOLPHIN_AMOUNT;
+                isEligible[user] = true;
+                totalEligible += DOLPHIN_AMOUNT;
+                emit AirdropClaimed(user, DOLPHIN_AMOUNT, "Dolphin NFT");
+            }
+        }
+        
+        return amount;
+    }
+    
+    // ============ АДМИНИСТРАТИВНЫЕ ФУНКЦИИ ============
+    
+    function getContractBalance() external view returns (uint256) {
+        return hashToken.balanceOf(address(this));
+    }
+    
+    function withdrawTokens(address token, uint256 amount) external onlyOwner {
+        if (token == address(0)) {
+            (bool success, ) = payable(owner).call{value: amount}("");
+            require(success, "ETH transfer failed");
+        } else {
+            require(IERC20(token).transfer(owner, amount), "Token transfer failed");
+        }
+    }
+    
+    function addExtraAirdrop(address user, uint256 amount, string memory reason) external onlyOwner {
+        require(amount > 0, "Amount must be > 0");
+        userAirdrops[user].push(UserAirdrop({
+            amount: amount,
+            claimed: false,
+            reason: reason
+        }));
+        isEligible[user] = true;
+        totalEligible += amount;
+        emit AirdropAdded(user, amount, reason);
+    }
+}
+
+
+
+abi
+
+
+[
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "reason",
+				"type": "string"
+			}
+		],
+		"name": "addExtraAirdrop",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "reason",
+				"type": "string"
+			}
+		],
+		"name": "AirdropAdded",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "reason",
+				"type": "string"
+			}
+		],
+		"name": "AirdropClaimed",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "claimAllAirdrops",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "token",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "withdrawTokens",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "BETA_AMOUNT",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "DOLPHIN_AMOUNT",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "DOLPHIN_NFT",
+		"outputs": [
+			{
+				"internalType": "contract IERC721",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "DRUB_AMOUNT",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "DRUB_BADGE_NFT",
+		"outputs": [
+			{
+				"internalType": "contract IERC721",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "GEMFUN_AMOUNT",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "getAirdrops",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "claimed",
+						"type": "bool"
+					},
+					{
+						"internalType": "string",
+						"name": "reason",
+						"type": "string"
+					}
+				],
+				"internalType": "struct HashAirdropFinal.UserAirdrop[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getContractBalance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "getTotalAirdropAmount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "total",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "claimed",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "pending",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "hashToken",
+		"outputs": [
+			{
+				"internalType": "contract IERC20",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "isEligible",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalClaimed",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalEligible",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "userAirdrops",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "claimed",
+				"type": "bool"
+			},
+			{
+				"internalType": "string",
+				"name": "reason",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "ZEALY_AMOUNT",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
+
+
+
+Коментарий фронтенд. 
+AirdropScanner.tsx
+tsx
+import React, { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
+import { 
+  Gamepad2, 
+  RefreshCw, 
+  FlaskConical, 
+  Medal, 
+  Fish,
+  Gift,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Trophy
+} from 'lucide-react';
+
+// Конфигурация всех критериев наград
+const REWARD_CRITERIA = {
+  "GemFun v1": {
+    icon: Gamepad2,
+    color: "text-purple-400",
+    bg: "bg-purple-900/20",
+    border: "border-purple-500/30",
+    label: "GemFun v1 Participant",
+    description: "Early adopter of GemFun v1 platform",
+    category: "Community"
+  },
+  "Zealy Spin": {
+    icon: RefreshCw,
+    color: "text-blue-400",
+    bg: "bg-blue-900/20",
+    border: "border-blue-500/30",
+    label: "Zealy Spin Quest",
+    description: "Completed Zealy Spin quests",
+    category: "Quests"
+  },
+  "Beta Tester": {
+    icon: FlaskConical,
+    color: "text-green-400",
+    bg: "bg-green-900/20",
+    border: "border-green-500/30",
+    label: "Beta Tester",
+    description: "Participated in beta testing program",
+    category: "Testing"
+  },
+  "DRUB Badge NFT": {
+    icon: Medal,
+    color: "text-yellow-400",
+    bg: "bg-yellow-900/20",
+    border: "border-yellow-500/30",
+    label: "DRUB Badge Holder",
+    description: "Owns DRUB Badge NFT",
+    category: "NFT"
+  },
+  "Dolphin NFT": {
+    icon: Fish,
+    color: "text-cyan-400",
+    bg: "bg-cyan-900/20",
+    border: "border-cyan-500/30",
+    label: "Dolphin NFT Holder",
+    description: "Owns Dolphin NFT",
+    category: "NFT"
+  }
+};
+
+interface AirdropInfo {
+  amount: string;
+  claimed: boolean;
+  reason: string;
+}
+
+interface Stats {
+  total: string;
+  claimed: string;
+  pending: string;
+}
+
+const AirdropScanner: React.FC = () => {
+  const [address, setAddress] = useState('');
+  const [airdrops, setAirdrops] = useState<AirdropInfo[]>([]);
+  const [stats, setStats] = useState<Stats>({ total: '0', claimed: '0', pending: '0' });
+  const [loading, setLoading] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [account, setAccount] = useState<string | null>(null);
+
+  const CONTRACT_ADDRESS = '0x...'; // Вставьте адрес вашего контракта
+  const ABI = [
+    "function getAirdrops(address user) view returns ((uint256 amount, bool claimed, string reason)[])",
+    "function getTotalAirdropAmount(address user) view returns (uint256, uint256, uint256)",
+    "function claimAllAirdrops()",
+    "function hashToken() view returns (address)"
+  ];
+
+  // Подключение к MetaMask
+  const connectWallet = async () => {
+    if (!window.ethereum) {
+      alert('Please install MetaMask');
+      return;
+    }
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+      setAccount(address);
+      setAddress(address);
+      scanAddress(address);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // Сканирование адреса
+  const scanAddress = async (addr: string) => {
+    if (!ethers.isAddress(addr)) {
+      alert('Invalid address');
+      return;
+    }
+
+    setScanning(true);
+    setLoading(true);
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+
+      // Получаем все дропы
+      const drops = await contract.getAirdrops(addr);
+      const formattedDrops = drops.map((d: any) => ({
+        amount: ethers.formatEther(d.amount),
+        claimed: d.claimed,
+        reason: d.reason
+      }));
+      setAirdrops(formattedDrops);
+
+      // Получаем статистику
+      const statsData = await contract.getTotalAirdropAmount(addr);
+      setStats({
+        total: ethers.formatEther(statsData[0]),
+        claimed: ethers.formatEther(statsData[1]),
+        pending: ethers.formatEther(statsData[2])
+      });
+
+    } catch (error) {
+      console.error(error);
+      alert('Error scanning address');
+    } finally {
+      setLoading(false);
+      setScanning(false);
+    }
+  };
+
+  // Клейм всех наград
+  const claimAll = async () => {
+    if (!window.ethereum) {
+      alert('Please install MetaMask');
+      return;
+    }
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
+      const tx = await contract.claimAllAirdrops();
+      await tx.wait();
+      
+      alert('🎉 All airdrops claimed successfully!');
+      if (address) scanAddress(address);
+      
+    } catch (error) {
+      console.error(error);
+      alert('Error claiming airdrops');
+    }
+  };
+
+  // Получение конфигурации для критерия
+  const getCriteriaConfig = (reason: string) => {
+    return REWARD_CRITERIA[reason as keyof typeof REWARD_CRITERIA] || {
+      icon: Gift,
+      color: "text-gray-400",
+      bg: "bg-gray-800",
+      border: "border-gray-700",
+      label: reason,
+      description: "Airdrop reward",
+      category: "Other"
+    };
+  };
+
+  // Группировка дропов по категориям
+  const groupDropsByCategory = (drops: AirdropInfo[]) => {
+    const groups: { [key: string]: AirdropInfo[] } = {};
+    drops.forEach(drop => {
+      const config = getCriteriaConfig(drop.reason);
+      const category = config.category;
+      if (!groups[category]) groups[category] = [];
+      groups[category].push(drop);
+    });
+    return groups;
+  };
+
+  const groupedDrops = groupDropsByCategory(airdrops);
+  const hasPending = parseFloat(stats.pending) > 0;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] to-[#1a1a2e] p-6">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Хедер */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Trophy className="w-10 h-10 text-yellow-400" />
+            <h1 className="text-4xl font-bold text-white">HASH Airdrop Scanner</h1>
+          </div>
+          <p className="text-gray-400">Check your eligibility and claim your rewards</p>
+        </div>
+
+        {/* Подключение кошелька */}
+        {!account ? (
+          <button
+            onClick={connectWallet}
+            className="w-full mb-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition"
+          >
+            🔌 Connect Wallet
+          </button>
+        ) : (
+          <div className="mb-6 p-3 bg-gray-800/50 rounded-xl border border-gray-700 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-gray-300 text-sm">{account.slice(0, 6)}...{account.slice(-4)}</span>
+            </div>
+            <button
+              onClick={() => { setAccount(null); setAirdrops([]); setStats({ total: '0', claimed: '0', pending: '0' }); }}
+              className="text-gray-400 hover:text-white text-sm"
+            >
+              Disconnect
+            </button>
+          </div>
+        )}
+
+        {/* Поиск */}
+        <div className="flex gap-3 mb-6">
+          <input
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="Enter wallet address (0x...)"
+            className="flex-1 px-4 py-3 bg-gray-800/50 text-white rounded-xl border border-gray-700 focus:border-blue-500 focus:outline-none transition"
+          />
+          <button
+            onClick={() => scanAddress(address)}
+            disabled={scanning || !address}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold disabled:opacity-50 transition"
+          >
+            {scanning ? '🔍 Scanning...' : '🔍 Scan'}
+          </button>
+        </div>
+
+        {/* Статистика */}
+        {!loading && stats.total !== '0' && (
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+              <p className="text-gray-400 text-sm">Total Rewards</p>
+              <p className="text-2xl font-bold text-white">{parseFloat(stats.total).toFixed(2)} HASH</p>
+            </div>
+            <div className="bg-gray-800/50 p-4 rounded-xl border border-green-500/30">
+              <p className="text-gray-400 text-sm">Claimed</p>
+              <p className="text-2xl font-bold text-green-400">{parseFloat(stats.claimed).toFixed(2)} HASH</p>
+            </div>
+            <div className="bg-gray-800/50 p-4 rounded-xl border border-yellow-500/30">
+              <p className="text-gray-400 text-sm">Pending</p>
+              <p className="text-2xl font-bold text-yellow-400">{parseFloat(stats.pending).toFixed(2)} HASH</p>
+            </div>
+          </div>
+        )}
+
+        {/* Кнопка Claim All */}
+        {hasPending && (
+          <button
+            onClick={claimAll}
+            className="w-full mb-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 hover:opacity-90 text-white rounded-xl font-bold transition shadow-lg shadow-blue-500/20"
+          >
+            🎯 Claim All ({parseFloat(stats.pending).toFixed(2)} HASH)
+          </button>
+        )}
+
+        {/* Список наград по категориям */}
+        {!loading && airdrops.length > 0 && (
+          <div className="space-y-6">
+            {Object.entries(groupedDrops).map(([category, drops]) => (
+              <div key={category} className="space-y-3">
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+                  {category}
+                </h3>
+                {drops.map((drop, index) => {
+                  const config = getCriteriaConfig(drop.reason);
+                  const IconComponent = config.icon;
+                  const isClaimed = drop.claimed;
+
+                  return (
+                    <div
+                      key={index}
+                      className={`p-4 rounded-xl border transition-all ${
+                        isClaimed 
+                          ? 'bg-gray-800/30 border-gray-700/50 opacity-60' 
+                          : `${config.bg} ${config.border} hover:scale-[1.01]`
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        {/* Иконка */}
+                        <div className={`p-3 rounded-xl ${config.bg}`}>
+                          <IconComponent className={`w-6 h-6 ${config.color}`} />
+                        </div>
+
+                        {/* Информация */}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className={`font-semibold ${config.color}`}>
+                              {config.label}
+                            </h4>
+                            <span className="text-xs px-2 py-1 rounded-full bg-gray-700/50 text-gray-400">
+                              {category}
+                            </span>
+                            {isClaimed && (
+                              <span className="flex items-center gap-1 text-xs text-green-400">
+                                <CheckCircle className="w-3 h-3" />
+                                Claimed
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-gray-400 text-sm">{config.description}</p>
+                          <div className="flex items-center gap-4 mt-2">
+                            <span className="text-white font-bold">
+                              {parseFloat(drop.amount).toFixed(2)} HASH
+                            </span>
+                            {!isClaimed ? (
+                              <span className="flex items-center gap-1 text-yellow-400 text-sm">
+                                <Clock className="w-3 h-3" />
+                                Pending
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1 text-green-400 text-sm">
+                                <CheckCircle className="w-3 h-3" />
+                                Received
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Бейдж условия */}
+                        <div className="text-right">
+                          <span className="text-xs px-3 py-1 rounded-full bg-gray-700/50 text-gray-400">
+                            {isClaimed ? '✅ Claimed' : '⏳ Available'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Пустое состояние */}
+        {!loading && airdrops.length === 0 && stats.total === '0' && (
+          <div className="text-center py-16">
+            <div className="text-6xl mb-4">🔍</div>
+            <p className="text-gray-400 text-lg">No airdrops found</p>
+            <p className="text-gray-500 text-sm mt-2">Enter a wallet address to check eligibility</p>
+          </div>
+        )}
+
+        {/* Загрузка */}
+        {loading && (
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="text-gray-400 mt-4">Scanning for rewards...</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AirdropScanner;
+📁 package.json зависимости:
+json
+{
+  "dependencies": {
+    "react": "^18.2.0",
+    "ethers": "^6.0.0",
+    "lucide-react": "^0.263.0",
+    "tailwindcss": "^3.3.0"
+  }
+}
+🎨 Дополнительно: компонент критерия
+tsx
+// components/RewardCriteria.tsx
+import React from 'react';
+import { CheckCircle, Clock } from 'lucide-react';
+
+interface RewardCriteriaProps {
+  reason: string;
+  amount: string;
+  claimed: boolean;
+  icon: React.ReactNode;
+  color: string;
+  label: string;
+  description: string;
+  category: string;
+}
+
+export const RewardCriteria: React.FC<RewardCriteriaProps> = ({
+  reason,
+  amount,
+  claimed,
+  icon,
+  color,
+  label,
+  description,
+  category
+}) => {
+  return (
+    <div className={`p-4 rounded-xl border transition-all ${
+      claimed 
+        ? 'bg-gray-800/30 border-gray-700/50 opacity-60' 
+        : 'hover:scale-[1.01]'
+    }`}>
+      <div className="flex items-center gap-4">
+        <div className={`p-3 rounded-xl bg-gray-800/50`}>
+          {icon}
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h4 className={`font-semibold ${color}`}>{label}</h4>
+            <span className="text-xs px-2 py-1 rounded-full bg-gray-700/50 text-gray-400">
+              {category}
+            </span>
+            {claimed && (
+              <span className="flex items-center gap-1 text-xs text-green-400">
+                <CheckCircle className="w-3 h-3" />
+                Claimed
+              </span>
+            )}
+          </div>
+          <p className="text-gray-400 text-sm">{description}</p>
+          <div className="flex items-center gap-4 mt-2">
+            <span className="text-white font-bold">{amount} HASH</span>
+            {!claimed ? (
+              <span className="flex items-center gap-1 text-yellow-400 text-sm">
+                <Clock className="w-3 h-3" />
+                Pending
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-green-400 text-sm">
+                <CheckCircle className="w-3 h-3" />
+                Received
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="text-right">
+          <span className="text-xs px-3 py-1 rounded-full bg-gray-700/50 text-gray-400">
+            {claimed ? '✅ Claimed' : '⏳ Available'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+📊 Как это выглядит в интерфейсе:
+text
+┌─────────────────────────────────────────────────┐
+│  🏆 HASH Airdrop Scanner                      │
+│  Check your eligibility and claim rewards     │
+│                                                 │
+│  [🔌 Connect Wallet]                          │
+│                                                 │
+│  [0xCC62...225a84         ] [🔍 Scan]         │
+│                                                 │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │ Total     │ │ Claimed  │ │ Pending  │      │
+│  │ 75,000    │ │ 30,000   │ │ 45,000   │      │
+│  └──────────┘ └──────────┘ └──────────┘      │
+│                                                 │
+│  [🎯 Claim All (45,000 HASH)]                 │
+│                                                 │
+│  ─── Community ───                            │
+│  ┌─────────────────────────────────────────┐  │
+│  │ 🎮  GemFun v1 Participant              │  │
+│  │     Early adopter reward               │  │
+│  │     30,000 HASH  ⏳ Pending           │  │
+│  └─────────────────────────────────────────┘  │
+│                                                 │
+│  ─── Quests ───                               │
+│  ┌─────────────────────────────────────────┐  │
+│  │ 🔄  Zealy Spin Quest                   │  │
+│  │     Completed Zealy quests             │  │
+│  │     15,000 HASH  ✅ Claimed            │  │
+│  └─────────────────────────────────────────┘  │
+│                                                 │
+│  ─── NFT ───                                  │
+│  ┌─────────────────────────────────────────┐  │
+│  │ 🏅  DRUB Badge Holder                  │  │
+│  │     Owns DRUB Badge NFT                │  │
+│  │     15,000 HASH  ⏳ Pending           │  │
+│  └─────────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────┐  │
+│  │ 🐬  Dolphin NFT Holder                 │  │
+│  │     Owns Dolphin NFT                   │  │
+│  │     30,000 HASH  ⏳ Pending           │  │
+│  └─────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────┘
+✅ Итог:
+Каждый критерий показан с иконкой, цветом и описанием
+
+Группировка по категориям (Community, Quests, NFT)
+
+Статус (Claimed/Pending) виден для каждой награды
+
+Подсветка активных/неактивных наград
+
+Итоговая статистика сверху

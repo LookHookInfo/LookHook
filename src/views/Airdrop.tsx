@@ -5,6 +5,7 @@ import { achievementAggregatorAbi } from '@/utils/achievementAggregatorAbi';
 import { tipsPublicClient } from '@/lib/viem/client';
 import { Spinner } from '@/components/Spinner';
 import Faucet from '@/partials/Faucet';
+import AirdropSection from '@/partials/AirdropSection';
 
 interface UserAchievementStatus {
   id: bigint;
@@ -103,6 +104,8 @@ export default function Airdrop() {
           <div className="text-sm text-gray-500">Unlocked</div>
         </div>
       </div>
+
+      <AirdropSection />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {achievements?.sort((a, b) => Number(a.order) - Number(b.order)).map((achievement) => (
