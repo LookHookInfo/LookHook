@@ -161,6 +161,62 @@ export default function Airdrop() {
         ))}
       </div>
 
+      {/* Completed Airdrops Section */}
+      <div className="mt-16 mb-12">
+        <div className="flex items-center gap-3 mb-6 px-2">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-neutral-800 to-transparent" />
+          <h2 className="text-[11px] font-bold text-gray-500 uppercase tracking-[0.3em] whitespace-nowrap">Historical Record</h2>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-neutral-800 to-transparent" />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="relative group overflow-hidden bg-neutral-900/40 border border-neutral-800/60 p-5 rounded-2xl transition-all duration-500 hover:border-neutral-700/80 hover:bg-neutral-900/60">
+            <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
+               <img src="/assets/Airdrop.webp" alt="" className="w-16 h-16 object-contain grayscale blur-sm" />
+            </div>
+            
+            <div className="relative z-10 flex items-center gap-5">
+              <div className="w-14 h-14 shrink-0 bg-neutral-950/50 rounded-xl border border-neutral-800/50 flex items-center justify-center p-2 group-hover:scale-105 transition-transform duration-500">
+                <img src="/assets/Airdrop.webp" alt="Completed Airdrop" className="w-full h-full object-contain opacity-60 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-gray-300 font-bold tracking-tight group-hover:text-white transition-colors">Genesis Airdrop</h3>
+                  <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-neutral-800 text-gray-500 uppercase">April 2025</span>
+                </div>
+                <p className="text-xs text-gray-500 mb-2 leading-relaxed">The First Distribution - For Those Who Believed First.</p>
+                <div className="inline-flex items-center gap-1.5 text-[9px] font-bold text-gray-600 uppercase tracking-widest">
+                  <div className="w-1 h-1 rounded-full bg-neutral-700" />
+                  Completed
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="relative group overflow-hidden bg-neutral-900/40 border border-neutral-800/60 p-5 rounded-2xl transition-all duration-500 hover:border-neutral-700/80 hover:bg-neutral-900/60">
+            <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
+               <img src="/assets/Drop.webp" alt="" className="w-16 h-16 object-contain grayscale blur-sm" />
+            </div>
+
+            <div className="relative z-10 flex items-center gap-5">
+              <div className="w-14 h-14 shrink-0 bg-neutral-950/50 rounded-xl border border-neutral-800/50 flex items-center justify-center p-2 group-hover:scale-105 transition-transform duration-500">
+                <img src="/assets/Drop.webp" alt="Completed Airdrop" className="w-full h-full object-contain opacity-60 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-gray-300 font-bold tracking-tight group-hover:text-white transition-colors">Community Reward II</h3>
+                  <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-neutral-800 text-gray-500 uppercase">Dec 2025</span>
+                </div>
+                <p className="text-xs text-gray-500 mb-2 leading-relaxed">Global Holiday Rewards - Honoring Our Early Supporters.</p>
+                <div className="inline-flex items-center gap-1.5 text-[9px] font-bold text-gray-600 uppercase tracking-widest">
+                  <div className="w-1 h-1 rounded-full bg-neutral-700" />
+                  Completed
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <Faucet />
     </div>
   );

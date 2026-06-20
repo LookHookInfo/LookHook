@@ -54,9 +54,9 @@ export default function Hero() {
                 />
               </svg>
               <div className="grow">
-                <h3 className="text-lg font-semibold text-gray-300 dark:text-white">Telegram Mini-Apps</h3>
+                <h3 className="text-lg font-semibold text-gray-300 dark:text-white">Base Mini-Apps</h3>
                 <p className="mt-1 text-gray-400 dark:text-neutral-400">
-                  Building functional and user-friendly mini-apps for Telegram with blockchain integration.
+                  Creation of functional and user-friendly mini-applications in the Base blockchain network.
                 </p>
               </div>
             </div>

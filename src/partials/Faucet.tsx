@@ -5,6 +5,8 @@ import { formatUnits, encodeFunctionData } from 'viem';
 import { faucetContract } from '@/utils/contracts';
 import { faucetAbi } from '@/utils/faucetAbi';
 import { tipsPublicClient } from '@/lib/viem/client';
+import { getTwitterShareUrl } from '@/utils/twitterConfig';
+
 
 export default function Faucet() {
   const account = useActiveAccount();
@@ -170,7 +172,7 @@ export default function Faucet() {
             </div>
 
             {/* Claim Button */}
-            <div className="shrink-0 w-full md:w-auto">
+            <div className="shrink-0 w-full md:w-auto flex flex-col gap-2">
               <button
                 onClick={() => claimMutation.mutate()}
                 disabled={!address || !canClaim || claimMutation.isPending}
@@ -196,6 +198,18 @@ export default function Faucet() {
                   <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-12"></div>
                 )}
               </button>
+
+              <a
+                href={getTwitterShareUrl('faucet')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full md:w-56 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 hover:bg-neutral-800/40 transition-all flex items-center justify-center gap-2"
+              >
+                <svg className="size-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932Z" />
+                </svg>
+                <span>Share on X</span>
+              </a>
             </div>
           </div>
 
