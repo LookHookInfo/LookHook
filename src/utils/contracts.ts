@@ -26,6 +26,7 @@ import { ambaNftAbi } from './ambaNftAbi';
 import { lamboRewardAbi } from './lamboRewardAbi';
 import { achievementAggregatorAbi } from './achievementAggregatorAbi';
 import { rewardAggregatorAbi } from './rewardAggregatorAbi';
+import { hashAchievementNFTsAbi } from './hashAchievementNFTsAbi';
 import { faucetAbi } from './faucetAbi';
 import { airdropAbi } from './airdropAbi';
 
@@ -143,8 +144,16 @@ export const lamboRewardContract = getContract({
 export const achievementAggregatorContract = getContract({
   client,
   chain: chain,
-  address: '0xb4c17f2DBc13df30d5fE7672D2D6E04c436196f5',
+  address: '0x9BA10D3A47398fBDC773F20e491c5040066cAba5',
   abi: achievementAggregatorAbi,
+});
+
+// DSW NFT коллекция (Dolphin / Shark / Whale) — минт напрямую
+export const dswNftContract = getContract({
+  client,
+  chain: chain,
+  address: '0x7aa5fc50D0E4A400545E34055134C89F2b310080',
+  abi: hashAchievementNFTsAbi,
 });
 
 export const rewardAggregatorContract = getContract({

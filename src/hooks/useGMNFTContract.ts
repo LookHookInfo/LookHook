@@ -114,9 +114,12 @@ export function useGMNFTContract() {
 
       return await publicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: gmBalanceQuery.queryKey });
-      queryClient.invalidateQueries({ queryKey: claimInfoQuery.queryKey });
+    onSuccess: async () => {
+      // Small delay to allow RPC nodes to sync the new state
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      
+      queryClient.invalidateQueries({ queryKey: ['gmBalance', accountAddress] });
+      queryClient.invalidateQueries({ queryKey: ['gmClaimInfo', accountAddress] });
     },
   });
 

@@ -1,0 +1,174 @@
+0x7aa5fc50D0E4A400545E34055134C89F2b310080
+
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+/**
+ * Only true Hashcoin Miners deserve these NFTs
+ * Soulbound Achievement NFTs for dedicated Hashcoin stakers
+ * These tokens represent mining prowess and cannot be transferred
+ */
+
+interface IEditionStake {
+    function getStakeInfo(address _staker) external view returns (
+        uint256[] memory,
+        uint256[] memory,
+        uint256 _totalRewards
+    );
+}
+
+contract HashAchievementNFTs {
+    string public constant name = "Mining Hash Club";
+    string public constant symbol = "CLUB";
+
+    address public constant STAKING_CONTRACT = 0xBBc4f75874930EB4d8075FCB3f48af2535A8E848;
+
+    // Mining achievement thresholds
+    uint256 private constant DOLPHIN_HASH = 1000 ether;
+    uint256 private constant SHARK_HASH = 10000 ether;  
+    uint256 private constant WHALE_HASH = 25000 ether;
+
+    // NFT metadata - fixed URIs without trailing spaces
+    string private constant DOLPHIN_URI = "https://bafkreidua57u6wvvvuw7tmqnq2w6iw7zwysztl2emkvzz7bmcv5wruoh7y.ipfs.dweb.link/";
+    string private constant SHARK_URI   = "https://bafkreidif3yk2ibpaxhfmcm546yrsikqim34wp67txdqrmnue4smgg4w2q.ipfs.dweb.link/";
+    string private constant WHALE_URI   = "https://bafkreiexuryarjuihgc7ovknvrtjotcv3ylujzhlz26is3oqhul5euwum4.ipfs.dweb.link/";
+
+    // Optimized storage
+    mapping(uint256 => address) private _owners;
+    mapping(address => uint256) private _balances;
+    
+    // Gas optimization - track minted tiers per user
+    mapping(address => uint8) private _tierBitmask; 
+    // Bit 0: Dolphin, Bit 1: Shark, Bit 2: Whale
+    
+    mapping(uint256 => uint8) private _tokenTier; // 1=Dolphin, 2=Shark, 3=Whale
+
+    uint256 private _tokenIdCounter = 1;
+    uint256 private _dolphinCount;
+    uint256 private _sharkCount;
+    uint256 private _whaleCount;
+
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+    event TierMinted(address indexed user, uint8 tier, uint256 tokenId);
+
+    // Minting functions for true miners
+    function mintDolphin() external { 
+        _mintTier(1, DOLPHIN_HASH); 
+    }
+    
+    function mintShark() external { 
+        _mintTier(2, SHARK_HASH); 
+    }
+    
+    function mintWhale() external { 
+        _mintTier(3, WHALE_HASH); 
+    }
+
+    function _mintTier(uint8 tier, uint256 threshold) internal {
+        // Check if already minted this tier
+        require(_tierBitmask[msg.sender] & (1 << (tier - 1)) == 0, "Already minted this tier");
+        
+        // Verify mining rewards
+        uint256 userRewards = _getUserRewards(msg.sender);
+        require(userRewards >= threshold, "Not enough HASH rewards");
+        
+        // Mark tier as minted
+        _tierBitmask[msg.sender] = _tierBitmask[msg.sender] | uint8(1 << (tier - 1));
+        
+        // Mint the achievement NFT
+        uint256 tokenId = _tokenIdCounter++;
+        _mint(msg.sender, tokenId);
+        _tokenTier[tokenId] = tier;
+
+        // Update counters
+        if (tier == 1) _dolphinCount++;
+        else if (tier == 2) _sharkCount++;
+        else if (tier == 3) _whaleCount++;
+
+        emit TierMinted(msg.sender, tier, tokenId);
+    }
+
+    function _mint(address to, uint256 tokenId) internal {
+        _balances[to]++;
+        _owners[tokenId] = to;
+        emit Transfer(address(0), to, tokenId);
+    }
+
+    function _getUserRewards(address user) internal view returns (uint256) {
+        (, , uint256 totalRewards) = IEditionStake(STAKING_CONTRACT).getStakeInfo(user);
+        return totalRewards;
+    }
+
+    // Basic ERC-721 view functions
+    function balanceOf(address owner) public view returns (uint256) {
+        require(owner != address(0), "zero address");
+        return _balances[owner];
+    }
+
+    function ownerOf(uint256 tokenId) public view returns (address) {
+        address owner = _owners[tokenId];
+        require(owner != address(0), "invalid token ID");
+        return owner;
+    }
+
+    // Mining progress tracker
+    function getUserStatus(address user) external view returns (
+        uint256 earnedHASH,
+        bool dolphinAvailable,
+        bool sharkAvailable,
+        bool whaleAvailable,
+        bool hasDolphinNFT,
+        bool hasSharkNFT,
+        bool hasWhaleNFT
+    ) {
+        earnedHASH = _getUserRewards(user);
+        
+        uint8 bitmask = _tierBitmask[user];
+        hasDolphinNFT = (bitmask & 1) != 0;
+        hasSharkNFT = (bitmask & 2) != 0;
+        hasWhaleNFT = (bitmask & 4) != 0;
+        
+        dolphinAvailable = earnedHASH >= DOLPHIN_HASH && !hasDolphinNFT;
+        sharkAvailable = earnedHASH >= SHARK_HASH && !hasSharkNFT;
+        whaleAvailable = earnedHASH >= WHALE_HASH && !hasWhaleNFT;
+    }
+
+    function tokenURI(uint256 tokenId) public view returns (string memory) {
+        require(_owners[tokenId] != address(0), "invalid token ID");
+        uint8 tier = _tokenTier[tokenId];
+        if (tier == 1) return DOLPHIN_URI;
+        if (tier == 2) return SHARK_URI;
+        if (tier == 3) return WHALE_URI;
+        revert("invalid tier");
+    }
+
+    // Achievement counters
+    function dolphinCount() external view returns (uint256) { return _dolphinCount; }
+    function sharkCount() external view returns (uint256) { return _sharkCount; }
+    function whaleCount() external view returns (uint256) { return _whaleCount; }
+
+    // Soulbound - non-transferable
+    function approve(address, uint256) public pure { revert("Soulbound NFT"); }
+    function setApprovalForAll(address, bool) public pure { revert("Soulbound NFT"); }
+    function transferFrom(address, address, uint256) public pure { revert("Soulbound NFT"); }
+    function safeTransferFrom(address, address, uint256) public pure { revert("Soulbound NFT"); }
+    function safeTransferFrom(address, address, uint256, bytes memory) public pure { revert("Soulbound NFT"); }
+    function getApproved(uint256) public pure returns (address) { return address(0); }
+    function isApprovedForAll(address, address) public pure returns (bool) { return false; }
+
+    // ERC-165 interface support
+    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
+        return 
+            interfaceId == 0x01ffc9a7 || // ERC165
+            interfaceId == 0x80ac58cd || // ERC721
+            interfaceId == 0x5b5e139f;   // ERC721Metadata
+    }
+}
+
+
+
+abi
+
+
+[{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint8","name":"tier","type":"uint8"},{"indexed":false,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"TierMinted","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[],"name":"STAKING_CONTRACT","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"approve","outputs":[],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"dolphinCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"getApproved","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getUserStatus","outputs":[{"internalType":"uint256","name":"earnedHASH","type":"uint256"},{"internalType":"bool","name":"dolphinAvailable","type":"bool"},{"internalType":"bool","name":"sharkAvailable","type":"bool"},{"internalType":"bool","name":"whaleAvailable","type":"bool"},{"internalType":"bool","name":"hasDolphinNFT","type":"bool"},{"internalType":"bool","name":"hasSharkNFT","type":"bool"},{"internalType":"bool","name":"hasWhaleNFT","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"isApprovedForAll","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"pure","type":"function"},{"inputs":[],"name":"mintDolphin","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"mintShark","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"mintWhale","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"safeTransferFrom","outputs":[],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"bytes","name":"","type":"bytes"}],"name":"safeTransferFrom","outputs":[],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"bool","name":"","type":"bool"}],"name":"setApprovalForAll","outputs":[],"stateMutability":"pure","type":"function"},{"inputs":[],"name":"sharkCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes4","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"pure","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"tokenURI","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"transferFrom","outputs":[],"stateMutability":"pure","type":"function"},{"inputs":[],"name":"whaleCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]

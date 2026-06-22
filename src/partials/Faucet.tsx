@@ -21,21 +21,8 @@ export default function Faucet() {
       abi: faucetAbi,
       functionName: 'getFaucetBalance',
     }),
+    staleTime: 300000,
     refetchInterval: 30000,
-  });
-
-  const { data: canClaim = false, refetch: refetchCanClaim } = useQuery({
-    queryKey: ['faucetCanClaim', address],
-    queryFn: () => {
-      if (!address) return false;
-      return tipsPublicClient.readContract({
-        address: faucetContract.address as `0x${string}`,
-        abi: faucetAbi,
-        functionName: 'canClaim',
-        args: [address],
-      });
-    },
-    enabled: !!address,
   });
 
   const { data: timeUntilNext = 0n, refetch: refetchTimeUntilNext } = useQuery({
@@ -50,7 +37,10 @@ export default function Faucet() {
       }) as Promise<bigint>;
     },
     enabled: !!address,
+    staleTime: 300000,
   });
+
+  const canClaim = timeUntilNext === 0n;
 
   useEffect(() => {
     if (timeUntilNext > 0n) {
@@ -59,7 +49,7 @@ export default function Faucet() {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(interval);
-            refetchCanClaim();
+            refetchTimeUntilNext();
             return 0;
           }
           return prev - 1;
@@ -69,7 +59,7 @@ export default function Faucet() {
     } else {
       setTimeLeft(0);
     }
-  }, [timeUntilNext, refetchCanClaim]);
+  }, [timeUntilNext, refetchTimeUntilNext]);
 
   const claimMutation = useMutation({
     mutationFn: async () => {
@@ -94,14 +84,12 @@ export default function Faucet() {
       
       // Invalidate all related queries
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['faucetCanClaim', address] }),
         queryClient.invalidateQueries({ queryKey: ['faucetTimeUntilNext', address] }),
         queryClient.invalidateQueries({ queryKey: ['faucetBalance'] }),
         queryClient.invalidateQueries({ queryKey: ['userAchievements', address] }), // Refresh achievements too
       ]);
       
       // Explicit refetch as a backup
-      refetchCanClaim();
       refetchTimeUntilNext();
     },
   });
