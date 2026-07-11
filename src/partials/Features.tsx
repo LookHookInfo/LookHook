@@ -15,7 +15,6 @@ export default function Features() {
     apr3M,
     apr6M,
     apr12M,
-    isApproved,
     poolInfo,
     status,
     setStatus,
@@ -184,7 +183,6 @@ export default function Features() {
           apr3M={apr3M}
           apr6M={apr6M}
           apr12M={apr12M}
-          isApproved={isApproved}
           status={status}
           setStatus={setStatus}
           stake={stake}

@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useActiveAccount } from 'thirdweb/react';
 import { encodeFunctionData } from 'viem';
 import { namePublicClient } from '../lib/viem/client';
 import { nameContract, hashcoinContract } from '../utils/contracts';
 import { nameContractAbi } from '../utils/nameContractAbi';
 import erc20Abi from '../utils/erc20';
+import { useGmNameFeed } from './useGmNameFeed';
 
 const MAX_NAME_LENGTH = 15;
 const MAX_NAMES_PER_ADDRESS = 20;
@@ -15,90 +16,20 @@ export function useNameContract() {
   const queryClient = useQueryClient();
   const accountAddress = account?.address;
 
-  // State for the user's input
   const [nameInput, setNameInput] = useState('');
   const [isNameTakenLoading, setIsNameTakenLoading] = useState(false);
   const [isTaken, setIsTaken] = useState<boolean | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
 
-  const queryResults = useQueries({
-    queries: [
-      {
-        queryKey: ['nameContract', 'PRICE'],
-        queryFn: () => namePublicClient.readContract({
-          address: nameContract.address as `0x${string}`,
-          abi: nameContractAbi,
-          functionName: 'PRICE',
-        }),
-        staleTime: Infinity,
-      },
-      {
-        queryKey: ['nameContract', 'hasDiscount', accountAddress],
-        queryFn: () => namePublicClient.readContract({
-          address: nameContract.address as `0x${string}`,
-          abi: nameContractAbi,
-          functionName: 'hasDiscount',
-          args: [accountAddress as `0x${string}`],
-        }),
-        enabled: !!accountAddress,
-        staleTime: 300000,
-      },
-      {
-        queryKey: ['nameContract', 'balanceOf', accountAddress],
-        queryFn: () => namePublicClient.readContract({
-          address: nameContract.address as `0x${string}`,
-          abi: nameContractAbi,
-          functionName: 'balanceOf',
-          args: [accountAddress as `0x${string}`],
-        }),
-        enabled: !!accountAddress,
-        staleTime: 300000,
-      },
-      {
-        queryKey: ['hashcoinContract', 'balanceOf', accountAddress],
-        queryFn: () => namePublicClient.readContract({
-          address: hashcoinContract.address as `0x${string}`,
-          abi: erc20Abi,
-          functionName: 'balanceOf',
-          args: [accountAddress as `0x${string}`],
-        }),
-        enabled: !!accountAddress,
-        staleTime: 300000,
-      },
-      {
-        queryKey: ['nameContract', 'getPrimaryName', accountAddress],
-        queryFn: () => namePublicClient.readContract({
-          address: nameContract.address as `0x${string}`,
-          abi: nameContractAbi,
-          functionName: 'getPrimaryName',
-          args: [accountAddress as `0x${string}`],
-        }),
-        enabled: !!accountAddress,
-        staleTime: 300000,
-      },
-    ],
-    combine: (results) => {
-      return {
-        priceResult: results[0],
-        hasDiscountResult: results[1],
-        registeredNamesCountResult: results[2],
-        hashBalanceResult: results[3],
-        registeredNameResult: results[4],
-        isLoading: results.some((res) => res.isLoading),
-      };
-    },
-  });
+  const { domain, isLoading } = useGmNameFeed();
 
-  const {
-    priceResult,
-    hasDiscountResult,
-    registeredNamesCountResult,
-    hashBalanceResult,
-    registeredNameResult,
-    isLoading: areInitialQueriesLoading,
-  } = queryResults;
+  const price = domain?.namePrice;
+  const hasDiscount = domain?.hasDiscount;
+  const registeredNamesCount = domain?.nameBalance;
+  const balance = domain?.hashBalance;
+  const registeredName = domain?.primaryName;
 
-  // Debounced check for name availability
+  // Debounced check for name availability (not in aggregator)
   useEffect(() => {
     if (!nameInput) {
       setIsTaken(null);
@@ -128,12 +59,6 @@ export function useNameContract() {
     };
   }, [nameInput]);
 
-  const price = priceResult.data as bigint | undefined;
-  const hasDiscount = hasDiscountResult.data as boolean | undefined;
-  const registeredNamesCount = registeredNamesCountResult.data as bigint | undefined;
-  const balance = hashBalanceResult.data as bigint | undefined;
-  const registeredName = registeredNameResult.data as string | undefined;
-
   const displayPrice = useMemo(() => {
     if (!price) return undefined;
     return hasDiscount ? price / 2n : price;
@@ -152,7 +77,6 @@ export function useNameContract() {
 
     setIsConfirming(true);
     try {
-      // 1. Approve HASH spending
       const approveData = encodeFunctionData({
         abi: erc20Abi,
         functionName: 'approve',
@@ -167,7 +91,6 @@ export function useNameContract() {
 
       await namePublicClient.waitForTransactionReceipt({ hash: approveHash as `0x${string}` });
 
-      // 2. Register the name
       const registerData = encodeFunctionData({
         abi: nameContractAbi,
         functionName: 'register',
@@ -182,18 +105,14 @@ export function useNameContract() {
 
       await namePublicClient.waitForTransactionReceipt({ hash: registerHash as `0x${string}` });
 
-      console.log('Successfully registered name. Invalidating specific queries...');
-      
-      await queryClient.invalidateQueries({ queryKey: ['nameContract'] });
-      await queryClient.invalidateQueries({ queryKey: ['hashcoinContract', 'balanceOf', accountAddress] });
-      
+      await queryClient.invalidateQueries({ queryKey: ['gmNameFeed'] });
       setIsTaken(true);
     } catch (error) {
       console.error('Unified claim error:', error);
     } finally {
       setIsConfirming(false);
     }
-  }, [account, displayPrice, nameInput, queryClient, accountAddress]);
+  }, [account, displayPrice, nameInput, queryClient]);
 
   return {
     nameInput,
@@ -205,10 +124,10 @@ export function useNameContract() {
     balance,
     registeredName,
     registeredNamesCount: registeredNamesCount !== undefined ? Number(registeredNamesCount) : null,
-    isLoading: areInitialQueriesLoading,
-    isConfirming: isConfirming,
+    isLoading,
+    isConfirming,
     hasSufficientBalance,
-    unifiedClaim: unifiedClaim,
+    unifiedClaim,
     maxNameLength: MAX_NAME_LENGTH,
     maxNamesPerAddress: MAX_NAMES_PER_ADDRESS,
   };

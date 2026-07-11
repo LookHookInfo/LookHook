@@ -3,7 +3,7 @@ import { miningPublicClient } from '../lib/viem/client';
 import { contractTools } from '../utils/contracts';
 import { contractToolsAbi } from '../utils/contractToolsAbi';
 
-export interface ToolMetadata {
+interface ToolMetadata {
   id: number;
   name: string;
   description: string;

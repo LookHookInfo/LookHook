@@ -15,7 +15,6 @@ interface StakingSectionProps {
   apr3M: bigint | undefined;
   apr6M: bigint | undefined;
   apr12M: bigint | undefined;
-  isApproved: (amount: string) => boolean;
   status: Status;
   setStatus: (status: Status) => void;
   // Transaction functions

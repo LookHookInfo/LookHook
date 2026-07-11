@@ -5,9 +5,6 @@ import { dswNftContract } from '@/utils/contracts';
 import { hashAchievementNFTsAbi } from '@/utils/hashAchievementNFTsAbi';
 import { dropPublicClient } from '@/lib/viem/client';
 
-// ID ачивок NFT (Dolphin / Shark / Whale)
-export const CLAIMABLE_ACHIEVEMENT_IDS = [10n, 11n, 12n] as const;
-
 // Маппинг achievementId → имя функции минта
 const ACHIEVEMENT_MINT_FN: Record<number, 'mintDolphin' | 'mintShark' | 'mintWhale'> = {
   10: 'mintDolphin',

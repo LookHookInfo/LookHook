@@ -175,7 +175,6 @@ export function useLamboReward() {
     rewardAmount: formattedRewardAmount,
     isClaiming: claimMutation.isPending,
     handleClaim,
-    error: claimMutation.error,
     poolRewardBalance: formattedPoolRewardBalance,
   };
 }

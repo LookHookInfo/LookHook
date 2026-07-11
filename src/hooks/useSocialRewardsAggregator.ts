@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+
 import { useActiveAccount } from 'thirdweb/react';
 import { useQuery } from '@tanstack/react-query';
 import { formatUnits } from 'viem';
@@ -6,7 +6,7 @@ import { rewardAggregatorContract } from '../utils/contracts';
 import { rewardAggregatorAbi } from '../utils/rewardAggregatorAbi';
 import { publicClient } from '../lib/viem/client';
 
-export interface RoleStatus {
+interface RoleStatus {
   hasNFT: boolean;
   alreadyClaimed: boolean;
   canClaim: boolean;
@@ -14,7 +14,7 @@ export interface RoleStatus {
   contractBalance: bigint;
 }
 
-export interface AmbaStatus {
+interface AmbaStatus {
   hasAmba: boolean;
   hasTube: boolean;
   hasGram: boolean;
@@ -23,7 +23,7 @@ export interface AmbaStatus {
   totalSupply: bigint;
 }
 
-export interface UserStatus {
+interface UserStatus {
   x: RoleStatus;
   gram: RoleStatus;
   tube: RoleStatus;

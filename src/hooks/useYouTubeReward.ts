@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+
 import { useActiveAccount } from 'thirdweb/react';
 import { encodeFunctionData } from 'viem';
 import { tuberoleRewardContract } from '../utils/contracts';

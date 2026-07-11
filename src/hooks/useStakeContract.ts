@@ -3,7 +3,7 @@ import { useActiveAccount } from 'thirdweb/react';
 import { stakingContract, hashcoinContract } from '../utils/contracts';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { UserStakes } from '../components/UserStakesDisplay';
-import { earlyPublicClient, stakePublicClient } from '../lib/viem/client';
+import { stakePublicClient } from '../lib/viem/client';
 import stakingAbi from '../utils/stakingAbi';
 import erc20Abi from '../utils/erc20';
 import { encodeFunctionData, parseUnits } from 'viem';

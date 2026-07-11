@@ -4,7 +4,7 @@ import { miningPublicClient } from '../lib/viem/client';
 import { coreAggregatorContract } from '../utils/contracts';
 import { coreAggregatorAbi } from '../utils/coreAggregatorAbi';
 
-export interface ToolState {
+interface ToolState {
   balance: bigint;
   staked: bigint;
   rewards: bigint;
@@ -34,7 +34,7 @@ export interface ToolPrice {
   maxClaimableSupply: bigint;
 }
 
-export interface MiningFeedData {
+interface MiningFeedData {
   shopFeed: ShopFeed;
   prices: ToolPrice[];
 }

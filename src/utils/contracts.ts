@@ -30,6 +30,7 @@ import { hashAchievementNFTsAbi } from './hashAchievementNFTsAbi';
 import { faucetAbi } from './faucetAbi';
 import { airdropAbi } from './airdropAbi';
 import { coreAggregatorAbi } from './coreAggregatorAbi';
+import { gmNameAggregatorAbi } from './gmNameAggregatorAbi';
 
 // --- CORE TOKENS ---
 
@@ -166,13 +167,6 @@ export const rewardAggregatorContract = getContract({
 
 // --- NFT & IDENTITY ---
 
-export const ourNftContract = getContract({
-  client,
-  chain: chain,
-  address: '0x8F45ee49fC8613661DF64Da7f0ce1Eb0a4c3794B',
-  abi: gmnftAbi,
-}); //ok
-
 export const nameContract = getContract({
   client,
   chain: chain,
@@ -271,4 +265,13 @@ export const coreAggregatorContract = getContract({
   chain: chain,
   address: '0xEA894566417d222F8246fD5Af392fA08B0b8b440',
   abi: coreAggregatorAbi,
+});
+
+// --- GM + NAME AGGREGATOR ---
+
+export const gmNameAggregatorContract = getContract({
+  client,
+  chain: chain,
+  address: '0x0E792896C630776cfc1B00F37E0e35262E4085E7',
+  abi: gmNameAggregatorAbi,
 });

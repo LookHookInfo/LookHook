@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+
 import { useActiveAccount } from 'thirdweb/react';
 import { encodeFunctionData } from 'viem';
 import { ambaNftContract } from '../utils/contracts';

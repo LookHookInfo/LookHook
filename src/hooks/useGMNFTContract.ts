@@ -1,4 +1,4 @@
-import { useQueryClient, useQueries, useMutation } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { useActiveAccount } from 'thirdweb/react';
 import { parseEther, encodeFunctionData } from 'viem';
 
@@ -6,6 +6,7 @@ import { gmContract, gmnftContract } from '../utils/contracts';
 import { publicClient } from '../lib/viem/client';
 import GMAbi from '../utils/GMAbi';
 import { gmnftAbi } from '../utils/gmnftAbi';
+import { useGmNameFeed } from './useGmNameFeed';
 
 const BURN_AMOUNT_STRING = '30';
 const BURN_AMOUNT_WEI = parseEther(BURN_AMOUNT_STRING);
@@ -13,92 +14,23 @@ const BURN_AMOUNT_WEI = parseEther(BURN_AMOUNT_STRING);
 export function useGMNFTContract() {
   const account = useActiveAccount();
   const queryClient = useQueryClient();
-  const accountAddress = account?.address as `0x${string}` | undefined;
+  const { gm, isLoading } = useGmNameFeed();
 
-  // 1. Batched Reads with Caching using Viem
-  const gmBalanceQuery = {
-    queryKey: ['gmBalance', accountAddress],
-    queryFn: async () => {
-      if (!accountAddress) return 0n;
-      return await publicClient.readContract({
-        address: gmContract.address as `0x${string}`,
-        abi: GMAbi,
-        functionName: 'balanceOf',
-        args: [accountAddress],
-      });
-    },
-    enabled: !!accountAddress,
-    staleTime: 300000,
-  };
-
-  const gmnftBalanceQuery = {
-    queryKey: ['gmnftBalance', accountAddress],
-    queryFn: async () => {
-      if (!accountAddress) return 0n;
-      return await publicClient.readContract({
-        address: gmnftContract.address as `0x${string}`,
-        abi: gmnftAbi,
-        functionName: 'balanceOf',
-        args: [accountAddress],
-      });
-    },
-    enabled: !!accountAddress,
-    staleTime: 300000,
-  };
-
-  const allowanceQuery = {
-    queryKey: ['gmAllowance', accountAddress],
-    queryFn: async () => {
-      if (!accountAddress) return 0n;
-      return await publicClient.readContract({
-        address: gmContract.address as `0x${string}`,
-        abi: GMAbi,
-        functionName: 'allowance',
-        args: [accountAddress, gmnftContract.address as `0x${string}`],
-      });
-    },
-    enabled: !!accountAddress,
-    staleTime: 300000,
-  };
-
-  const claimInfoQuery = {
-    queryKey: ['gmClaimInfo', accountAddress],
-    queryFn: async () => {
-      if (!accountAddress) return null;
-      return (await publicClient.readContract({
-        address: gmContract.address as `0x${string}`,
-        abi: GMAbi,
-        functionName: 'getClaimInfo',
-        args: [accountAddress],
-      })) as [boolean, bigint, boolean, boolean, bigint];
-    },
-    enabled: !!accountAddress,
-    staleTime: 60000,
-  };
-
-  const [
-    { data: gmBalance },
-    { data: gmnftBalance },
-    { data: allowance },
-    { data: claimInfo, isLoading: isLoadingClaimInfo },
-  ] = useQueries({
-    queries: [gmBalanceQuery, gmnftBalanceQuery, allowanceQuery, claimInfoQuery],
-  });
+  const gmBalance = gm?.gmBalance;
+  const gmnftBalance = gm?.gmnftBalance;
+  const allowance = gm?.allowance;
 
   const hasEnoughGM = gmBalance ? gmBalance >= BURN_AMOUNT_WEI : false;
   const hasGMNFT = gmnftBalance ? gmnftBalance > 0n : false;
   const isApproved = allowance ? allowance >= BURN_AMOUNT_WEI : false;
 
-  const canClaimNow = claimInfo ? claimInfo[0] : false;
-  const nextAvailableTimestamp = claimInfo ? Number(claimInfo[1]) : 0;
-  const hasNFTCondition = claimInfo ? claimInfo[2] : false;
-  const hasStakeCondition = claimInfo ? claimInfo[3] : false;
-  const isEligible = hasNFTCondition || hasStakeCondition;
+  const canClaimNow = gm?.canClaimNow ?? false;
+  const nextAvailableTimestamp = gm ? Number(gm.nextAvailable) : 0;
+  const isEligible = gm ? gm.nftHolder || gm.staker : false;
 
-  // 2. Mutations
   const claimMutation = useMutation({
     mutationFn: async () => {
-      if (!account || !accountAddress) throw new Error('Wallet not connected');
+      if (!account) throw new Error('Wallet not connected');
 
       const data = encodeFunctionData({
         abi: GMAbi,
@@ -115,11 +47,8 @@ export function useGMNFTContract() {
       return await publicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
     },
     onSuccess: async () => {
-      // Small delay to allow RPC nodes to sync the new state
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      
-      queryClient.invalidateQueries({ queryKey: ['gmBalance', accountAddress] });
-      queryClient.invalidateQueries({ queryKey: ['gmClaimInfo', accountAddress] });
+      queryClient.invalidateQueries({ queryKey: ['gmNameFeed'] });
     },
   });
 
@@ -142,27 +71,14 @@ export function useGMNFTContract() {
       return await publicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
     },
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: allowanceQuery.queryKey });
-      const previousAllowance = queryClient.getQueryData<bigint>(allowanceQuery.queryKey);
-      queryClient.setQueryData(allowanceQuery.queryKey, () => BURN_AMOUNT_WEI);
-      return { previousAllowance };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previousAllowance !== undefined) {
-        queryClient.setQueryData(allowanceQuery.queryKey, context.previousAllowance);
-      }
+      await queryClient.cancelQueries({ queryKey: ['gmNameFeed'] });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: allowanceQuery.queryKey });
+      queryClient.invalidateQueries({ queryKey: ['gmNameFeed'] });
     },
   });
 
-  const burnAndMintMutation = useMutation<
-    unknown,
-    Error,
-    void,
-    { previousGMBalance?: bigint; previousGMNFTBalance?: bigint }
-  >({
+  const burnAndMintMutation = useMutation({
     mutationFn: async () => {
       if (!account) throw new Error('Wallet not connected');
 
@@ -181,32 +97,13 @@ export function useGMNFTContract() {
       return await publicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
     },
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: gmnftBalanceQuery.queryKey });
-      await queryClient.cancelQueries({ queryKey: gmBalanceQuery.queryKey });
-
-      const previousGMBalance = queryClient.getQueryData<bigint>(gmBalanceQuery.queryKey);
-      const previousGMNFTBalance = queryClient.getQueryData<bigint>(gmnftBalanceQuery.queryKey);
-
-      queryClient.setQueryData<bigint>(gmBalanceQuery.queryKey, (old) => (old ? old - BURN_AMOUNT_WEI : 0n));
-      queryClient.setQueryData<bigint>(gmnftBalanceQuery.queryKey, (old) => (old ? old + 1n : 1n));
-
-      return { previousGMBalance, previousGMNFTBalance };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previousGMBalance) {
-        queryClient.setQueryData(gmBalanceQuery.queryKey, context.previousGMBalance);
-      }
-      if (context?.previousGMNFTBalance) {
-        queryClient.setQueryData(gmnftBalanceQuery.queryKey, context.previousGMNFTBalance);
-      }
+      await queryClient.cancelQueries({ queryKey: ['gmNameFeed'] });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: gmBalanceQuery.queryKey });
-      queryClient.invalidateQueries({ queryKey: gmnftBalanceQuery.queryKey });
+      queryClient.invalidateQueries({ queryKey: ['gmNameFeed'] });
     },
   });
 
-  // 3. Simplified Action Handler & Loading State
   const handleUnifiedAction = async () => {
     if (!account) return;
     try {
@@ -229,11 +126,10 @@ export function useGMNFTContract() {
     isApproved,
     isProcessing,
     handleUnifiedAction,
-    // Claim additions
     canClaimNow,
     nextAvailableTimestamp,
     isEligible,
-    isLoadingClaimInfo,
+    isLoadingClaimInfo: isLoading,
     handleClaim: () => {
       if (canClaimNow && !claimMutation.isPending) {
         claimMutation.mutate();

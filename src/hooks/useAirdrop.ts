@@ -5,7 +5,7 @@ import { airdropAbi } from '@/utils/airdropAbi';
 import { dropPublicClient } from '@/lib/viem/client';
 import { encodeFunctionData, parseAbi } from 'viem';
 
-export interface UserAirdrop {
+interface UserAirdrop {
   amount: bigint;
   claimed: boolean;
   reason: string;
