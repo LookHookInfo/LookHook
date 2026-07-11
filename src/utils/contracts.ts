@@ -29,6 +29,7 @@ import { rewardAggregatorAbi } from './rewardAggregatorAbi';
 import { hashAchievementNFTsAbi } from './hashAchievementNFTsAbi';
 import { faucetAbi } from './faucetAbi';
 import { airdropAbi } from './airdropAbi';
+import { coreAggregatorAbi } from './coreAggregatorAbi';
 
 // --- CORE TOKENS ---
 
@@ -261,4 +262,13 @@ export const airdropContract = getContract({
   chain: chain,
   address: '0xB2e9f6956E8B696ef6680AC1B4E828803dED218b',
   abi: airdropAbi,
+});
+
+// --- MINING AGGREGATOR ---
+
+export const coreAggregatorContract = getContract({
+  client,
+  chain: chain,
+  address: '0xEA894566417d222F8246fD5Af392fA08B0b8b440',
+  abi: coreAggregatorAbi,
 });

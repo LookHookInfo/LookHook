@@ -1,36 +1,31 @@
 import { useState } from 'react';
 import { MediaRenderer, useActiveAccount } from 'thirdweb/react';
 import { useQuery } from '@tanstack/react-query';
-import { NFT } from 'thirdweb';
 import { formatUnits } from 'viem';
 
 import { client } from '../lib/thirdweb/client';
-import { contractTools, contractStaking, usdcContract, hashcoinContract } from '../utils/contracts';
+import { contractStaking } from '../utils/contracts';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import { ToolDetailModal } from '@/components/ToolDetailModal';
-import { miningPublicClient, tipsPublicClient, stakePublicClient } from '../lib/viem/client';
-import { contractToolsAbi } from '../utils/contractToolsAbi';
+import { miningPublicClient } from '../lib/viem/client';
 import { contractStakingAbi } from '../utils/contractStakingAbi';
-import erc20Abi from '../utils/erc20';
+import { useMiningFeed, ShopFeed, ToolPrice } from '../hooks/useMiningFeed';
+import { useToolMetadata } from '../hooks/useToolMetadata';
 
 // #region Main Game Component
-function Game() {
+function Game({
+  shopFeed,
+  prices,
+  isLoadingFeed,
+  toolMetadata,
+}: {
+  shopFeed?: ShopFeed;
+  prices?: ToolPrice[];
+  isLoadingFeed: boolean;
+  toolMetadata: ReturnType<typeof useToolMetadata>['toolMetadata'];
+}) {
   const account = useActiveAccount();
-  const [selectedTool, setSelectedTool] = useState<NFT | null>(null);
-
-  const { data: usdcBalance = 0n } = useQuery({
-    queryKey: ['usdcBalance', account?.address],
-    queryFn: async () => {
-      if (!account?.address) return 0n;
-      return tipsPublicClient.readContract({
-        address: usdcContract.address as `0x${string}`,
-        abi: erc20Abi,
-        functionName: 'balanceOf',
-        args: [account.address as `0x${string}`],
-      });
-    },
-    enabled: !!account?.address,
-  });
+  const [selectedToolIndex, setSelectedToolIndex] = useState<number | null>(null);
 
   if (!account) {
     return (
@@ -46,13 +41,20 @@ function Game() {
 
   return (
     <div className="relative">
-      <GameContent account={account} onSelectTool={setSelectedTool} usdcBalance={usdcBalance} />
-      {selectedTool && (
+      <GameContent
+        address={account.address}
+        shopFeed={shopFeed}
+        isLoadingFeed={isLoadingFeed}
+        onSelectTool={setSelectedToolIndex}
+        toolMetadata={toolMetadata}
+      />
+      {selectedToolIndex !== null && shopFeed && prices && (
         <ToolDetailModal
-          tool={selectedTool}
+          toolIndex={selectedToolIndex}
           address={account.address}
-          onClose={() => setSelectedTool(null)}
-          usdcBalance={usdcBalance}
+          shopFeed={shopFeed}
+          prices={prices}
+          onClose={() => setSelectedToolIndex(null)}
         />
       )}
     </div>
@@ -60,67 +62,19 @@ function Game() {
 }
 
 function GameContent({
-  account,
+  address,
+  shopFeed,
+  isLoadingFeed,
   onSelectTool,
-  usdcBalance,
+  toolMetadata,
 }: {
-  account: ReturnType<typeof useActiveAccount> | undefined;
-  onSelectTool: (tool: NFT) => void;
-  usdcBalance: bigint;
+  address: string;
+  shopFeed?: ShopFeed;
+  isLoadingFeed: boolean;
+  onSelectTool: (index: number) => void;
+  toolMetadata: ReturnType<typeof useToolMetadata>['toolMetadata'];
 }) {
-  if (!account) {
-    return null;
-  }
-
-  const { data: allTools, isLoading: isLoadingTools } = useQuery({
-    queryKey: ['allTools', contractTools.address],
-    queryFn: async () => {
-      const nextTokenIdToMint = (await miningPublicClient.readContract({
-        address: contractTools.address as `0x${string}`,
-        abi: contractToolsAbi,
-        functionName: 'nextTokenIdToMint',
-        args: [],
-      })) as bigint;
-
-      if (nextTokenIdToMint === 0n) {
-        return [];
-      }
-
-      const multicallContracts = Array.from({ length: Number(nextTokenIdToMint) }, (_, i) => ({
-        address: contractTools.address as `0x${string}`,
-        abi: contractToolsAbi,
-        functionName: 'uri',
-        args: [BigInt(i)],
-      }));
-
-      const results = await miningPublicClient.multicall({ contracts: multicallContracts as any });
-
-      const nfts = await Promise.all(
-        results.map(async (result, i) => {
-          if (result.status === 'success') {
-            const uri = result.result as string;
-            const response = await fetch(uri.replace('ipfs://', 'https://ipfs.io/ipfs/'));
-            const metadata = await response.json();
-            return {
-              id: BigInt(i),
-              type: 'ERC1155',
-              tokenURI: uri,
-              metadata,
-              owner: account.address,
-              supply: 1n,
-              tokenAddress: contractTools.address,
-              chainId: 8453,
-            } as NFT;
-          }
-          return null;
-        })
-      );
-
-      return nfts.filter((nft): nft is NFT => nft !== null);
-    },
-  });
-
-  if (isLoadingTools) {
+  if (isLoadingFeed) {
     return (
       <div className="flex justify-center items-center h-full min-h-[400px]">
         <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
@@ -129,8 +83,13 @@ function GameContent({
   }
 
   return (
-    <div className={`${!account ? 'pointer-events-none' : ''}`}>
-      <ToolGrid address={account.address} allTools={allTools} onSelectTool={onSelectTool} usdcBalance={usdcBalance} />
+    <div className="">
+      <ToolGrid
+        address={address}
+        shopFeed={shopFeed}
+        onSelectTool={onSelectTool}
+        toolMetadata={toolMetadata}
+      />
     </div>
   );
 }
@@ -148,15 +107,18 @@ function Section({ title, children }: { title: React.ReactNode; children: React.
 }
 
 function ToolGrid({
-  allTools,
+  address,
+  shopFeed,
   onSelectTool,
-  usdcBalance,
+  toolMetadata,
 }: {
   address: string;
-  allTools: NFT[] | undefined;
-  onSelectTool: (tool: NFT) => void;
-  usdcBalance: bigint;
+  shopFeed?: ShopFeed;
+  onSelectTool: (index: number) => void;
+  toolMetadata: ReturnType<typeof useToolMetadata>['toolMetadata'];
 }) {
+  const usdcBalance = shopFeed?.usdcBalance ?? 0n;
+
   const titleWithBalance = (
     <div className="flex justify-between items-center">
       <span>Inventory</span>
@@ -170,30 +132,40 @@ function ToolGrid({
   return (
     <Section title={titleWithBalance}>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {allTools?.map((tool) => (
-          <ToolCard key={tool.id.toString()} tool={tool} onClick={() => onSelectTool(tool)} />
+        {toolMetadata.map((meta, index) => (
+          <ToolCard
+            key={meta.id}
+            meta={meta}
+            onClick={() => onSelectTool(index)}
+          />
         ))}
       </div>
     </Section>
   );
 }
 
-function ToolCard({ tool, onClick }: { tool: NFT; onClick: () => void }) {
+function ToolCard({
+  meta,
+  onClick,
+}: {
+  meta: { id: number; name: string; description: string; image: string };
+  onClick: () => void;
+}) {
   return (
     <div
       className="border border-neutral-700 rounded-lg p-4 cursor-pointer shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
       onClick={onClick}
     >
       <div className="relative w-full h-36 mt-2 rounded-lg aspect-square object-cover overflow-hidden">
-        <MediaRenderer client={client} src={tool.metadata.image} className="w-full h-full object-cover" />
+        <MediaRenderer client={client} src={meta.image} className="w-full h-full object-cover" />
         {/* Name Overlay */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-fit px-2 py-1 bg-gray-200 bg-opacity-75 rounded-lg text-center">
-          <p className="font-bold text-sm text-gray-800 truncate">{tool.metadata.name}</p>
+          <p className="font-bold text-sm text-gray-800 truncate">{meta.name}</p>
         </div>
         {/* Description Overlay */}
-        {tool.metadata.description && (
+        {meta.description && (
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-fit px-2 py-1 bg-gray-200 bg-opacity-75 rounded-lg text-center">
-            <p className="font-bold text-xs text-gray-800 truncate">{tool.metadata.description}</p>
+            <p className="font-bold text-xs text-gray-800 truncate">{meta.description}</p>
           </div>
         )}
       </div>
@@ -204,6 +176,9 @@ function ToolCard({ tool, onClick }: { tool: NFT; onClick: () => void }) {
 // #endregion
 
 export default function Mining() {
+  const { shopFeed, prices, isLoading: isLoadingFeed } = useMiningFeed();
+  const { toolMetadata } = useToolMetadata();
+
   const { data: totalRewards, isLoading } = useQuery({
     queryKey: ['totalRewards', contractStaking.address],
     queryFn: () =>
@@ -211,17 +186,6 @@ export default function Mining() {
         address: contractStaking.address as `0x${string}`,
         abi: contractStakingAbi,
         functionName: 'getRewardTokenBalance',
-        args: [],
-      }),
-  });
-
-  const { data: tokenSymbol } = useQuery({
-    queryKey: ['hashcoinSymbol', hashcoinContract.address],
-    queryFn: () =>
-      miningPublicClient.readContract({
-        address: hashcoinContract.address as `0x${string}`,
-        abi: erc20Abi,
-        functionName: 'symbol',
         args: [],
       }),
   });
@@ -264,7 +228,7 @@ export default function Mining() {
                   {isLoading ? (
                     <div className="inline-block loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-4 w-4"></div>
                   ) : (
-                    `${totalRewards ? Math.floor(parseFloat(formatUnits(totalRewards, 18))).toLocaleString() : '0'} ${tokenSymbol || ''}`
+                    `${totalRewards ? Math.floor(parseFloat(formatUnits(totalRewards, 18))).toLocaleString() : '0'} HASH`
                   )}
                 </span>
               </div>
@@ -335,7 +299,7 @@ export default function Mining() {
           </div>
         </div>
         <div className="lg:col-span-8">
-          <Game />
+          <Game shopFeed={shopFeed} prices={prices} isLoadingFeed={isLoadingFeed} toolMetadata={toolMetadata} />
         </div>
       </div>
     </div>

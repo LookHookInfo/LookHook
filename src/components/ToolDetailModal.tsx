@@ -1,17 +1,22 @@
 import { useToolCardLogic } from '@/hooks/useToolCardLogic';
-import { NFT } from 'thirdweb';
 import { client } from '@/lib/thirdweb/client';
 import { MediaRenderer } from 'thirdweb/react';
 import { formatUnits } from 'viem';
+import { ShopFeed, ToolPrice } from '../hooks/useMiningFeed';
+import { useToolMetadata } from '../hooks/useToolMetadata';
 
 interface ToolDetailModalProps {
-  tool: NFT;
+  toolIndex: number;
   address: string;
-  usdcBalance: bigint;
+  shopFeed: ShopFeed;
+  prices: ToolPrice[];
   onClose: () => void;
 }
 
-export function ToolDetailModal({ tool, address, usdcBalance, onClose }: ToolDetailModalProps) {
+export function ToolDetailModal({ toolIndex, address, shopFeed, prices, onClose }: ToolDetailModalProps) {
+  const { toolMetadata } = useToolMetadata();
+  const meta = toolMetadata[toolIndex];
+
   const {
     quantity,
     isLoading,
@@ -34,7 +39,7 @@ export function ToolDetailModal({ tool, address, usdcBalance, onClose }: ToolDet
     isClaiming,
     handleApproveStaking,
     isApproving,
-  } = useToolCardLogic({ tool, address, usdcBalance });
+  } = useToolCardLogic({ toolIndex, address, shopFeed, prices });
 
   const getBuyButtonText = () => {
     if (isSoldOut) return 'Sold Out';
@@ -67,13 +72,13 @@ export function ToolDetailModal({ tool, address, usdcBalance, onClose }: ToolDet
         ) : (
           <>
             <div className="relative w-full h-64 rounded-lg overflow-hidden mb-4">
-              <MediaRenderer client={client} src={tool.metadata.image} className="w-full h-full object-cover" />
+              <MediaRenderer client={client} src={meta?.image} className="w-full h-full object-cover" />
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-fit px-2 py-1 bg-gray-200 bg-opacity-75 rounded-lg text-center">
-                <h3 className="text-xl font-bold text-gray-800 truncate">{tool.metadata.name}</h3>
+                <h3 className="text-xl font-bold text-gray-800 truncate">{meta?.name}</h3>
               </div>
-              {tool.metadata.description && (
+              {meta?.description && (
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-fit px-2 py-1 bg-gray-200 bg-opacity-75 rounded-lg text-center">
-                  <p className="text-sm font-bold text-gray-800 truncate">{tool.metadata.description}</p>
+                  <p className="text-sm font-bold text-gray-800 truncate">{meta.description}</p>
                 </div>
               )}
             </div>
