@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/image.svg" />
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    
+    <!-- SEO Meta Tags -->
+    <title>Look Hook | Web3 Ecosystem Hub & Digital Asset Infrastructure</title>
+    <meta name="description" content="Look Hook is a comprehensive Web3 ecosystem on the Base network. Manage digital assets, participate in NFT-based mining, earn social rewards, and access professional blockchain services through a single interactive dashboard.">
+    <meta name="keywords" content="Look Hook, Web3 Ecosystem, Base Network, HASH Token, NFT Mining, Crypto Staking, Blockchain Infrastructure, Hook Capital, Digital Asset Management, SocialFi, GameFi">
+    <link rel="canonical" href="https://lookhook.info" />
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Look Hook | The Gateway to Web3 Ecosystem on Base">
+    <meta property="og:description" content="Unlock the power of your digital assets. Mining, Staking, Social Rewards, and Professional Web3 Services in one place.">
+    <meta property="og:image" content="https://lookhook.info/Logo.png">
+    <meta property="og:url" content="https://lookhook.info">
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Look Hook" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Look Hook - Web3 Practical Tools">
+    <meta name="twitter:description" content="Building infrastructure for the future of digital assets. Explore rewards and tools on Base.">
+    <meta name="twitter:image" content="https://lookhook.info/Logo.png">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Look Hook",
+        "operatingSystem": "Web",
+        "applicationCategory": "FinanceApplication",
+        "description": "Practical tools and products for the Web3 and digital assets space on Base network.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0"
+        }
+      }
+    </script>
+
+  </head>
+  <body>
+    <div id="root"></div>
+    
+    <!-- BigInt serialization fix -->
+    <script>
+      // Fix for BigInt serialization error in React DevTools
+      BigInt.prototype.toJSON = function() {
+        return this.toString();
+      };
+    </script>
+    
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,45 @@
+export const hashAchievementNFTsAbi = [
+  {
+    inputs: [],
+    name: 'mintDolphin',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'mintShark',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'mintWhale',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'getUserStatus',
+    outputs: [
+      { internalType: 'uint256', name: 'earnedHASH', type: 'uint256' },
+      { internalType: 'bool', name: 'dolphinAvailable', type: 'bool' },
+      { internalType: 'bool', name: 'sharkAvailable', type: 'bool' },
+      { internalType: 'bool', name: 'whaleAvailable', type: 'bool' },
+      { internalType: 'bool', name: 'hasDolphinNFT', type: 'bool' },
+      { internalType: 'bool', name: 'hasSharkNFT', type: 'bool' },
+      { internalType: 'bool', name: 'hasWhaleNFT', type: 'bool' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'owner', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
