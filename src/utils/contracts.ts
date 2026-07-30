@@ -247,7 +247,7 @@ export const gramContract = getContract({
 export const faucetContract = getContract({
   client,
   chain: chain,
-  address: '0x9C9c604c588144bB60864547d5152B309B684122',
+  address: '0x77AE0f4a3787C204b3fb79cf8822513a6D144cf7',
   abi: faucetAbi,
 });
 

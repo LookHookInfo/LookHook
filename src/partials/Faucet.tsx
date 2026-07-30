@@ -131,7 +131,7 @@ export default function Faucet() {
                 <span className="text-sky-500">Hash</span> Faucet
               </h2>
               <p className="text-neutral-400 text-sm max-w-sm mb-6 leading-relaxed">
-                The OG way to get free coins. Claim <span className="text-white font-bold">20 $HASH</span> tokens every 24 hours.
+                The OG way to get free coins. Claim <span className="text-white font-bold">2 $HASH</span> tokens every 24 hours.
               </p>
 
               <div className="flex gap-4">
