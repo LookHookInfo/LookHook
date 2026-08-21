@@ -19,7 +19,7 @@ export default function NFTCard({ className }: NFTCardProps) {
             </div>
 
             <img
-              src="https://ipfs.io/ipfs/QmSNSLzJwsVye4QJqdjTo4oF5XnvWg5uWGKUY74jHBAStw"
+              src="/assets/plasma.gif"
               alt="NFT Claim App"
               className="rounded-xl w-full h-auto scale-90"
             />

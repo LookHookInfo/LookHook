@@ -208,8 +208,8 @@ export default function Mining() {
             <div className="space-y-2 md:space-y-4">
               <h2 className="font-bold text-3xl lg:text-4xl text-gray-300 dark:text-neutral-200">
                 <img
-                  src="https://bafkreigg2isvgh4zxqdojs5bdmfhkw7hugqikptcewd6zeegvfcnxufw4a.ipfs.dweb.link/"
-                  alt="Stake"
+                  src="/assets/Farm.webp"
+                  alt="Mining Hash"
                   className="rounded-xl w-16 h-16 inline-block mr-2 align-middle"
                 />
                 Mining Hash

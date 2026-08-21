@@ -57,7 +57,7 @@ export default function Features() {
             <div className="space-y-2 md:space-y-4">
               <h2 className="font-bold text-3xl lg:text-4xl text-gray-300 dark:text-neutral-200">
                 <img
-                  src="https://bafybeidlh52vnf2cfuvskmhdrixojelnavpyv2q34qmlz5bfutr2mjgvey.ipfs.dweb.link/"
+                  src="/assets/Stake.webp"
                   alt="Stake"
                   className="rounded-xl w-16 h-16 inline-block mr-2 align-middle"
                 />

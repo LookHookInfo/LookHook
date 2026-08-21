@@ -126,7 +126,7 @@ export default function GM({ className }: GMProps) {
               onClick={handleClaim}
             >
               <img
-                src="https://bafybeihjwg5c4zsl335gpxu7y4nspp5gcy26udisdbpogt7edrvac6iiwu.ipfs.w3s.link/"
+                src="/assets/GM.webp"
                 alt="HashCoin NFT"
                 className="w-full h-auto transition-transform duration-500 group-hover:scale-110"
               />

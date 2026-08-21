@@ -52,7 +52,7 @@ export default function Xrole({ className }: XroleProps) {
           </div>
 
           <img
-            src="https://ipfs.io/ipfs/bafybeieiwzuctm3xrqhwn2gvbds3jgwvt6nvfd53xdfoj2erklcnigfozy"
+            src="/assets/Xrole.webp"
             alt="X Role"
             className="rounded-full w-full h-auto object-cover"
           />

@@ -10,13 +10,13 @@ interface ToolMetadata {
   image: string;
 }
 
-const PLACEHOLDER: ToolMetadata[] = [
-  { id: 0, name: 'Tool #0', description: '', image: '' },
-  { id: 1, name: 'Tool #1', description: '', image: '' },
-  { id: 2, name: 'Tool #2', description: '', image: '' },
-  { id: 3, name: 'Tool #3', description: '', image: '' },
-  { id: 4, name: 'Tool #4', description: '', image: '' },
-  { id: 5, name: 'Tool #5', description: '', image: '' },
+const TOOL_DEFAULTS: ToolMetadata[] = [
+  { id: 0, name: 'GPU', description: 'Speed: 0.042/h', image: '/assets/tools/0.png' },
+  { id: 1, name: 'ASIC', description: 'Speed: 0.42/h', image: '/assets/tools/1.png' },
+  { id: 2, name: 'FARM', description: 'Speed: 2.42/h', image: '/assets/tools/2.png' },
+  { id: 3, name: 'RIG', description: 'Speed: 0.335/h', image: '/assets/tools/3.png' },
+  { id: 4, name: 'RACK', description: 'Speed: 5.05/h', image: '/assets/tools/4.png' },
+  { id: 5, name: 'CONTAINER', description: 'Speed: 24.2/h', image: '/assets/tools/5.png' },
 ];
 
 function resolveIpfsUrl(uri: string): string {
@@ -34,7 +34,7 @@ export function useToolMetadata() {
         args: [],
       })) as bigint;
 
-      if (count === 0n) return PLACEHOLDER;
+      if (count === 0n) return TOOL_DEFAULTS;
 
       const numTools = Math.min(Number(count), 6);
 
@@ -58,20 +58,20 @@ export function useToolMetadata() {
               const json = await response.json();
               return {
                 id: i,
-                name: json.name || `Tool #${i}`,
-                description: json.description || '',
-                image: json.image || '',
+                name: json.name || TOOL_DEFAULTS[i].name,
+                description: json.description || TOOL_DEFAULTS[i].description,
+                image: `/assets/tools/${i}.png`,
               } as ToolMetadata;
             } catch {
-              return PLACEHOLDER[i];
+              return TOOL_DEFAULTS[i];
             }
           }
-          return PLACEHOLDER[i];
+          return TOOL_DEFAULTS[i];
         })
       );
 
       for (let i = metadata.length; i < 6; i++) {
-        metadata.push(PLACEHOLDER[i]);
+        metadata.push(TOOL_DEFAULTS[i]);
       }
 
       return metadata;
@@ -79,5 +79,5 @@ export function useToolMetadata() {
     staleTime: 600_000,
   });
 
-  return { toolMetadata: data ?? PLACEHOLDER, isLoading };
+  return { toolMetadata: data ?? TOOL_DEFAULTS, isLoading };
 }

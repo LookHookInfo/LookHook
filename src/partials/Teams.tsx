@@ -71,8 +71,8 @@ export default function Teams() {
           <div className="flex items-center gap-x-4">
             <img
               className="rounded-full size-20"
-              src="https://ipfs.io/ipfs/QmQqYYWnxKsonNaUGU5CLHrZzapxwRUht4NPUs1qpA8CJK"
-              alt="Avatar"
+              src="/assets/Founder.jpg"
+              alt="Konstantin Moiseev"
             />
             <div className="grow">
               <h3 className="font-medium text-gray-800 dark:text-neutral-200">Konstantin Moiseev</h3>
@@ -108,8 +108,8 @@ export default function Teams() {
           <div className="flex items-center gap-x-4">
             <img
               className="rounded-full size-20"
-              src="https://ipfs.io/ipfs/QmSPSEdJM7Q2qwVWjNN9fJCchrSpaEy2mnfSGBHcTgbtqC"
-              alt="Avatar"
+              src="/assets/Artemois.jpg"
+              alt="ArteMois"
             />
             <div className="grow">
               <h3 className="font-medium text-gray-800 dark:text-neutral-200">ArteMois</h3>
@@ -135,8 +135,8 @@ export default function Teams() {
           <div className="flex items-center gap-x-4">
             <img
               className="rounded-full size-20"
-              src="https://ipfs.io/ipfs/bafybeieq7wk3ry5hb5za47nni7jo2apnx4z5oou7u65ruy6gk4uwgd6oli"
-              alt="Avatar"
+              src="/assets/Chain.png"
+              alt="Chain Inside"
             />
             <div className="grow">
               <h3 className="font-medium text-gray-800 dark:text-neutral-200">Chain Inside</h3>

@@ -64,7 +64,7 @@ export default function OG({ className }: OGProps) {
             </div>
 
             <img
-              src="https://bafybeiewbedtuxd5naj74f2u4wwwykp36wkuiitdzurd7p5k4lp5zfw4we.ipfs.w3s.link/"
+              src="/assets/OG.webp"
               alt="OG role"
               className="rounded-xl w-full h-auto scale-90"
             />
