@@ -13,8 +13,16 @@ export function Footer() {
 
         {/* Footer Text */}
         <div className="mt-3">
-          <p className="text-gray-400 dark:text-neutral-500">Look Hook - creating blockchain products</p>
-          <p className="text-gray-400 dark:text-neutral-500">© 2026 All rights reserved.</p>
+          <p className="text-gray-400 dark:text-neutral-500">
+            <a
+              href="https://road.lookhook.info"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white dark:hover:text-neutral-200 transition-colors"
+            >
+              LookHook - Ecosystem
+            </a>
+          </p>
         </div>
 
         {/* Social Links */}
