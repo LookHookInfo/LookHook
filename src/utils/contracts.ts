@@ -27,7 +27,6 @@ import { lamboRewardAbi } from './lamboRewardAbi';
 import { achievementAggregatorAbi } from './achievementAggregatorAbi';
 import { rewardAggregatorAbi } from './rewardAggregatorAbi';
 import { hashAchievementNFTsAbi } from './hashAchievementNFTsAbi';
-import { faucetAbi } from './faucetAbi';
 import { airdropAbi } from './airdropAbi';
 import { coreAggregatorAbi } from './coreAggregatorAbi';
 import { gmNameAggregatorAbi } from './gmNameAggregatorAbi';
@@ -243,13 +242,6 @@ export const gramContract = getContract({
   address: '0x4De659ef1617eF215f36A1953B3Cd7a4A10a5159',
   abi: gmnftAbi,
 }); //ok
-
-export const faucetContract = getContract({
-  client,
-  chain: chain,
-  address: '0x77AE0f4a3787C204b3fb79cf8822513a6D144cf7',
-  abi: faucetAbi,
-});
 
 export const airdropContract = getContract({
   client,
