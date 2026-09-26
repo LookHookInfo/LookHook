@@ -1,17 +1,22 @@
+import { useSeaReward } from '../hooks/useSeaReward';
+import { Spinner } from '../components/Spinner';
+
 interface SeaProps {
   className?: string;
 }
 
-const EligibilityIndicator = ({ tooltip, icon }: { tooltip: string; icon: string }) => (
+const EligibilityIndicator = ({ tooltip, status, icon }: { tooltip: string; status: boolean; icon: string }) => (
   <div className="relative group flex items-center">
     <div className="relative">
       <img
         src={icon}
         alt={tooltip}
-        className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover border-2 border-neutral-600 group-hover:border-neutral-500 transition-all duration-200 grayscale opacity-40"
+        className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover border-2 border-neutral-600 group-hover:border-neutral-500 transition-all duration-200"
       />
       <div
-        className="absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 border-neutral-800 bg-neutral-500"
+        className={`absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 border-neutral-800 ${
+          status ? 'bg-green-500' : 'bg-neutral-500'
+        }`}
       ></div>
     </div>
     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-900 text-white text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
@@ -21,10 +26,23 @@ const EligibilityIndicator = ({ tooltip, icon }: { tooltip: string; icon: string
 );
 
 export default function Sea({ className }: SeaProps) {
+  const {
+    isLoading,
+    isShark,
+    isVoter,
+    isX,
+    canClaim,
+    hasClaimed,
+    rewardAmount,
+    isClaiming,
+    handleClaim,
+    poolRewardBalance,
+  } = useSeaReward();
+
   const eligibilityCriteria = [
-    { key: 'sea1', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
-    { key: 'sea2', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
-    { key: 'sea3', tooltip: 'Soon', icon: '/assets/hashcoin.webp' },
+    { key: 'isShark', tooltip: 'Shark role (2+ NFT)', status: isShark, icon: '/assets/Shark.webp' },
+    { key: 'isVoter', tooltip: 'DeVote role', status: isVoter, icon: '/assets/DeVote.webp' },
+    { key: 'isX', tooltip: 'X role', status: isX, icon: '/assets/Xrole.webp' },
   ];
 
   const renderEligibility = () => {
@@ -34,12 +52,18 @@ export default function Sea({ className }: SeaProps) {
           <EligibilityIndicator
             key={criterion.key}
             tooltip={criterion.tooltip}
+            status={criterion.status}
             icon={criterion.icon}
           />
         ))}
       </div>
     );
   };
+
+  let progressPercentage = 10;
+  if (isShark) progressPercentage += 30;
+  if (isVoter) progressPercentage += 30;
+  if (isX) progressPercentage += 30;
 
   return (
     <div
@@ -52,9 +76,6 @@ export default function Sea({ className }: SeaProps) {
             Base
           </div>
           <img src="/assets/Osea.webp" alt="Sea" className="rounded-full w-full h-auto object-cover" />
-          <div className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border border-gray-500 text-gray-500 cursor-not-allowed">
-            Soon
-          </div>
         </div>
 
         {/* Text Content Block */}
@@ -70,21 +91,49 @@ export default function Sea({ className }: SeaProps) {
             </div>
 
             <div className="space-y-4">
-              <p className="text-neutral-300">Reward for your activity.</p>
+              <p className="text-neutral-300">Anyone is eligible for a reward.</p>
 
               <div className="flex flex-wrap gap-2">{renderEligibility()}</div>
             </div>
           </div>
 
-          {/* Claim Button Stub */}
+          {/* Claim Button */}
           <div className="mt-auto pt-4 w-full relative">
             <div className="relative group w-full">
               <button
-                disabled={true}
-                className="relative flex items-center justify-center w-full py-3 rounded-lg text-xl font-bold border border-gray-500 text-gray-500 opacity-50 cursor-not-allowed bg-neutral-800"
+                onClick={handleClaim}
+                disabled={!canClaim || isClaiming || hasClaimed}
+                className={`relative flex items-center justify-center w-full py-3 rounded-lg text-xl font-bold border transition-colors overflow-hidden ${
+                  canClaim && !hasClaimed
+                    ? 'border-neutral-700 text-white bg-neutral-800 glow-effect cursor-pointer'
+                    : 'border-gray-500 text-gray-500 opacity-50 cursor-not-allowed'
+                }`}
               >
-                <span>Progress to Claim: 0%</span>
+                {isLoading ? (
+                  <Spinner className="w-6 h-6" />
+                ) : isClaiming ? (
+                  <>
+                    <Spinner className="w-5 h-5 mr-2" />
+                    Claiming...
+                  </>
+                ) : hasClaimed ? (
+                  'Claimed'
+                ) : canClaim ? (
+                  <span>Claim {rewardAmount} HASH</span>
+                ) : (
+                  <>
+                    <div
+                      className="absolute top-0 left-0 h-full bg-sky-500/30"
+                      style={{ width: `${progressPercentage}%` }}
+                    ></div>
+                    <span className="relative z-10">Progress to Claim: {progressPercentage}%</span>
+                  </>
+                )}
               </button>
+              <div className="absolute bottom-full mb-2 w-max px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                Pool: {poolRewardBalance} HASH
+                <div className="tooltip-arrow" data-popper-arrow></div>
+              </div>
             </div>
           </div>
         </div>

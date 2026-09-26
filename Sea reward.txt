@@ -1,0 +1,124 @@
+0x07EbD4C678281b87594cF40f3ec6e9Af300f46B7  contract
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.34;
+
+interface IERC721 {
+    function balanceOf(address owner) external view returns (uint256);
+}
+
+interface IERC20 {
+    function transfer(address to, uint256 amount) external returns (bool);
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+}
+
+contract SeaReward {
+    address public owner;
+
+    // --- NFT коллекции (soulbound / непередаваемые) ---
+    address public constant SHARK_NFT = 0x7aa5fc50D0E4A400545E34055134C89F2b310080;
+    address public constant VOTE_NFT  = 0x52ab3d4ED15F71b8eC153222daa9E13353E36bb3;
+    address public constant X_NFT     = 0x1A502C6259DBFebD7f568139cC28168831DA5D30;
+
+    // --- Reward token ---
+    IERC20 public constant HASH_TOKEN =
+        IERC20(0xA9B631ABcc4fd0bc766d7C0C8fCbf866e2bB0445);
+
+    uint256 public rewardAmount = 30_000 * 1e18;
+
+    mapping(address => bool) public claimed;
+
+    event RewardClaimed(address indexed user, uint256 amount);
+    event RewardAmountChanged(uint256 newAmount);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    // --- Проверки ролей ---
+
+    /// SHARK: минимум 2 NFT
+    function isShark(address user) public view returns (bool) {
+        return IERC721(SHARK_NFT).balanceOf(user) >= 2;
+    }
+
+    /// VOTE: минимум 1 NFT (выдаётся за голосование в DeVote)
+    function isVoter(address user) public view returns (bool) {
+        return IERC721(VOTE_NFT).balanceOf(user) >= 1;
+    }
+
+    /// X: минимум 1 NFT
+    function isX(address user) public view returns (bool) {
+        return IERC721(X_NFT).balanceOf(user) >= 1;
+    }
+
+    /// Нужны ВСЕ три роли одновременно
+    function hasAllRoles(address user) public view returns (bool) {
+        return isShark(user) && isVoter(user) && isX(user);
+    }
+
+    // --- Клейм ---
+
+    function claim() external {
+        require(!claimed[msg.sender], "Already claimed");
+        require(hasAllRoles(msg.sender), "Not all roles");
+        require(
+            HASH_TOKEN.balanceOf(address(this)) >= rewardAmount,
+            "Not enough HASH"
+        );
+
+        claimed[msg.sender] = true;
+        require(HASH_TOKEN.transfer(msg.sender, rewardAmount), "Transfer failed");
+
+        emit RewardClaimed(msg.sender, rewardAmount);
+    }
+
+    function canClaim(address user) external view returns (bool) {
+        if (claimed[user]) return false;
+        if (!hasAllRoles(user)) return false;
+        if (HASH_TOKEN.balanceOf(address(this)) < rewardAmount) return false;
+        return true;
+    }
+
+    // --- Админ ---
+
+    function setRewardAmount(uint256 newAmount) external onlyOwner {
+        require(newAmount > 0, "Amount must be > 0");
+        rewardAmount = newAmount;
+        emit RewardAmountChanged(newAmount);
+    }
+
+    function depositTokens(uint256 amount) external onlyOwner {
+        require(amount > 0, "Zero amount");
+        require(
+            HASH_TOKEN.transferFrom(msg.sender, address(this), amount),
+            "TransferFrom failed"
+        );
+    }
+
+    function withdrawTokens() external onlyOwner {
+        uint256 balance = HASH_TOKEN.balanceOf(address(this));
+        require(balance > 0, "No tokens");
+        require(HASH_TOKEN.transfer(owner, balance), "Transfer failed");
+    }
+
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "Zero address");
+        owner = newOwner;
+    }
+}
+
+
+
+__________________
+
+abi
+
+[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newAmount","type":"uint256"}],"name":"RewardAmountChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardClaimed","type":"event"},{"inputs":[],"name":"HASH_TOKEN","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"SHARK_NFT","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"VOTE_NFT","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"X_NFT","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"canClaim","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"claim","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"claimed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"depositTokens","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"hasAllRoles","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"isShark","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"isVoter","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"isX","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"rewardAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"newAmount","type":"uint256"}],"name":"setRewardAmount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"withdrawTokens","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+

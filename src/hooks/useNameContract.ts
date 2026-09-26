@@ -14,7 +14,6 @@ const MAX_NAMES_PER_ADDRESS = 20;
 export function useNameContract() {
   const account = useActiveAccount();
   const queryClient = useQueryClient();
-  const accountAddress = account?.address;
 
   const [nameInput, setNameInput] = useState('');
   const [isNameTakenLoading, setIsNameTakenLoading] = useState(false);

@@ -11,12 +11,11 @@ import { ShopFeed, ToolPrice } from '../hooks/useMiningFeed';
 
 interface UseToolCardLogicProps {
   toolIndex: number;
-  address: string;
   shopFeed: ShopFeed;
   prices: ToolPrice[];
 }
 
-export function useToolCardLogic({ toolIndex, address, shopFeed, prices }: UseToolCardLogicProps) {
+export function useToolCardLogic({ toolIndex, shopFeed, prices }: UseToolCardLogicProps) {
   const [quantity, setQuantity] = useState<number>(1);
 
   const incrementQuantity = () => setQuantity((prev) => prev + 1);
@@ -33,7 +32,6 @@ export function useToolCardLogic({ toolIndex, address, shopFeed, prices }: UseTo
   const stakedAmount = toolState?.staked ?? 0n;
   const claimableRewards = toolState?.rewards ?? 0n;
   const isApprovedForStaking = shopFeed.isApprovedForStaking;
-  const tokenAllowance = shopFeed.usdcAllowance;
 
   const pricePerToken = price?.pricePerToken ?? 0n;
   const totalPrice = pricePerToken * BigInt(quantity);

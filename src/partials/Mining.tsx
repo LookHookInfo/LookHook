@@ -42,7 +42,6 @@ function Game({
   return (
     <div className="relative">
       <GameContent
-        address={account.address}
         shopFeed={shopFeed}
         isLoadingFeed={isLoadingFeed}
         onSelectTool={setSelectedToolIndex}
@@ -51,7 +50,6 @@ function Game({
       {selectedToolIndex !== null && shopFeed && prices && (
         <ToolDetailModal
           toolIndex={selectedToolIndex}
-          address={account.address}
           shopFeed={shopFeed}
           prices={prices}
           onClose={() => setSelectedToolIndex(null)}
@@ -62,13 +60,11 @@ function Game({
 }
 
 function GameContent({
-  address,
   shopFeed,
   isLoadingFeed,
   onSelectTool,
   toolMetadata,
 }: {
-  address: string;
   shopFeed?: ShopFeed;
   isLoadingFeed: boolean;
   onSelectTool: (index: number) => void;
@@ -85,7 +81,6 @@ function GameContent({
   return (
     <div className="">
       <ToolGrid
-        address={address}
         shopFeed={shopFeed}
         onSelectTool={onSelectTool}
         toolMetadata={toolMetadata}
@@ -107,12 +102,10 @@ function Section({ title, children }: { title: React.ReactNode; children: React.
 }
 
 function ToolGrid({
-  address,
   shopFeed,
   onSelectTool,
   toolMetadata,
 }: {
-  address: string;
   shopFeed?: ShopFeed;
   onSelectTool: (index: number) => void;
   toolMetadata: ReturnType<typeof useToolMetadata>['toolMetadata'];

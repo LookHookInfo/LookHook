@@ -1,30 +1,36 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActiveAccount } from 'thirdweb/react';
 import { encodeFunctionData, formatUnits } from 'viem';
-import { welcomeRewardContract } from '../utils/contracts';
+import { seaRewardContract } from '../utils/contracts';
 import { xPublicClient } from '../lib/viem/client';
-import welcomeRewardAbi from '../utils/welcomeRewardAbi';
+import { seaRewardAbi } from '../utils/seaRewardAbi';
 import { useRewardBlocksAggregator } from './useRewardBlocksAggregator';
 
-export function useWelcomeRewardClaim() {
+export function useSeaReward() {
   const account = useActiveAccount();
   const queryClient = useQueryClient();
   const { userStatus, pools, isLoading: isLoadingStatus, isPoolsLoading, refetch } = useRewardBlocksAggregator();
 
-  const canClaim = userStatus?.welcome.canClaim ?? false;
-  const hasClaimed = userStatus?.welcome.alreadyClaimed ?? false;
+  const isShark = userStatus?.seaIsShark ?? false;
+  const isVoter = userStatus?.seaIsVoter ?? false;
+  const isX = userStatus?.seaIsX ?? false;
+
+  const canClaim = userStatus?.sea.canClaim ?? false;
+  const hasClaimed = userStatus?.sea.alreadyClaimed ?? false;
 
   const rewardAmount =
-    userStatus && userStatus.welcome.rewardAmount !== undefined
-      ? parseFloat(formatUnits(userStatus.welcome.rewardAmount, 18)).toLocaleString()
+    userStatus && userStatus.sea.rewardAmount !== undefined
+      ? parseFloat(formatUnits(userStatus.sea.rewardAmount, 18)).toLocaleString()
       : '0';
 
   const formattedPoolRewardBalance =
-    pools && pools.welcomePool !== undefined
-      ? parseFloat(formatUnits(pools.welcomePool, 18)).toLocaleString()
-      : userStatus && userStatus.welcome.poolBalance !== undefined
-        ? parseFloat(formatUnits(userStatus.welcome.poolBalance, 18)).toLocaleString()
+    pools && pools.seaPool !== undefined
+      ? parseFloat(formatUnits(pools.seaPool, 18)).toLocaleString()
+      : userStatus && userStatus.sea.poolBalance !== undefined
+        ? parseFloat(formatUnits(userStatus.sea.poolBalance, 18)).toLocaleString()
         : '0';
+
+  const isLoading = isLoadingStatus || isPoolsLoading;
 
   const claimMutation = useMutation({
     mutationFn: async () => {
@@ -32,13 +38,13 @@ export function useWelcomeRewardClaim() {
       if (!canClaim) throw new Error('You are not eligible to claim this reward.');
 
       const data = encodeFunctionData({
-        abi: welcomeRewardAbi,
+        abi: seaRewardAbi,
         functionName: 'claim',
         args: [],
       });
 
       const { transactionHash } = await account.sendTransaction({
-        to: welcomeRewardContract.address as `0x${string}`,
+        to: seaRewardContract.address as `0x${string}`,
         data,
         chainId: 8453,
       });
@@ -49,7 +55,7 @@ export function useWelcomeRewardClaim() {
       queryClient.invalidateQueries({ queryKey: ['rewardBlocksAggregator'] });
     },
     onError: (error: Error) => {
-      console.error('Welcome Reward claim failed', error);
+      console.error('Sea Reward claim failed', error);
     },
   });
 
@@ -61,12 +67,13 @@ export function useWelcomeRewardClaim() {
     handleClaim,
     canClaim,
     hasClaimed,
+    isShark,
+    isVoter,
+    isX,
     rewardAmount,
     poolRewardBalance: formattedPoolRewardBalance,
     isClaiming: claimMutation.isPending,
-    isCheckingCanClaim: isLoadingStatus,
-    isLoadingPoolBalance: isPoolsLoading,
-    isCheckingHasClaimed: isLoadingStatus,
+    isLoading,
     refetchCanClaim: refetch,
     error: claimMutation.error,
   };

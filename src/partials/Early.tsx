@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useActiveAccount } from 'thirdweb/react';
 import { earlyBirdContract } from '../utils/contracts';
 import { useQueries, useQuery, useQueryClient, useMutation } from '@tanstack/react-query';

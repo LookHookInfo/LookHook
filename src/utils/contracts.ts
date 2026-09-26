@@ -30,6 +30,8 @@ import { hashAchievementNFTsAbi } from './hashAchievementNFTsAbi';
 import { airdropAbi } from './airdropAbi';
 import { coreAggregatorAbi } from './coreAggregatorAbi';
 import { gmNameAggregatorAbi } from './gmNameAggregatorAbi';
+import { seaRewardAbi } from './seaRewardAbi';
+import { rewardBlocksAggregatorAbi } from './rewardBlocksAggregatorAbi';
 
 // --- CORE TOKENS ---
 
@@ -142,6 +144,13 @@ export const lamboRewardContract = getContract({
   abi: lamboRewardAbi,
 }); //ok
 
+export const seaRewardContract = getContract({
+  client,
+  chain: chain,
+  address: '0x07EbD4C678281b87594cF40f3ec6e9Af300f46B7',
+  abi: seaRewardAbi,
+});
+
 export const achievementAggregatorContract = getContract({
   client,
   chain: chain,
@@ -164,6 +173,13 @@ export const rewardAggregatorContract = getContract({
   abi: rewardAggregatorAbi,
 });
 
+export const rewardBlocksAggregatorContract = getContract({
+  client,
+  chain: chain,
+  address: '0xBf15B8B67150fE5903EE83e9a4fE1d4254E021b8',
+  abi: rewardBlocksAggregatorAbi,
+});
+
 // --- NFT & IDENTITY ---
 
 export const nameContract = getContract({
@@ -171,13 +187,6 @@ export const nameContract = getContract({
   chain: chain,
   address: '0xA8e00E2ca8b183Edb7EbB6bD7EeBB90047416F95',
   abi: nameContractAbi,
-}); //ok
-
-export const whaleContract = getContract({
-  client,
-  chain: chain,
-  address: '0x7aa5fc50D0E4A400545E34055134C89F2b310080',
-  abi: gmnftAbi,
 }); //ok
 
 export const gmContract = getContract({
@@ -227,20 +236,6 @@ export const ambaNftContract = getContract({
   chain: chain,
   address: '0x1076d1C0Bb444C8bb50A6D2dbdF3bA5095910a52',
   abi: ambaNftAbi,
-}); //ok
-
-export const gemContract = getContract({
-  client,
-  chain: chain,
-  address: '0xa0021fc511ad7348ba7b1a9ad564e29f2a54e928',
-  abi: gmnftAbi,
-}); //ok
-
-export const gramContract = getContract({
-  client,
-  chain: chain,
-  address: '0x4De659ef1617eF215f36A1953B3Cd7a4A10a5159',
-  abi: gmnftAbi,
 }); //ok
 
 export const airdropContract = getContract({

@@ -7,13 +7,12 @@ import { useToolMetadata } from '../hooks/useToolMetadata';
 
 interface ToolDetailModalProps {
   toolIndex: number;
-  address: string;
   shopFeed: ShopFeed;
   prices: ToolPrice[];
   onClose: () => void;
 }
 
-export function ToolDetailModal({ toolIndex, address, shopFeed, prices, onClose }: ToolDetailModalProps) {
+export function ToolDetailModal({ toolIndex, shopFeed, prices, onClose }: ToolDetailModalProps) {
   const { toolMetadata } = useToolMetadata();
   const meta = toolMetadata[toolIndex];
 
@@ -32,14 +31,13 @@ export function ToolDetailModal({ toolIndex, address, shopFeed, prices, onClose 
     decrementQuantity,
     isPurchaseEnabled,
     isSoldOut,
-    hasEnoughUSDC,
     handleWithdraw,
     handleClaimRewards,
     isWithdrawing,
     isClaiming,
     handleApproveStaking,
     isApproving,
-  } = useToolCardLogic({ toolIndex, address, shopFeed, prices });
+  } = useToolCardLogic({ toolIndex, shopFeed, prices });
 
   const getBuyButtonText = () => {
     if (isSoldOut) return 'Sold Out';

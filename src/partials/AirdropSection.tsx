@@ -153,7 +153,6 @@ export default function AirdropSection() {
                   displayRewards.map((item, idx) => {
                     const isPending = item.isEligible && !item.isClaimed;
                     const isClaimed = item.isEligible && item.isClaimed;
-                    const isLocked = !item.isEligible;
                     
                     const amountFormatted = Number(formatUnits(item.amount, 18)).toLocaleString('en-US', { maximumFractionDigits: 0 });
 

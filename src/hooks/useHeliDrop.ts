@@ -1,118 +1,39 @@
-import { useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActiveAccount } from 'thirdweb/react';
 import { formatUnits, encodeFunctionData } from 'viem';
 
-import {
-  gmnftContract,
-  badgeStakeContract,
-  earlyBirdContract,
-  heliRewardContract,
-  hashcoinContract,
-} from '../utils/contracts';
+import { heliRewardContract, hashcoinContract } from '../utils/contracts';
 import { namePublicClient } from '../lib/viem/client';
-import { gmnftAbi } from '../utils/gmnftAbi';
 import { heliRewardAbi } from '../utils/heliRewardAbi';
-import { earlyBirdAbi } from '../utils/earlyBirdAbi';
-import { badgeStakeAbi } from '../utils/badgeStakeAbi';
-import erc20Abi from '../utils/erc20';
+import { useRewardBlocksAggregator } from './useRewardBlocksAggregator';
 
 export function useHeliDrop() {
   const account = useActiveAccount();
   const queryClient = useQueryClient();
   const accountAddress = account?.address;
+  const { userStatus, pools, isLoading: isLoadingStatus, isPoolsLoading } = useRewardBlocksAggregator();
 
-  const queries = useQueries({
-    queries: [
-      // Balance checks for UI indicators
-      {
-        queryKey: ['heliDrop', 'gmnftBalance', accountAddress],
-        queryFn: () => namePublicClient.readContract({
-          address: gmnftContract.address as `0x${string}`,
-          abi: gmnftAbi,
-          functionName: 'balanceOf',
-          args: [accountAddress as `0x${string}`],
-        }),
-        enabled: !!accountAddress,
-        staleTime: 300_000,
-      },
-      {
-        queryKey: ['heliDrop', 'badgeStakeBalance', accountAddress],
-        queryFn: () => namePublicClient.readContract({
-          address: badgeStakeContract.address as `0x${string}`,
-          abi: badgeStakeAbi,
-          functionName: 'balanceOf',
-          args: [accountAddress as `0x${string}`],
-        }),
-        enabled: !!accountAddress,
-        staleTime: 300_000,
-      },
-      {
-        queryKey: ['heliDrop', 'earlyBirdBalance', accountAddress],
-        queryFn: () => namePublicClient.readContract({
-          address: earlyBirdContract.address as `0x${string}`,
-          abi: earlyBirdAbi,
-          functionName: 'balanceOf',
-          args: [accountAddress as `0x${string}`],
-        }),
-        enabled: !!accountAddress,
-        staleTime: 300_000,
-      },
-      // Reward contract state checks
-      {
-        queryKey: ['heliDrop', 'hasClaimed', accountAddress],
-        queryFn: () => namePublicClient.readContract({
-          address: heliRewardContract.address as `0x${string}`,
-          abi: heliRewardAbi,
-          functionName: 'claimed',
-          args: [accountAddress as `0x${string}`],
-        }),
-        enabled: !!accountAddress,
-        staleTime: 300_000,
-      },
-      {
-        queryKey: ['heliDrop', 'rewardAmount'],
-        queryFn: () => namePublicClient.readContract({
-          address: heliRewardContract.address as `0x${string}`,
-          abi: heliRewardAbi,
-          functionName: 'rewardAmount',
-        }),
-        enabled: true,
-        staleTime: Infinity,
-      },
-      {
-        queryKey: ['heliDrop', 'poolRewardBalance'],
-        queryFn: () => namePublicClient.readContract({
-          address: hashcoinContract.address as `0x${string}`,
-          abi: erc20Abi,
-          functionName: 'balanceOf',
-          args: [heliRewardContract.address as `0x${string}`],
-        }),
-        enabled: true,
-        staleTime: 300_000,
-      },
-    ],
-  });
+  const hasGmnft = userStatus?.heliHasGm ?? false;
+  const hasBadge = userStatus?.heliHasBadge ?? false;
+  const hasEarlyBird = userStatus?.heliHasEarly ?? false;
 
-  const [gmnftResult, badgeResult, earlyBirdResult, hasClaimedResult, rewardAmountResult, poolRewardBalanceResult] =
-    queries;
+  const hasClaimed = userStatus?.heli.alreadyClaimed ?? false;
 
-  const isLoading = queries.some((q) => q.isLoading);
+  const canClaim = userStatus?.heli.canClaim ?? false;
 
-  const hasGmnft = gmnftResult.data ? (gmnftResult.data as bigint) > 0n : false;
-  const hasBadge = badgeResult.data ? (badgeResult.data as bigint) > 0n : false;
-  const hasEarlyBird = earlyBirdResult.data ? (earlyBirdResult.data as bigint) > 0n : false;
+  const formattedRewardAmount =
+    userStatus && userStatus.heli.rewardAmount !== undefined
+      ? parseFloat(formatUnits(userStatus.heli.rewardAmount, 18)).toLocaleString()
+      : '0';
 
-  const hasClaimed = (hasClaimedResult.data as boolean) ?? false;
+  const formattedPoolRewardBalance =
+    pools && pools.heliPool !== undefined
+      ? parseFloat(formatUnits(pools.heliPool, 18)).toLocaleString()
+      : userStatus && userStatus.heli.poolBalance !== undefined
+        ? parseFloat(formatUnits(userStatus.heli.poolBalance, 18)).toLocaleString()
+        : '0';
 
-  const canClaim = hasGmnft && hasBadge && hasEarlyBird && !hasClaimed;
-
-  const formattedRewardAmount = rewardAmountResult.data
-    ? parseFloat(formatUnits(rewardAmountResult.data as bigint, 18)).toLocaleString()
-    : '0';
-
-  const formattedPoolRewardBalance = poolRewardBalanceResult.data
-    ? parseFloat(formatUnits(poolRewardBalanceResult.data as bigint, 18)).toLocaleString()
-    : '0';
+  const isLoading = isLoadingStatus || isPoolsLoading;
 
   const claimMutation = useMutation({
     mutationFn: async () => {
@@ -134,7 +55,7 @@ export function useHeliDrop() {
       return namePublicClient.waitForTransactionReceipt({ hash: transactionHash as `0x${string}` });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['heliDrop'] });
+      queryClient.invalidateQueries({ queryKey: ['rewardBlocksAggregator'] });
       queryClient.invalidateQueries({ queryKey: [hashcoinContract.address, 'balanceOf', accountAddress] });
     },
     onError: (error: Error) => {
