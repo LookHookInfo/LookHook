@@ -32,6 +32,7 @@ import { coreAggregatorAbi } from './coreAggregatorAbi';
 import { gmNameAggregatorAbi } from './gmNameAggregatorAbi';
 import { seaRewardAbi } from './seaRewardAbi';
 import { rewardBlocksAggregatorAbi } from './rewardBlocksAggregatorAbi';
+import { earlyLoanAbi } from './earlyLoanAbi';
 
 // --- CORE TOKENS ---
 
@@ -80,6 +81,14 @@ export const earlyBirdContract = getContract({
   address: '0xe6DC0fe06C141329050A1B2F3e9c4A7f944450B0',
   abi: earlyBirdAbi,
 }); //ok
+
+// Кредитование под залог Early NFT: 1 NFT -> 150,000 HASH, возврат 151,000 HASH
+export const earlyLoanContract = getContract({
+  client,
+  chain: chain,
+  address: '0xe152620357E9cBA90F66fC5855046995e94D0Ec7',
+  abi: earlyLoanAbi,
+});
 
 export const buyMeACoffeeContract = getContract({
   client,
