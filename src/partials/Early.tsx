@@ -1,4 +1,4 @@
-import { useEarlyLoan, LOAN_PER_NFT, REPAY_TOTAL } from '../hooks/useEarlyLoan';
+import { useEarlyLoan, LOAN_PER_NFT, } from '../hooks/useEarlyLoan';
 import ConnectWalletButton from '../components/ConnectWalletButton';
 import { Spinner } from '../components/Spinner';
 import { useHashPrice } from '../hooks/useHashPrice';
@@ -102,7 +102,15 @@ export default function Early({ className }: EarlyProps) {
                       disabled
                       className="w-full py-3 rounded-lg text-lg font-bold border border-neutral-700 text-neutral-500 bg-neutral-900/30 cursor-not-allowed opacity-60"
                     >
-                      {isLoading ? <Spinner className="w-5 h-5 mx-auto" /> : label}
+                      {isLoading ? (
+                        <Spinner className="w-5 h-5 mx-auto" />
+                      ) : step === 'no-nft' && loanUsd ? (
+                        <>
+                          {label} <span className="text-sky-400 ml-2">(~${loanUsd})</span>
+                        </>
+                      ) : (
+                        label
+                      )}
                     </button>
                   )
                 ) : (
