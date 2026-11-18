@@ -369,7 +369,7 @@ export default function Airdrop() {
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-neutral-800 to-transparent" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="relative group overflow-hidden bg-neutral-900/40 border border-neutral-800/60 p-5 rounded-2xl transition-all duration-500 hover:border-neutral-700/80 hover:bg-neutral-900/60">
             <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
               <img src="/assets/Airdrop.webp" alt="" className="w-16 h-16 object-contain grayscale blur-sm" />
@@ -418,10 +418,38 @@ export default function Airdrop() {
                 <p className="text-xs text-gray-500 mb-2 leading-relaxed">
                   Global Holiday Rewards - Honoring Our Early Supporters.
                 </p>
-                <div className="inline-flex items-center gap-1.5 text-[9px] font-bold text-gray-600 uppercase tracking-widest">
+<div className="inline-flex items-center gap-1.5 text-[9px] font-bold text-gray-600 uppercase tracking-widest">
                   <div className="w-1 h-1 rounded-full bg-neutral-700" />
                   Completed
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative group overflow-hidden bg-neutral-900/40 border border-neutral-800/60 p-5 rounded-2xl transition-all duration-500 hover:border-neutral-700/80 hover:bg-neutral-900/60">
+            <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
+              <img src="/assets/Airdrop.webp" alt="" className="w-16 h-16 object-contain grayscale blur-sm" />
+            </div>
+            <div className="relative z-10 flex items-center gap-5">
+              <div className="w-14 h-14 shrink-0 bg-neutral-950/50 rounded-xl border border-neutral-800/50 flex items-center justify-center p-2 group-hover:scale-105 transition-transform duration-500">
+                <img src="/assets/Airdrop.webp" alt="Completed Airdrop" className="w-full h-full object-contain opacity-60 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-gray-300 font-bold tracking-tight group-hover:text-white transition-colors">
+                    Community Airdrop 3
+</h3>
+                    <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-neutral-800 text-gray-500 uppercase">
+                      September 2026
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-2 leading-relaxed">
+                    Community Contribution Awards.
+                  </p>
+                  <div className="inline-flex items-center gap-1.5 text-[9px] font-bold text-gray-600 uppercase tracking-widest">
+                    <div className="w-1 h-1 rounded-full bg-neutral-700" />
+                    Completed September 2026
+                  </div>
               </div>
             </div>
           </div>
