@@ -1,0 +1,74 @@
+0xC9C79168b895cf373CE1461C558b930E7C819B44
+https://basescan.org/address/0xC9C79168b895cf373CE1461C558b930E7C819B44#writeContract
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
+/// @title Рождественский аирдроп HASH для держателей StarNFT (носков)
+/// @notice Один носок (tokenId) может получить награду ровно один раз, независимо от передач
+contract SockChristmasAirdrop is Ownable, ReentrancyGuard {
+
+    IERC721 public immutable SOCKS;      // StarNFTV4: 0xfB9E265ecF12e252930f73302202bc16523F206A
+    IERC20  public immutable HASH;       // токен Mining Hash
+    uint256 public immutable rewardPerSock;  // в мин. единицах (с учётом decimals!)
+    uint256 public immutable claimDeadline;  // unix-timestamp конца кампании
+
+    /// @dev tokenId носка => награда уже выплачена
+    mapping(uint256 => bool) public claimed;
+
+    event Claimed(address indexed holder, uint256 indexed tokenId, uint256 amount);
+
+    constructor(
+        address socks,
+        address hashToken,
+        uint256 _rewardPerSock,
+        uint256 _claimDeadline
+    ) Ownable(msg.sender) {
+        require(_claimDeadline > block.timestamp, "deadline in past");
+        SOCKS = IERC721(socks);
+        HASH = IERC20(hashToken);
+        rewardPerSock = _rewardPerSock;
+        claimDeadline = _claimDeadline;
+    }
+
+    /// Забрать награду за один носок
+    function claim(uint256 tokenId) external nonReentrant {
+        _claim(msg.sender, tokenId);
+    }
+
+    /// Забрать награду сразу за несколько носков (юзерам с несколькими NFT)
+    function claimBatch(uint256[] calldata tokenIds) external nonReentrant {
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            _claim(msg.sender, tokenIds[i]);
+        }
+    }
+
+    function _claim(address to, uint256 tokenId) internal {
+        require(block.timestamp <= claimDeadline, "Claim period ended");
+        require(!claimed[tokenId], "This sock already claimed");
+        require(SOCKS.ownerOf(tokenId) == to, "Not the owner of this sock");
+
+        claimed[tokenId] = true; // сначала помечаем — защита от повторного входа
+        require(HASH.transfer(to, rewardPerSock), "HASH transfer failed");
+
+        emit Claimed(to, tokenId, rewardPerSock);
+    }
+
+    /// Вернуть нераспределённые HASH на кошелёк владельца после дедлайна
+    function withdrawUnclaimed(address to) external onlyOwner {
+        require(block.timestamp > claimDeadline, "Claim period not over");
+        HASH.transfer(to, HASH.balanceOf(address(this)));
+    }
+}
+
+
+
+
+ABI
+
+[{"inputs":[{"internalType":"address","name":"socks","type":"address"},{"internalType":"address","name":"hashToken","type":"address"},{"internalType":"uint256","name":"_rewardPerSock","type":"uint256"},{"internalType":"uint256","name":"_claimDeadline","type":"uint256"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"OwnableInvalidOwner","type":"error"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"OwnableUnauthorizedAccount","type":"error"},{"inputs":[],"name":"ReentrancyGuardReentrantCall","type":"error"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"holder","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Claimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"inputs":[],"name":"HASH","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"SOCKS","outputs":[{"internalType":"contract IERC721","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"claim","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256[]","name":"tokenIds","type":"uint256[]"}],"name":"claimBatch","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"claimDeadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"claimed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"rewardPerSock","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"}],"name":"withdrawUnclaimed","outputs":[],"stateMutability":"nonpayable","type":"function"}]
